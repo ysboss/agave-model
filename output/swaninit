@@ -1,0 +1,63 @@
+    4                                   version of initialisation file
+Delft University of Technology          name of institute
+    3                                   command file ref. number
+INPUT                                   command file name
+    4                                   print file ref. number
+PRINT                                   print file name
+    4                                   test file ref. number
+                                        test file name
+    6                                   screen ref. number
+   99                                   highest file ref. number
+$                                       comment identifier
+	                                       TAB character
+\                                       dir sep char in input file
+/                                       dir sep char replacing previous one
+    1                                   default time coding option
+  100                                   speed of processor   1
+  100                                   speed of processor   2
+  100                                   speed of processor   3
+  100                                   speed of processor   4
+  100                                   speed of processor   5
+  100                                   speed of processor   6
+  100                                   speed of processor   7
+  100                                   speed of processor   8
+  100                                   speed of processor   9
+  100                                   speed of processor  10
+  100                                   speed of processor  11
+  100                                   speed of processor  12
+  100                                   speed of processor  13
+  100                                   speed of processor  14
+  100                                   speed of processor  15
+  100                                   speed of processor  16
+  100                                   speed of processor  17
+  100                                   speed of processor  18
+  100                                   speed of processor  19
+  100                                   speed of processor  20
+  100                                   speed of processor  21
+  100                                   speed of processor  22
+  100                                   speed of processor  23
+  100                                   speed of processor  24
+  100                                   speed of processor  25
+  100                                   speed of processor  26
+  100                                   speed of processor  27
+  100                                   speed of processor  28
+  100                                   speed of processor  29
+  100                                   speed of processor  30
+  100                                   speed of processor  31
+  100                                   speed of processor  32
+  100                                   speed of processor  33
+  100                                   speed of processor  34
+  100                                   speed of processor  35
+  100                                   speed of processor  36
+  100                                   speed of processor  37
+  100                                   speed of processor  38
+  100                                   speed of processor  39
+  100                                   speed of processor  40
+  100                                   speed of processor  41
+  100                                   speed of processor  42
+  100                                   speed of processor  43
+  100                                   speed of processor  44
+  100                                   speed of processor  45
+  100                                   speed of processor  46
+  100                                   speed of processor  47
+  100                                   speed of processor  48
