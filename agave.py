@@ -73,7 +73,7 @@ def configure(agave_username, machine_username, project_name):
           "homeDir": "${HOME_DIR}",
            "auth": {
              "username" : "${MACHINE_USERNAME}",
-             "password" : "${MACHINE_PASSWORD}",
+             "password" : "${MACHINE_PASSWD}",
              "type" : "PASSWORD"
            }
      }
@@ -136,7 +136,7 @@ def configure(agave_username, machine_username, project_name):
         "login": {
             "auth": {
              "username" : "${MACHINE_USERNAME}",
-             "password" : "${MACHINE_PASSWORD}",
+             "password" : "${MACHINE_PASSWD}",
              "type" : "PASSWORD"
             },
             "host": "${MACHINE_FULL}",
@@ -153,7 +153,7 @@ def configure(agave_username, machine_username, project_name):
             "homeDir": "${HOME_DIR}",
             "auth": {
              "username" : "${MACHINE_USERNAME}",
-             "password" : "${MACHINE_PASSWORD}",
+             "password" : "${MACHINE_PASSWD}",
              "type" : "PASSWORD"
             }
          }
