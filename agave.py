@@ -5,15 +5,17 @@ import subprocess
 
 from setvar import *
 
-def configure(agave_username, machine_username, project_name):
+def configure(agave_username, machine_username, machine_name, project_name):
     
     #subprocess.call("mkdir -p ~/swan", shell = True)
     #subprocess.call("cd ~/swan", shell = True)
+    g = re.match(r'(\w+)\.(.*)',machine_name)
+    os.environ["MACHINE"] = g.group(1)
+    os.environ["DOMAIN"] = g.group(2)
+    os.environ["MACHINE_FULL"] = machine_name
     
     
     setvar("""
-    MACHINE=shelob
-    DOMAIN=hpc.lsu.edu
     AGAVE_USERNAME="""+agave_username+"""
     MACHINE_USERNAME="""+machine_username+"""
     BASE_APP_NAME="""+project_name+"""
@@ -23,7 +25,6 @@ def configure(agave_username, machine_username, project_name):
     HOME_DIR=/home/${MACHINE_USERNAME}
     SCRATCH_DIR=/work/${MACHINE_USERNAME}
     DEPLOYMENT_PATH=agave-deployment
-    MACHINE_FULL=${MACHINE}.${DOMAIN}
     AGAVE_JSON_PARSER=jq
     PATH=$HOME/swan/cli/bin:$PATH
     """)

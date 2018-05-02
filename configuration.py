@@ -24,13 +24,14 @@ confBtn = Button(description='Configure', layout= Layout(
 ))
 
 def confBtn_click(a):
-    configure(agaveText.value, machineText.value, baseappText.value)
+    configure(agaveText.value, machineText.value, machineName.value, baseappText.value)
 
 confBtn.on_click(confBtn_click)
 
 items = [
     Box([Label(value='Agave username', layout = Layout(width = '120px')), agaveText], layout = item_layout),
     Box([Label(value='Machine username', layout = Layout(width = '120px')), machineText], layout = item_layout),
+    Box([Label(value='Machine name', layout = Layout(width = '120px')), machineNameText], layout = item_layout),
     Box([Label(value='Project name', layout = Layout(width = '120px')), baseappText], layout = item_layout),
     Box([confBtn])
 ]
