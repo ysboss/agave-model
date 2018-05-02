@@ -15,6 +15,7 @@ item_layout = Layout(
 agaveText = Text()
 machineText = Text()
 baseappText = Text()
+machineNameText = Text()
 confBtn = Button(description='Configure', layout= Layout(
     display = 'flex',
     flex_flow = 'row',
