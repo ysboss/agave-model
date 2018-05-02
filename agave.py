@@ -73,9 +73,8 @@ def configure(agave_username, machine_username, project_name):
           "homeDir": "${HOME_DIR}",
            "auth": {
              "username" : "${MACHINE_USERNAME}",
-             "publicKey" : "${PUB_KEY}",
-             "privateKey" : "${PRIV_KEY}",
-             "type" : "SSHKEYS"
+             "password" : "${MACHINE_PASSWORD}",
+             "type" : "PASSWORD"
            }
      }
     }
@@ -137,9 +136,8 @@ def configure(agave_username, machine_username, project_name):
         "login": {
             "auth": {
              "username" : "${MACHINE_USERNAME}",
-             "publicKey" : "${PUB_KEY}",
-             "privateKey" : "${PRIV_KEY}",
-             "type" : "SSHKEYS"
+             "password" : "${MACHINE_PASSWORD}",
+             "type" : "PASSWORD"
             },
             "host": "${MACHINE_FULL}",
             "port": ${PORT},
@@ -155,9 +153,9 @@ def configure(agave_username, machine_username, project_name):
             "homeDir": "${HOME_DIR}",
             "auth": {
              "username" : "${MACHINE_USERNAME}",
-             "publicKey" : "${PUB_KEY}",
-             "privateKey" : "${PRIV_KEY}",
-             "type" : "SSHKEYS"
+             "password" : "${MACHINE_PASSWORD}",
+             "type" : "PASSWORD"
+            }
          }
         },
         "workDir": "${WORK_DIR}"
