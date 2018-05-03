@@ -25,7 +25,7 @@ confBtn = Button(description='Configure', layout= Layout(
 ))
 
 def confBtn_click(a):
-    configure(agaveText.value, machineText.value, machineName.value, baseappText.value)
+    configure(agaveText.value, machineText.value, machineNameText.value, baseappText.value)
 
 confBtn.on_click(confBtn_click)
 
