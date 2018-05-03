@@ -26,7 +26,7 @@ def configure(agave_username, machine_username, machine_name, project_name):
     SCRATCH_DIR=/work/${MACHINE_USERNAME}
     DEPLOYMENT_PATH=agave-deployment
     AGAVE_JSON_PARSER=jq
-    PATH=$HOME/swan/cli/bin:$PATH
+    PATH=$HOME/agave-model/cli/bin:$PATH
     """)
     
     
