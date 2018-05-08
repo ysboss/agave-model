@@ -77,7 +77,7 @@ def configure(agave_username, machine_username, machine_name, project_name):
     """)
     
     print (os.popen(repvar("systems-addupdate -F ${STORAGE_MACHINE}.txt"),'r').read())
-    print (os.popen(repvar("sshpass -f MACHINE_PASSWD.txt ssh ${MACHINE_USERNAME}@${MACHINE_FULL} -p ${PORT} (sinfo || qstat -q)"),'r').read())
+    print (os.popen(repvar("sshpass -f MACHINE_PASSWD.txt ssh -o StrictHostKeyChecking=no ${MACHINE_USERNAME}@${MACHINE_FULL} -p ${PORT} (sinfo || qstat -q)"),'r').read())
     
    
     setvar("""
@@ -87,7 +87,7 @@ def configure(agave_username, machine_username, machine_name, project_name):
     # We figure out the number of processes automatically.
     # This assumes the head node and compute nodes have
     # the same number of procs.
-    CPUINFO=$(sshpass -f MACHINE_PASSWD.txt ssh ${MACHINE_USERNAME}@${MACHINE_FULL} -p ${PORT} lscpu)
+    CPUINFO=$(sshpass -f MACHINE_PASSWD.txt ssh -o StrictHostKeyChecking=no ${MACHINE_USERNAME}@${MACHINE_FULL} -p ${PORT} lscpu)
     QUEUE=checkpt # Name of default queue
     NODES=42 # Number of nodes in queue
     """)
