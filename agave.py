@@ -40,12 +40,7 @@ def configure(agave_username, machine_username, machine_name, project_name):
     print (os.popen("git clone https://bitbucket.org/agaveapi/cli.git",'r').read())
     
     print (os.popen("tenants-init -t agave.prod",'r').read())
-
-   
-  #  cmd1 = repvar("clients-create -p $AGAVE_PASSWD -S -N $APP_NAME -u $AGAVE_USERNAME")
     
-  #  output = os.popen(cmd1,'r')
-  #  print (output.read())
     print (os.popen(repvar("clients-create -p $AGAVE_PASSWD -S -N $APP_NAME -u $AGAVE_USERNAME"),'r').read())
     
     print (os.popen(repvar("auth-tokens-create -u $AGAVE_USERNAME -p $AGAVE_PASSWD"),'r').read())
@@ -82,7 +77,7 @@ def configure(agave_username, machine_username, machine_name, project_name):
     """)
     
     print (os.popen(repvar("systems-addupdate -F ${STORAGE_MACHINE}.txt"),'r').read())
-    print (os.popen(repvar("ssh -o IdentityFile=${MACHINE}-key ${MACHINE_USERNAME}@${MACHINE_FULL} -p ${PORT} (sinfo || qstat -q)"),'r').read())
+    print (os.popen(repvar("sshpass -f MACHINE_PASSWD.txt ssh ${MACHINE_USERNAME}@${MACHINE_FULL} -p ${PORT} (sinfo || qstat -q)"),'r').read())
     
    
     setvar("""
