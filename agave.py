@@ -87,7 +87,7 @@ def configure(agave_username, machine_username, machine_name, project_name):
     # We figure out the number of processes automatically.
     # This assumes the head node and compute nodes have
     # the same number of procs.
-    CPUINFO=$(ssh -o "IdentityFile=${MACHINE}-key" ${MACHINE_USERNAME}@${MACHINE_FULL} -p ${PORT} lscpu)
+    CPUINFO=$(sshpass -f MACHINE_PASSWD.txt ssh ${MACHINE_USERNAME}@${MACHINE_FULL} -p ${PORT} lscpu)
     QUEUE=checkpt # Name of default queue
     NODES=42 # Number of nodes in queue
     """)
