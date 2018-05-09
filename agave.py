@@ -5,6 +5,11 @@ import subprocess
 
 from setvar import *
 
+def cmd(cmd):
+    cmd = repvar(cmd)
+    print('cmd:',cmd)
+    os.system(cmd + " 2>&1")
+
 def configure(agave_username, machine_username, machine_name, project_name):
     
     #subprocess.call("mkdir -p ~/swan", shell = True)
@@ -37,22 +42,17 @@ def configure(agave_username, machine_username, machine_name, project_name):
     
     setvar("APP_NAME=${BASE_APP_NAME}-${MACHINE}-${AGAVE_USERNAME}")
     
-    print (os.popen("git clone https://bitbucket.org/agaveapi/cli.git",'r').read())
+    cmd("git clone https://bitbucket.org/agaveapi/cli.git",'r')
     
-    print (os.popen("tenants-init -t agave.prod",'r').read())
+    cmd("tenants-init -t agave.prod",'r')
     
-    print (os.popen(repvar("clients-create -p $AGAVE_PASSWD -S -N $APP_NAME -u $AGAVE_USERNAME"),'r').read())
+    cmd("clients-delete -u $AGAVE_USERNAME -p $AGAVE_PASSWD $APP_NAME")
+    cmd("clients-create -p $AGAVE_PASSWD -S -N $APP_NAME -u $AGAVE_USERNAME")
     
-    print (os.popen(repvar("auth-tokens-create -u $AGAVE_USERNAME -p $AGAVE_PASSWD"),'r').read())
+    cmd("auth-tokens-create -u $AGAVE_USERNAME -p $AGAVE_PASSWD")
     
-    print (os.popen(repvar("jsonpki --public ${MACHINE}-key.pub > ${MACHINE}-key.pub.txt"),'r').read())
+    cmd("auth-tokens-refresh",'r')
     
-    print (os.popen(repvar("jsonpki --private ${MACHINE}-key > ${MACHINE}-key.txt"),'r').read())
-    
-    print (os.popen("auth-tokens-refresh",'r').read())
-    
-    os.environ["PUB_KEY"]=readfile("${MACHINE}-key.pub.txt").strip()
-    os.environ["PRIV_KEY"]=readfile("${MACHINE}-key.txt").strip()
     setvar("STORAGE_MACHINE=${MACHINE}-storage-${AGAVE_USERNAME}3")
     
     writefile("${STORAGE_MACHINE}.txt","""{
@@ -76,8 +76,8 @@ def configure(agave_username, machine_username, machine_name, project_name):
     }
     """)
     
-    print (os.popen(repvar("systems-addupdate -F ${STORAGE_MACHINE}.txt"),'r').read())
-    print (os.popen(repvar("sshpass -f MACHINE_PASSWD.txt ssh -o StrictHostKeyChecking=no ${MACHINE_USERNAME}@${MACHINE_FULL} -p ${PORT} (sinfo || qstat -q)"),'r').read())
+    cmd("systems-addupdate -F ${STORAGE_MACHINE}.txt")
+    cmd("sshpass -f MACHINE_PASSWD.txt ssh -o StrictHostKeyChecking=no ${MACHINE_USERNAME}@${MACHINE_FULL} -p ${PORT} (sinfo || qstat -q)"),'r')
     
    
     setvar("""
@@ -157,7 +157,7 @@ def configure(agave_username, machine_username, machine_name, project_name):
         "workDir": "${WORK_DIR}"
     }""")                        
 
-    print (os.popen(repvar("systems-addupdate -F ${EXEC_MACHINE}.txt"),'r').read())
+    cmd("systems-addupdate -F ${EXEC_MACHINE}.txt")
     
     writefile("swan-wrapper.txt","""
     #!/bin/bash
@@ -213,8 +213,8 @@ def configure(agave_username, machine_username, machine_name, project_name):
     tar -zcvf output.tar.gz output
     """)
     
-    print (os.popen(repvar("files-mkdir -S ${STORAGE_MACHINE} -N ${DEPLOYMENT_PATH}"),'r').read())
-    print (os.popen(repvar("files-upload -F swan-wrapper.txt -S ${STORAGE_MACHINE} ${DEPLOYMENT_PATH}/"),'r').read())
+    cmd("files-mkdir -S ${STORAGE_MACHINE} -N ${DEPLOYMENT_PATH}")
+    cmd("files-upload -F swan-wrapper.txt -S ${STORAGE_MACHINE} ${DEPLOYMENT_PATH}/")
     
     
     writefile("test.txt","""
@@ -222,8 +222,8 @@ def configure(agave_username, machine_username, machine_name, project_name):
     swan-wrapper.txt
     """)
     
-    print (os.popen(repvar("files-mkdir -S ${STORAGE_MACHINE} -N ${DEPLOYMENT_PATH}"),'r').read())
-    print (os.popen(repvar("files-upload -F test.txt -S ${STORAGE_MACHINE} ${DEPLOYMENT_PATH}/"),'r').read())
+    cmd("files-mkdir -S ${STORAGE_MACHINE} -N ${DEPLOYMENT_PATH}"),'r')
+    cmd("files-upload -F test.txt -S ${STORAGE_MACHINE} ${DEPLOYMENT_PATH}/")
     
 
     writefile("${APP_NAME}.txt","""
@@ -279,11 +279,11 @@ def configure(agave_username, machine_username, machine_name, project_name):
     """)
     
     
-    print (os.popen(repvar("apps-addupdate -F ${APP_NAME}.txt"),'r').read())
+    cmd("apps-addupdate -F ${APP_NAME}.txt"),'r')
     
     writefile("input.txt","")
     
-    print (os.popen(repvar("files-upload -F input.txt -S ${STORAGE_MACHINE}/ISAAC"),'r').read())
+    cmd("files-upload -F input.txt -S ${STORAGE_MACHINE}/ISAAC")
     
     
     setvar("EMAIL=ms.ysboss@gmail.com")
