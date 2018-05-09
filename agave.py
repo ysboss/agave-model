@@ -42,16 +42,16 @@ def configure(agave_username, machine_username, machine_name, project_name):
     
     setvar("APP_NAME=${BASE_APP_NAME}-${MACHINE}-${AGAVE_USERNAME}")
     
-    cmd("git clone https://bitbucket.org/agaveapi/cli.git",'r')
+    cmd("git clone https://bitbucket.org/agaveapi/cli.git")
     
-    cmd("tenants-init -t agave.prod",'r')
+    cmd("tenants-init -t agave.prod")
     
     cmd("clients-delete -u $AGAVE_USERNAME -p $AGAVE_PASSWD $APP_NAME")
     cmd("clients-create -p $AGAVE_PASSWD -S -N $APP_NAME -u $AGAVE_USERNAME")
     
     cmd("auth-tokens-create -u $AGAVE_USERNAME -p $AGAVE_PASSWD")
     
-    cmd("auth-tokens-refresh",'r')
+    cmd("auth-tokens-refresh")
     
     setvar("STORAGE_MACHINE=${MACHINE}-storage-${AGAVE_USERNAME}3")
     
@@ -77,7 +77,7 @@ def configure(agave_username, machine_username, machine_name, project_name):
     """)
     
     cmd("systems-addupdate -F ${STORAGE_MACHINE}.txt")
-    cmd("sshpass -f MACHINE_PASSWD.txt ssh -o StrictHostKeyChecking=no ${MACHINE_USERNAME}@${MACHINE_FULL} -p ${PORT} (sinfo || qstat -q)"),'r')
+    cmd("sshpass -f MACHINE_PASSWD.txt ssh -o StrictHostKeyChecking=no ${MACHINE_USERNAME}@${MACHINE_FULL} -p ${PORT} (sinfo || qstat -q)")
     
    
     setvar("""
@@ -222,7 +222,7 @@ def configure(agave_username, machine_username, machine_name, project_name):
     swan-wrapper.txt
     """)
     
-    cmd("files-mkdir -S ${STORAGE_MACHINE} -N ${DEPLOYMENT_PATH}"),'r')
+    cmd("files-mkdir -S ${STORAGE_MACHINE} -N ${DEPLOYMENT_PATH}")
     cmd("files-upload -F test.txt -S ${STORAGE_MACHINE} ${DEPLOYMENT_PATH}/")
     
 
@@ -279,7 +279,7 @@ def configure(agave_username, machine_username, machine_name, project_name):
     """)
     
     
-    cmd("apps-addupdate -F ${APP_NAME}.txt"),'r')
+    cmd("apps-addupdate -F ${APP_NAME}.txt")
     
     writefile("input.txt","")
     
