@@ -14,5 +14,5 @@ RUN pip3 install setvar --user
 WORKDIR /home/jupuser
 RUN git clone https://github.com/ysboss/agave-model.git
 WORKDIR /home/jupuser/agave-model
-CMD ["/bin/bash", "-c", "jupyter notebook --ip 0.0.0.0 --no-browser --port 8003"]
+CMD ["jupyter","notebook","--ip=0.0.0.0","--no-browser","--port=8006"]
 #CMD jupyter notebook --ip 0.0.0.0 --no-browser --port 8003

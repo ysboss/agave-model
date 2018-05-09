@@ -5,9 +5,10 @@ import subprocess
 
 from setvar import *
 
-def cmd(cmd):
+def cmd(cmd,show=True):
     cmd = repvar(cmd)
-    print('cmd:',cmd)
+    if show:
+        print('cmd:',cmd)
     os.system(cmd + " 2>&1")
 
 def configure(agave_username, machine_username, machine_name, project_name):
@@ -46,10 +47,10 @@ def configure(agave_username, machine_username, machine_name, project_name):
     
     cmd("tenants-init -t agave.prod")
     
-    cmd("clients-delete -u $AGAVE_USERNAME -p $AGAVE_PASSWD $APP_NAME")
-    cmd("clients-create -p $AGAVE_PASSWD -S -N $APP_NAME -u $AGAVE_USERNAME")
+    cmd("clients-delete -u $AGAVE_USERNAME -p $AGAVE_PASSWD $APP_NAME",show=False)
+    cmd("clients-create -p $AGAVE_PASSWD -S -N $APP_NAME -u $AGAVE_USERNAME",show=False)
     
-    cmd("auth-tokens-create -u $AGAVE_USERNAME -p $AGAVE_PASSWD")
+    cmd("auth-tokens-create -u $AGAVE_USERNAME -p $AGAVE_PASSWD",show=False)
     
     cmd("auth-tokens-refresh")
     
