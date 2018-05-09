@@ -209,7 +209,7 @@ def configure(agave_username, machine_username, machine_name, project_name):
     mpiexec --machinefile \${PBS_NODEFILE} swan.exe
     rm -f PRINT-*
     cd ..
-    cp -r input output
+    cp -r input/* output
     tar -zcvf output.tar.gz output
     """)
     
