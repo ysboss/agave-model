@@ -174,7 +174,7 @@ def configure(agave_username, machine_username, machine_name, project_name):
     # directory. Again, for debugging purposes.
     pwd
     echo ==JOB=============
-    EXE_DIR=/home/${MACHINE_USERNAME}/ISAAC
+    #EXE_DIR=/home/${MACHINE_USERNAME}/ISAAC
 
     if [ "\${PBS_NODEFILE}" = "" ]
     then
@@ -217,7 +217,6 @@ def configure(agave_username, machine_username, machine_name, project_name):
     """)
     
     cmd("files-mkdir -S ${STORAGE_MACHINE} -N ${DEPLOYMENT_PATH}")
-    cmd("files-mkdir -S ${STORAGE_MACHINE} -N ISAAC")
     cmd("files-upload -F swan-wrapper.txt -S ${STORAGE_MACHINE} ${DEPLOYMENT_PATH}/")
     
     
@@ -287,7 +286,7 @@ def configure(agave_username, machine_username, machine_name, project_name):
     
     writefile("input.txt","")
     
-    cmd("files-upload -F input.txt -S ${STORAGE_MACHINE}/ISAAC")
+    cmd("files-upload -F input.txt -S ${STORAGE_MACHINE}/")
     
     
     setvar("EMAIL=ms.ysboss@gmail.com")
