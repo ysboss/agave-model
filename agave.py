@@ -207,8 +207,11 @@ def configure(agave_username, machine_username, machine_name, project_name):
     #cd ..
     #cp -r input/* output
     #tar -zcvf output.tar.gz output
-   ls
-    /project/singularity/2.4.2/bin/singularity exec --bind \$PWD:/workdir --bind /var/spool --bind /etc/ssh/ssh_known_hosts /project/sbrandt/chemora/images/swan.simg mpirun -np 4 --machinefile \${PBS_NODEFILE} /model/swan4120/swan.exe
+    echo cd /workdir/input > runswan.sh
+    echo mpirun -np 1 /model/swan4120/swan.exe >> runswan.sh
+    /project/singularity/2.4.2/bin/singularity exec --bind \$PWD:/workdir --bind /var/spool --bind /etc/ssh/ssh_known_hosts /project/sbrandt/chemora/images/swan.simg bash \$PWD/runswan.sh
+    mv input output
+    tar cvzf output.tar.gz output
 
     """)
     
