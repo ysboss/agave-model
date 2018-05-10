@@ -78,7 +78,7 @@ def configure(agave_username, machine_username, machine_name, project_name):
     """)
     
     cmd("systems-addupdate -F ${STORAGE_MACHINE}.txt")
-    cmd("sshpass -f MACHINE_PASSWD.txt ssh -o StrictHostKeyChecking=no ${MACHINE_USERNAME}@${MACHINE_FULL} -p ${PORT} (sinfo || qstat -q)")
+    #cmd("sshpass -f MACHINE_PASSWD.txt ssh -o StrictHostKeyChecking=no ${MACHINE_USERNAME}@${MACHINE_FULL} -p ${PORT} (sinfo || qstat -q)")
     
    
     setvar("""
