@@ -215,6 +215,7 @@ def configure(agave_username, machine_username, machine_name, project_name):
     """)
     
     cmd("files-mkdir -S ${STORAGE_MACHINE} -N ${DEPLOYMENT_PATH}")
+    cmd("files-mkdir -S ${STORAGE_MACHINE} -N ISAAC")
     cmd("files-upload -F swan-wrapper.txt -S ${STORAGE_MACHINE} ${DEPLOYMENT_PATH}/")
     
     
