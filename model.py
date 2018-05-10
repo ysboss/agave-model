@@ -28,6 +28,12 @@ from buoy import Buoytable
 import subprocess
 
 
+def cmd(cmd,show=True):
+    cmd = repvar(cmd)
+    if show:
+        print('cmd:',cmd)
+    os.system(cmd + " 2>&1")
+
 
 
 
@@ -305,7 +311,7 @@ def runfun_btn_clicked(a):
     #setvar("""PATH=$HOME/swan/cli/bin:$PATH""")
     #print (os.popen("auth-tokens-refresh",'r').read())
     if (modelTitle.value == "SWAN"): 
-        os.system("files-upload -F input -S ${STORAGE_MACHINE} ${DEPLOYMENT_PATH}/")
+        cmd("files-upload -F input -S ${STORAGE_MACHINE} ${DEPLOYMENT_PATH}/")
         submitJob(numnodeSlider.value,numprocSlider.value) 
     
 runBtn.on_click(runfun_btn_clicked)
