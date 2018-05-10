@@ -128,7 +128,7 @@ def configure(agave_username, machine_username, machine_name, project_name):
                 "maxNodes": ${NODES},
                 "maxProcessorsPerNode": ${PROCS},
                 "minProcessorsPerNode": 1,
-               "maxRequestedTime": "${MAX_TIME}"
+                "maxRequestedTime": "${MAX_TIME}"
             }
         ],
         "login": {
@@ -208,9 +208,10 @@ def configure(agave_username, machine_username, machine_name, project_name):
     #cd ..
     #cp -r input/* output
     #tar -zcvf output.tar.gz output
-    echo cd /workdir/input > runswan.sh
-    echo mpirun -np 1 /model/swan4120/swan.exe >> runswan.sh
-    /project/singularity/2.4.2/bin/singularity exec --bind \$PWD:/workdir --bind /var/spool --bind /etc/ssh/ssh_known_hosts /project/sbrandt/chemora/images/swan.simg bash \$PWD/runswan.sh
+    tar xzvf input.tgz
+    echo cd /workdir/input > input/runswan.sh
+    echo mpirun -np 1 /model/swan4120/swan.exe >> input/runswan.sh
+    /project/singularity/2.4.2/bin/singularity exec --bind \$PWD:/workdir --bind /var/spool --bind /etc/ssh/ssh_known_hosts /project/sbrandt/chemora/images/swan.simg bash /workdir/input/runswan.sh
     mv input output
     tar cvzf output.tar.gz output
 
@@ -247,9 +248,9 @@ def configure(agave_username, machine_username, machine_name, project_name):
         "modules":[],
         "inputs":[
             {   
-            "id":"parfile",
+            "id":"input tarball",
             "details":{  
-                "label":"null parfile",
+                "label":"input tarball",
                 "description":"",
                 "argument":null,
                 "showArgument":false
@@ -307,7 +308,7 @@ def submitJob(nodes,procs):
         "archive": false,
         "archiveSystem": "${STORAGE_MACHINE}",
         "inputs": {
-            "parfile": ""
+            "parfile": "input.tgz"
         },
         "parameters": {
         },

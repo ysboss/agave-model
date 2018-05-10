@@ -311,7 +311,8 @@ def runfun_btn_clicked(a):
     #setvar("""PATH=$HOME/swan/cli/bin:$PATH""")
     #print (os.popen("auth-tokens-refresh",'r').read())
     if (modelTitle.value == "SWAN"): 
-        cmd("files-upload -F input -S ${STORAGE_MACHINE} ${DEPLOYMENT_PATH}/")
+        cmd("tar cvzf input.tgz input")
+        cmd("files-upload -F input.tgz -S ${STORAGE_MACHINE} ${DEPLOYMENT_PATH}/")
         submitJob(numnodeSlider.value,numprocSlider.value) 
     
 runBtn.on_click(runfun_btn_clicked)
