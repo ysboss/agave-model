@@ -8,6 +8,7 @@ import sys
 import numpy as np
 from numpy import NaN
 import os
+import re
 
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
@@ -126,8 +127,8 @@ input_items = [
 
 def uploadInput_Btn_clicked(a):
     os.system("mkdir -p input")
-    cmd = "cp -a "+inputText.value+"/. input/"
-    os.system(cmd)
+    rcmd = "cp -a "+inputText.value+"/. input/"
+    cmd(rcmd)
 
 uploadInputBtn.on_click(uploadInput_Btn_clicked)
 
@@ -204,7 +205,7 @@ def saveInput_Btn_clicked(a):
     tb11_value = judgeBtn(togBtn11, "TM02")
     tb12_value = judgeBtn(togBtn12, "PDIR")
         
-    cmd = "TABLE  'BUOYS' HEAD  'buoy.tab' "+tb1_value+" "+tb2_value+" "+tb3_value+" "+tb4_value+" "+tb5_value+" "+tb6_value+" "+ tb7_value+" "+tb8_value+" "+tb9_value+" "+tb10_value+" "+tb11_value+" "+tb12_value+" OUT 20120826.000000 "+togBtns.value+" HR"
+    rcmd = "TABLE  'BUOYS' HEAD  'buoy.tab' "+tb1_value+" "+tb2_value+" "+tb3_value+" "+tb4_value+" "+tb5_value+" "+tb6_value+" "+ tb7_value+" "+tb8_value+" "+tb9_value+" "+tb10_value+" "+tb11_value+" "+tb12_value+" OUT 20120826.000000 "+togBtns.value+" HR"
 
     with open("tmp","w") as tmp:
         f = open("input/INPUT","r+")
@@ -212,7 +213,7 @@ def saveInput_Btn_clicked(a):
         lines = f.readlines()
         for line in lines:
             if (index == 36):
-                tmp.write(cmd+'\n')
+                tmp.write(rcmd+'\n')
             elif (index == 37):
                 if(togBtn14.value==True):
                     tmp.write("SPEC 'BUOYS' SPEC1D ABS 'buoy_sp1d' OUT 20120826.000000 "+togBtns.value+" HR\n")
@@ -409,8 +410,8 @@ jobListBtn.on_click(jobList_btn_clicked)
 
 def jobOutput_btn_clicked(a):
     jobid = jobSelect.value[:-9] 
-    cmd = "jobs-output-list "+jobid
-    out = os.popen(cmd,'r').read()
+    rcmd = "jobs-output-list "+jobid
+    out = os.popen(rcmd,'r').read()
     out1 = out.splitlines()
     outputSelect.options = out1
     
@@ -419,14 +420,18 @@ jobOutputBtn.on_click(jobOutput_btn_clicked)
 def download_btn_clicked(a):
     jobid = jobSelect.value[:-9] 
     if(outputSelect.value.find('.')==-1):
-        cmd = "jobs-output-get -r "+ jobid +" "+ outputSelect.value
+        rcmd = "jobs-output-get -r "+ jobid +" "+ outputSelect.value
     else:
-        cmd = "jobs-output-get "+ jobid +" "+ outputSelect.value
-    print (os.popen(cmd,'r').read())
+        rcmd = "jobs-output-get "+ jobid +" "+ outputSelect.value
+    cmd(rcmd)
     
     if(outputSelect.value == 'output.tar.gz'):
-        cmd = 'tar -zxvf output.tar.gz'
-        os.popen(cmd,'r').read()
+        rcmd = 'tar -zxvf output.tar.gz'
+        cmd(rcmd)
+    if(re.match(r'.*\.(txt|out|err)',outputSelect.value)):
+        with open(outputSelect.value,'r') as fd:
+            for line in fd.readlines():
+                print(line,end='')
 
 downloadOpBtn.on_click(download_btn_clicked)
 

@@ -168,11 +168,6 @@ def configure(agave_username, machine_username, machine_name, project_name):
     # for debugging, so we can see what's
     # going on.
     set -x
-    echo ==ENV=============
-    # The env command prints out the
-    # entire execution environment. This
-    # is also present for debugging purposes.
-    env
     echo ==PWD=============
     # We also print out the execution
     # directory. Again, for debugging purposes.
@@ -206,15 +201,19 @@ def configure(agave_username, machine_username, machine_name, project_name):
     fi
 
     # Execute our MPI command.
-    cd input
-    mpiexec --machinefile \${PBS_NODEFILE} swan.exe
-    rm -f PRINT-*
-    cd ..
-    cp -r input/* output
-    tar -zcvf output.tar.gz output
+    #cd input
+    #mpiexec --machinefile \${PBS_NODEFILE} swan.exe
+    #rm -f PRINT-*
+    #cd ..
+    #cp -r input/* output
+    #tar -zcvf output.tar.gz output
+   ls
+    /project/singularity/2.4.2/bin/singularity exec --bind \$PWD:/workdir --bind /var/spool --bind /etc/ssh/ssh_known_hosts /project/sbrandt/chemora/images/swan.simg mpirun -np 4 --machinefile \${PBS_NODEFILE} /model/swan4120/swan.exe
+
     """)
     
     cmd("files-mkdir -S ${STORAGE_MACHINE} -N ${DEPLOYMENT_PATH}")
+    cmd("files-mkdir -S ${STORAGE_MACHINE} -N ISAAC")
     cmd("files-upload -F swan-wrapper.txt -S ${STORAGE_MACHINE} ${DEPLOYMENT_PATH}/")
     
     
@@ -319,6 +318,36 @@ def submitJob(nodes,procs):
             "url":"${EMAIL}",
             "event":"FAILED",
             "persistent":false
+        },
+        {
+            "url":"https://www.cct.lsu.edu/~sbrandt/pushbullet.php?key=${PBTOK}&status=\${JOB_STATUS}:\${JOB_ID}",
+            "event":"RUNNING",
+            "persistent":"false"
+        },
+        {
+            "url":"https://www.cct.lsu.edu/~sbrandt/pushbullet.php?key=${PBTOK}&status=\${JOB_STATUS}:\${JOB_ID}",
+            "event":"KILLED",
+            "persistent":"false"
+        },
+        {
+            "url":"https://www.cct.lsu.edu/~sbrandt/pushbullet.php?key=${PBTOK}&status=\${JOB_STATUS}:\${JOB_ID}",
+            "event":"STOPPED",
+            "persistent":"false"
+        },
+        {
+            "url":"https://www.cct.lsu.edu/~sbrandt/pushbullet.php?key=${PBTOK}&status=\${JOB_STATUS}:\${JOB_ID}",
+            "event":"PAUSED",
+            "persistent":"false"
+        },
+        {
+            "url":"https://www.cct.lsu.edu/~sbrandt/pushbullet.php?key=${PBTOK}&status=\${JOB_STATUS}:\${JOB_ID}",
+            "event":"SUBMITTING",
+            "persistent":"false"
+        },
+        {
+            "url":"https://www.cct.lsu.edu/~sbrandt/pushbullet.php?key=${PBTOK}&status=\${JOB_STATUS}:\${JOB_ID}",
+            "event":"QUEUED",
+            "persistent":"false"
         },
         {
             "url":"https://www.cct.lsu.edu/~sbrandt/pushbullet.php?key=${PBTOK}&status=\${JOB_STATUS}:\${JOB_ID}",
