@@ -9,6 +9,7 @@ def cmd(cmd,show=True):
     cmd = repvar(cmd)
     if show:
         print('cmd:',cmd)
+        os.write(1,(cmd+'\n').encode())
     os.system(cmd + " 2>&1")
 
 def configure(agave_username, machine_username, machine_name, project_name):
