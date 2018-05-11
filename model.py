@@ -25,17 +25,7 @@ from shutil import copyfile
 
 from buoy import Buoytable
 
-import subprocess
-
-
-def cmd(cmd,show=True):
-    cmd = repvar(cmd)
-    if show:
-        print('cmd:',cmd)
-    os.system(cmd + " 2>&1")
-
-
-
+from command import cmd
 
 ######################## Input tab ############################################################
 Time = ""
@@ -308,8 +298,6 @@ abortBtn = Button(
 
 def runfun_btn_clicked(a):
     
-    #setvar("""PATH=$HOME/swan/cli/bin:$PATH""")
-    #print (os.popen("auth-tokens-refresh",'r').read())
     if (modelTitle.value == "SWAN"): 
         cmd("tar cvzf input.tgz input")
         cmd("files-upload -F input.tgz -S ${STORAGE_MACHINE} ${DEPLOYMENT_PATH}/")
@@ -394,23 +382,9 @@ downloadOpBtn = Button(description='Get selected ouput', layout= Layout(
 ))
 
 def jobList_btn_clicked(a):
-    #os.popen("auth-tokens-refresh",'r').read()
-    #print (os.popen("auth-tokens-refresh",'r').read())
-    out = os.popen("jobs-list -l 10",'r').read()
-    out1 = out.splitlines()
+    cout = cmd("jobs-list -l 10")
+    out1 = cout["stdout"]
     jobSelect.options = out1
-    #Input = subprocess.getoutput("jobs-list -l 10")
-    #jobSelect.options = Input[1]                             
-    #print(Input[1])
-    
-    #out = subprocess.Popen(['jobs-list','-l','10'],
-    #                stdout=subprocess.PIPE,
-    #                stderr=subprocess.STDOUT)
-    
-    #stdout,stderr = out.communicate()
-    #out1 = stdout.splitlines()
-    
-    #jobsarea.value = stdout
     
 jobListBtn.on_click(jobList_btn_clicked)
 
@@ -418,27 +392,33 @@ jobListBtn.on_click(jobList_btn_clicked)
 def jobOutput_btn_clicked(a):
     jobid = jobSelect.value[:-9] 
     rcmd = "jobs-output-list "+jobid
-    out = os.popen(rcmd,'r').read()
-    out1 = out.splitlines()
+    cout = cmd(rcmd)
+    out1 = cout["stdout"]
     outputSelect.options = out1
     
 jobOutputBtn.on_click(jobOutput_btn_clicked)
 
 def download_btn_clicked(a):
-    jobid = jobSelect.value[:-9] 
-    if(outputSelect.value.find('.')==-1):
-        rcmd = "jobs-output-get -r "+ jobid +" "+ outputSelect.value
-    else:
-        rcmd = "jobs-output-get "+ jobid +" "+ outputSelect.value
-    cmd(rcmd)
-    
-    if(outputSelect.value == 'output.tar.gz'):
-        rcmd = 'tar -zxvf output.tar.gz'
+    try:
+        jobid = jobSelect.value[:-9] 
+        if(outputSelect.value.find('.')==-1):
+            rcmd = "jobs-output-get -r "+ jobid +" "+ outputSelect.value
+        else:
+            rcmd = "jobs-output-get "+ jobid +" "+ outputSelect.value
         cmd(rcmd)
-    if(re.match(r'.*\.(txt|out|err)',outputSelect.value)):
-        with open(outputSelect.value,'r') as fd:
-            for line in fd.readlines():
-                print(line,end='')
+        
+        if(outputSelect.value == 'output.tar.gz'):
+            cmd("rm -fr output")
+            rcmd = 'tar -zxvf output.tar.gz'
+            cmd(rcmd)
+        elif(re.match(r'.*\.(txt|out|err|ipcexe)',outputSelect.value)):
+            with open(outputSelect.value,'r') as fd:
+                for line in fd.readlines():
+                    print(line,end='')
+        else:
+            print('value=(',outputSelect.value,')',sep='')
+    except Exception as ex:
+        print("DIED!",ex)
 
 downloadOpBtn.on_click(download_btn_clicked)
 
@@ -662,7 +642,7 @@ tab_nest.set_title(3, 'Show 1D plots')
 tab_nest.set_title(4, 'Show 2D plots')
 
 setvar("""PATH=$HOME/swan/cli/bin:$PATH""")
-os.popen("auth-tokens-refresh",'r').read()
+cmd("auth-tokens-refresh")
 clear_output()
 
 display(tab_nest)
