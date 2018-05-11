@@ -9,7 +9,7 @@ item_layout = Layout(
 )
 
 agaveText = Text()
-agavepwText = Text()
+execMachineText = Text()
 machineNameText = Text()
 appText = Text()
 pbtokText = Text()
@@ -21,17 +21,17 @@ confBtn = Button(description='Configure', layout= Layout(
     disabled=False
 ))
 
-#def confBtn_click(a):
-    #configure(agaveText.value, machineText.value, machineNameText.value, baseappText.value)
+def confBtn_click(a):
+    configure2(agaveText.value, execMachineText.value, machineNameText.value, appText.value)
 
-#confBtn.on_click(confBtn_click)
+confBtn.on_click(confBtn_click)
 
 items = [
     Box([Label(value='Agave username', layout = Layout(width = '140px')), agaveText], layout = item_layout),
-    Box([Label(value='Agave password', layout = Layout(width = '140px')), agavepwText], layout = item_layout),
+    Box([Label(value='Execute machine', layout = Layout(width = '140px')), execMachineText], layout = item_layout),
     Box([Label(value='Storage system name', layout = Layout(width = '140px')), machineNameText], layout = item_layout),
     Box([Label(value='Project name', layout = Layout(width = '140px')), appText], layout = item_layout),
-    Box([Label(value='PBTOK', layout = Layout(width = '140px')), pbtokText], layout = item_layout),
+    #Box([Label(value='PBTOK', layout = Layout(width = '140px')), pbtokText], layout = item_layout),
     Box([confBtn])
 ]
 
