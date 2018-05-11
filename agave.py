@@ -1,21 +1,12 @@
 import re
 import os
 import sys
-import subprocess
+from command import cmd
 
 from setvar import *
 
-def cmd(cmd,show=True):
-    cmd = repvar(cmd)
-    if show:
-        print('cmd:',cmd)
-        os.write(1,(cmd+'\n').encode())
-    os.system(cmd + " 2>&1")
-
 def configure(agave_username, machine_username, machine_name, project_name):
     
-    #subprocess.call("mkdir -p ~/swan", shell = True)
-    #subprocess.call("cd ~/swan", shell = True)
     g = re.match(r'(\w+)\.(.*)',machine_name)
     os.environ["MACHINE"] = g.group(1)
     os.environ["DOMAIN"] = g.group(2)
@@ -381,8 +372,6 @@ def submitJob(nodes,procs):
     }
     """)
 
-    #os.system('jobs-submit -F job.txt')
-    #subprocess.call("jobs-submit -F job.txt", stdout=subprocess.PIPE, shell = True)
     setvar("""
     # Capture the output of the job submit command
     OUTPUT=$(jobs-submit -F job.txt)
