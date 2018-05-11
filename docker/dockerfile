@@ -21,6 +21,7 @@ RUN perl -p -i -e 's/0\.0\.0\.0/1.1.1.1/' /usr/local/lib/python3.5/dist-packages
 USER jupuser
 RUN git config --global user.email "syuan@lsu.edu"
 RUN git config --global user.name "Shuai Yuan"
+RUN git clone https://bitbucket.org/agaveapi/cli.git
 RUN echo git pull > start.sh
 RUN echo jupyter notebook --ip=0.0.0.0 --port=8003 --no-browser >> start.sh
 
