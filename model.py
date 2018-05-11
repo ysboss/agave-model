@@ -33,12 +33,8 @@ def cmd(cmd,show=True):
     if show:
         print('cmd:',cmd)
     os.system(cmd + " 2>&1")
-
-
-
-
-######################## Input tab ############################################################
-Time = ""
+    
+    
 
 input_item_layout = Layout(
     display = 'flex',
@@ -46,7 +42,19 @@ input_item_layout = Layout(
     justify_content = 'flex-start',
     width = '50%'
 )
+  
+
+modelTitle = Dropdown(options=['SWAN', 'Funwave-tvd','Delft3D'])
+modelBox = Box([Label(value='Model', layout = Layout(width = '100px')), modelTitle], layout = input_item_layout)
+
+
     
+
+
+######################## Input tab ############################################################
+Time = ""
+
+  
 togBtns = ToggleButtons(options=['0.5', '1', '2'],
     description='',
     disabled=False,)
@@ -117,10 +125,10 @@ inputArea = Textarea(layout= Layout(
 ))
 
 inputText = Text()
-modelTitle = Dropdown(options=['SWAN', 'Funwave-tvd','Delft3D'])
+
 
 input_items = [
-    Box([Label(value='Model', layout = Layout(width = '100px')), modelTitle], layout = input_item_layout),
+    modelBox,
     Box([Label(value='Input Directory', layout = Layout(width = '125px')), inputText,uploadInputBtn], layout = input_item_layout),
     togBtnsBox,
     tabBox,
@@ -275,7 +283,23 @@ inputBox = Box(input_items, layout= Layout(
 
 
 
+funtogBtns = ToggleButtons(options=['5', '10', '20'],
+    description='',
+    disabled=False)
+funtogBtnsBox = Box([Label(value='Time Step (h)', layout = Layout(width = '100px')),funtogBtns],Layout = input_item_layout )
+                           
+                           
+funwave_items=[
+    modelBox,
+    funtogBtnsBox
+]                        
 
+funBox = Box(funwave_items, layout= Layout(
+ #   display = 'flex',
+    flex_flow = 'column',
+    align_items='stretch',
+    disabled=False
+))
 
 
 
@@ -651,8 +675,7 @@ Show2DPlotsBox = Box(Show2D_items, layout= Layout(
 
 
 
-
-
+        
 tab_nest = widgets.Tab()
 tab_nest.children = [inputBox, runBox,outputBox, Show1DPlotsBox, Show2DPlotsBox]
 tab_nest.set_title(0, 'Input')
@@ -664,5 +687,18 @@ tab_nest.set_title(4, 'Show 2D plots')
 setvar("""PATH=$HOME/swan/cli/bin:$PATH""")
 os.popen("auth-tokens-refresh",'r').read()
 clear_output()
+
+def on_change(change):
+    if(modelTitle.value == "SWAN"):
+        tab_nest.children = [inputBox, runBox,outputBox, Show1DPlotsBox, Show2DPlotsBox]
+        clear_output()
+        display(tab_nest)
+    if(modelTitle.value == "Funwave-tvd"):
+        tab_nest.children = [funBox, runBox,outputBox, Show1DPlotsBox, Show2DPlotsBox]
+        clear_output()
+        display(tab_nest)
+
+modelTitle.observe(on_change)
+
 
 display(tab_nest)
