@@ -251,7 +251,7 @@ def saveInput_Btn_clicked(a):
                 else:
                     tmp.write("$BLOCK 'COMPGRID' HEADER 'per' LAY 4 PER OUT 20050919.000000 "+togBtns.value+" HR\n")
             elif (index == 45):
-                tmp.write("COMPUTE NONST  20120826.000000 "+togBtns.value+" HR 20120831.000000\n")
+                tmp.write("COMPUTE NONST  20120826.000000 "+togBtns.value+" HR 20120826.020000\n")
             else:
                 tmp.write(line)
             index+=1
