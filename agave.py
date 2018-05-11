@@ -312,7 +312,7 @@ def submitJob(nodes,procs):
     writefile("job.txt","""
     {
         "name":"${JOB_NAME}",
-        "appId": "${APP_NAME}-2.0",
+        "appId": "${APP_NAME}",
         "executionSystem": "${EXEC_MACHINE}",
         "batchQueue": "${QUEUE}",
         "maxRunTime": "01:00:00",
@@ -410,6 +410,9 @@ def configure2(agave_username, exec_machine, storage_name, project_name):
     
     
     cmd("tenants-init -t agave.prod")
+    
+    cmd("clients-delete -u $AGAVE_USERNAME -p $AGAVE_PASSWD $APP_NAME",show=False)
+    cmd("clients-create -p $AGAVE_PASSWD -S -N $APP_NAME -u $AGAVE_USERNAME",show=False)
     
     cmd("auth-tokens-create -u $AGAVE_USERNAME -p $AGAVE_PASSWD",show=False)
     

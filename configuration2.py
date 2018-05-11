@@ -1,6 +1,9 @@
 from agave import *
 from ipywidgets import Box, Text, Layout, Label, Button
 
+readpass("AGAVE_PASSWD")
+readpass("PBTOK")
+
 item_layout = Layout(
     display = 'flex',
     flex_flow = 'row',
@@ -9,9 +12,9 @@ item_layout = Layout(
 )
 
 agaveText = Text()
-execMachineText = Text()
-machineNameText = Text()
-appText = Text()
+execMachineText = Text(value="shelob-exec-stevenrbrandt2")
+machineNameText = Text(value="shelob-storage-stevenrbrandt23")
+appText = Text(value="testing-shelob-stevenrbrandt2-2.0")
 pbtokText = Text()
 confBtn = Button(description='Configure', layout= Layout(
     display = 'flex',
