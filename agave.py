@@ -44,7 +44,7 @@ def configure(agave_username, machine_username, machine_name, project_name):
     
     setvar("APP_NAME=${BASE_APP_NAME}-${MACHINE}-${AGAVE_USERNAME}")
     
-    cmd("git clone https://bitbucket.org/agaveapi/cli.git")
+    #cmd("git clone https://bitbucket.org/agaveapi/cli.git")
     
     cmd("tenants-init -t agave.prod")
     
@@ -174,7 +174,6 @@ def configure(agave_username, machine_username, machine_name, project_name):
     # directory. Again, for debugging purposes.
     pwd
     echo ==JOB=============
-    #EXE_DIR=/home/${MACHINE_USERNAME}/ISAAC
 
     if [ "\${PBS_NODEFILE}" = "" ]
     then
@@ -182,7 +181,7 @@ def configure(agave_username, machine_username, machine_name, project_name):
      # this variable should be set. If it's not,
      # that's a problem.
      echo "The PBS_NODEFILE was not set"
-     
+     \$(\${AGAVE_JOB_CALLBACK_FAILURE})
      exit 2
     fi
 
@@ -197,24 +196,38 @@ def configure(agave_username, machine_username, machine_name, project_name):
     if [ "\${PROCS}" = "" ]
     then
      echo "PROCS was not set"
-     
+     \$(\${AGAVE_JOB_CALLBACK_FAILURE})
      exit 3
     fi
 
-    # Execute our MPI command.
-    #cd input
-    #mpiexec --machinefile \${PBS_NODEFILE} swan.exe
-    #rm -f PRINT-*
-    #cd ..
-    #cp -r input/* output
-    #tar -zcvf output.tar.gz output
+    # Prepare the nodes to run the swan image
+    export SING_OPTS="--bind \$PWD:/workdir --bind /var/spool --bind /etc/ssh/ssh_known_hosts --bind /work --bind /var/spool"
+    for host in \$(cat nodefile.txt)
+    do
+        hostfile="\$HOME/.bash.\${host}.sh"
+        echo "export SING_IMAGE=/project/sbrandt/chemora/images/swan.simg" > \$hostfile
+        echo "export SING_OPTS='\$SING_OPTS'" >> \$hostfile
+    done
+
+    # Create a nodefile that matches our choices at submit time
+    touch nodes.txt
+    for i in \$(seq 1 \${AGAVE_JOB_PROCESSORS_PER_NODE})
+    do
+        cat nodefile.txt >> nodes.txt
+    done
+
+    NP=\$(wc -l < nodes.txt)
+
     tar xzvf input.tgz
-    echo cd /workdir/input > input/runswan.sh
-    echo mpirun -np 1 /model/swan4120/swan.exe >> input/runswan.sh
-    /project/singularity/2.4.2/bin/singularity exec --bind \$PWD:/workdir --bind /var/spool --bind /etc/ssh/ssh_known_hosts /project/sbrandt/chemora/images/swan.simg bash /workdir/input/runswan.sh
+
+    # Create a file to run the code
+    echo echo RUNNING SWAN > input/runswan.sh
+    echo cd /workdir/input >> input/runswan.sh
+    echo mpirun -np \$NP -machinefile /workdir/nodes.txt /model/swan4120/swan.exe >> input/runswan.sh
+
+    /project/singularity/2.4.2/bin/singularity exec \$SING_OPTS /project/sbrandt/chemora/images/swan.simg bash /workdir/input/runswan.sh
     mv input output
     tar cvzf output.tar.gz output
-
     """)
     
     cmd("files-mkdir -S ${STORAGE_MACHINE} -N ${DEPLOYMENT_PATH}")

@@ -6,8 +6,13 @@ RUN pip3 install --upgrade pip
 RUN pip3 install jupyter jupyterhub matplotlib numpy notebook
 RUN npm install -g configurable-http-proxy
 RUN apt-get install -y vim
+
+# Horrible hack to get the URL to display properly
+RUN perl -p -i -e 's/0\.0\.0\.0/1.1.1.1/' /usr/local/lib/python3.5/dist-packages/notebook/notebookapp.py
+
 RUN useradd -m jupuser
 USER jupuser
+
 RUN pip3 install ipywidgets
 RUN jupyter nbextension enable --py widgetsnbextension
 RUN pip3 install setvar --user
@@ -15,12 +20,15 @@ WORKDIR /home/jupuser
 RUN git clone https://github.com/ysboss/agave-model.git
 WORKDIR /home/jupuser/agave-model
 
-# Horrible hack to get the URL to display properly
-USER root
-RUN perl -p -i -e 's/0\.0\.0\.0/1.1.1.1/' /usr/local/lib/python3.5/dist-packages/notebook/notebookapp.py
-USER jupuser
+# Make it possible to use git commands in the image
 RUN git config --global user.email "syuan@lsu.edu"
 RUN git config --global user.name "Shuai Yuan"
+RUN git clone https://bitbucket.org/agaveapi/cli.git
+
+# Configure vim
+RUN echo 'set ai nu ic sw=4 ts=4 expandtab' > ~/.vimrc
+
+# Startup script ensures the latest git repo
 RUN echo git pull > start.sh
 RUN echo jupyter notebook --ip=0.0.0.0 --port=8003 --no-browser >> start.sh
 
