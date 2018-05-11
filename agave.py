@@ -297,11 +297,12 @@ def configure(agave_username, machine_username, machine_name, project_name):
     
     
     cmd("apps-addupdate -F ${APP_NAME}.txt")
+
+    setvar("APP_NAME=${APP_NAME}-2.0")
     
     writefile("input.txt","")
     
     cmd("files-upload -F input.txt -S ${STORAGE_MACHINE}/")
-    
     
     setvar("EMAIL=ms.ysboss@gmail.com")
 
