@@ -19,5 +19,9 @@ WORKDIR /home/jupuser/agave-model
 USER root
 RUN perl -p -i -e 's/0\.0\.0\.0/1.1.1.1/' /usr/local/lib/python3.5/dist-packages/notebook/notebookapp.py
 USER jupuser
+RUN git config --global user.email "syuan@lsu.edu"
+RUN git config --global user.name "Shuai Yuan"
+RUN echo git pull > start.sh
+RUN echo jupyter notebook --ip=0.0.0.0 --port=8003 --no-browser >> start.sh
 
-CMD jupyter notebook --ip 0.0.0.0 --no-browser --port 8003
+CMD bash start.sh
