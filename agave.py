@@ -377,12 +377,40 @@ def submitJob(nodes,procs):
     """)
     
     
+def configure2(agave_username, exec_machine, storage_name, project_name):
     
     
+    setvar("""
+    AGAVE_USERNAME="""+agave_username+"""
+    APP_NAME="""+project_name+"""
+    AGAVE_JSON_PARSER=jq
+    PATH=$HOME/agave-model/cli/bin:$PATH
+    STORAGE_MACHINE="""+storage_name+"""
+    DEPLOYMENT_PATH=agave-deployment
+    EXEC_MACHINE="""+exec_machine+"""
+    QUEUE=checkpt
+    """)
+   
+    
+    readpass("AGAVE_PASSWD")
+    readpass("PBTOK")
     
     
+    cmd("tenants-init -t agave.prod")
+    
+    cmd("auth-tokens-create -u $AGAVE_USERNAME -p $AGAVE_PASSWD",show=False)
+    
+
+    
+   
+    writefile("input.txt","")
+    
+    cmd("files-upload -F input.txt -S ${STORAGE_MACHINE}/")
     
     
+    setvar("EMAIL=ms.ysboss@gmail.com")
+
+
     
     
     
