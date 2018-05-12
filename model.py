@@ -9,7 +9,7 @@ import numpy as np
 from numpy import NaN
 import os
 import re
-from upload import _upload_widget, setInput, _upload
+from upload import upload_widget, set_input
 
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
@@ -120,13 +120,13 @@ inputArea = Textarea(layout= Layout(
 ))
 
 inputText = Text()
-setInput(inputText)
+set_input(inputText)
 
 modelTitle = Dropdown(options=['SWAN', 'Funwave-tvd','Delft3D'])
 
 input_items = [
     Box([Label(value='Model', layout = Layout(width = '100px')), modelTitle], layout = input_item_layout),
-    Box([Label(value='Upload File', layout = Layout(width = '125px')), inputText,_upload_widget], layout = input_item_layout),
+    Box([Label(value='Upload File', layout = Layout(width = '125px')), inputText, upload_widget], layout = input_item_layout),
     togBtnsBox,
     tabBox,
     specBox,
@@ -140,7 +140,8 @@ def uploadInput_Btn_clicked(a):
     #os.system("mkdir -p input")
     #rcmd = "cp -a "+inputText.value+"/. input/"
     #cmd(rcmd)
-    _upload()
+    #_upload()
+    pass
 
 uploadInputBtn.on_click(uploadInput_Btn_clicked)
 
