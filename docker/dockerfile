@@ -10,6 +10,11 @@ RUN apt-get install -y vim
 # Horrible hack to get the URL to display properly
 RUN perl -p -i -e 's/0\.0\.0\.0/1.1.1.1/' /usr/local/lib/python3.5/dist-packages/notebook/notebookapp.py
 
+RUN pip3 install fileupload
+RUN jupyter nbextension install --py fileupload
+RUN jupyter nbextension enable --py fileupload
+
+
 RUN useradd -m jupuser
 USER jupuser
 
