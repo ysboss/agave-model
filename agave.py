@@ -218,6 +218,7 @@ def configure(agave_username, machine_username, machine_name, project_name):
 
     /project/singularity/2.4.2/bin/singularity exec \$SING_OPTS /project/sbrandt/chemora/images/swan.simg bash /workdir/input/runswan.sh
     mv input output
+    rm -f output/PRINT*
     tar cvzf output.tar.gz output
     """)
     
@@ -295,7 +296,9 @@ def configure(agave_username, machine_username, machine_name, project_name):
     
     cmd("files-upload -F input.txt -S ${STORAGE_MACHINE}/")
     
-    setvar("EMAIL=ms.ysboss@gmail.com")
+    setvar("EMAIL=""")
+    
+    print ("Successfully configured Agave")
 
 def submitJob(nodes,procs):
     
@@ -414,7 +417,8 @@ def configure2(agave_username, exec_machine, storage_name, project_name):
     cmd("files-upload -F input.txt -S ${STORAGE_MACHINE}/")
     
     
-    setvar("EMAIL=ms.ysboss@gmail.com")
+    setvar("EMAIL=""")
+    print ("Successfully configured Agave")
 
 
     
