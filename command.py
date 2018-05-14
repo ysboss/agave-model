@@ -11,7 +11,10 @@ def cmd(arg,show=True,keep_endings=False):
         pyargs = arg
     lines = []
     errs  = []
-    print("cmd:"," ".join(pyargs))
+    if show:
+        print("cmd:"," ".join(pyargs))
+    else:
+        print("cmd:",pyargs[0],"...")
     with Popen(pyargs,stderr=PIPE,stdout=PIPE) as pipe:
         for line in pipe.stdout.readlines():
             ld = line.decode()
