@@ -28,8 +28,8 @@ from buoy import Buoytable
 
 from command import cmd
 
-######################## Input tab ############################################################
-Time = ""
+######################## Previous ############################################################
+#Time = ""
 
 input_item_layout = Layout(
     display = 'flex',
@@ -43,11 +43,16 @@ modelTitle = Dropdown(options=['SWAN', 'Funwave-tvd','Delft3D'])
 modelBox = Box([Label(value='Model', layout = Layout(width = '100px')), modelTitle], layout = input_item_layout)
 
 
-    
-
+delft3d_items=[Label(value='Coming soon too', layout = Layout(width = '200px'))]   
+delft3dBox = Box(delft3d_items, layout= Layout(
+ #   display = 'flex',
+    flex_flow = 'column',
+    align_items='stretch',
+    disabled=False
+))
 
 ######################## Input tab ############################################################
-Time = ""
+
 
   
 togBtns = ToggleButtons(options=['0.5', '1', '2'],
@@ -125,7 +130,6 @@ set_input(inputText)
 modelTitle = Dropdown(options=['SWAN', 'Funwave-tvd','Delft3D'])
 
 input_items = [
-    Box([Label(value='Model', layout = Layout(width = '100px')), modelTitle], layout = input_item_layout),
     Box([Label(value='Upload File', layout = Layout(width = '125px')), inputText, upload_widget], layout = input_item_layout),
     togBtnsBox,
     tabBox,
@@ -280,16 +284,10 @@ inputBox = Box(input_items, layout= Layout(
 
 
 
-
-
-funtogBtns = ToggleButtons(options=['5', '10', '20'],
-    description='',
-    disabled=False)
-funtogBtnsBox = Box([Label(value='Time Step (h)', layout = Layout(width = '100px')),funtogBtns],Layout = input_item_layout )
+funtogBtnsBox = Box([Label(value='Coming soon', layout = Layout(width = '100px'))],Layout = input_item_layout )
                            
                            
 funwave_items=[
-    modelBox,
     funtogBtnsBox
 ]                        
 
@@ -679,15 +677,29 @@ clear_output()
 
 def on_change(change):
     if(modelTitle.value == "SWAN"):
-        tab_nest.children = [inputBox, runBox,outputBox, Show1DPlotsBox, Show2DPlotsBox]
-        clear_output()
-        display(tab_nest)
+        out.clear_output()
+        with out:
+            tab_nest.children = [inputBox, runBox,outputBox, Show1DPlotsBox, Show2DPlotsBox]
+            display(tab_nest)
     if(modelTitle.value == "Funwave-tvd"):
-        tab_nest.children = [funBox, runBox,outputBox, Show1DPlotsBox, Show2DPlotsBox]
-        clear_output()
-        display(tab_nest)
-
+        out.clear_output()
+        with out:
+            tab_nest.children = [funBox, runBox,outputBox, Show1DPlotsBox, Show2DPlotsBox]
+            display(tab_nest)
+    if(modelTitle.value == "Delft3D"):
+        out.clear_output()
+        with out:
+            tab_nest.children = [delft3dBox, runBox,outputBox, Show1DPlotsBox, Show2DPlotsBox]
+            display(tab_nest)
+           
 modelTitle.observe(on_change)
 
 
-display(tab_nest)
+display(modelTitle)
+
+out = widgets.Output()
+
+with out:
+    display(tab_nest)
+display(out)
+
