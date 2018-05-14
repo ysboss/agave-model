@@ -71,7 +71,7 @@ togBtn9 = ToggleButton(value = False, description = 'PER')
 togBtn10 = ToggleButton(value = False, description = 'TM01')
 togBtn11 = ToggleButton(value = False, description = 'TM02')
 togBtn12 = ToggleButton(value = False, description = 'PDIR')
-togBtn13 = ToggleButton(value = False, description = 'Select Main Parameters', button_style = 'success')
+togBtn13 = ToggleButton(value = False, description = 'Select All', button_style = 'success')
 
 togBtn14 = ToggleButton(value = False, description = 'sp1d')
 togBtn15 = ToggleButton(value = False, description = 'sp2d')
@@ -136,8 +136,8 @@ input_items = [
     specBox,
     blocBox,
     togBtn13,
-    inputArea,
-    saveInputBtn
+    saveInputBtn,
+    inputArea
 ]
 
 def uploadInput_Btn_clicked(a):
@@ -262,7 +262,7 @@ def saveInput_Btn_clicked(a):
                 else:
                     tmp.write("$BLOCK 'COMPGRID' HEADER 'per' LAY 4 PER OUT 20050919.000000 "+togBtns.value+" HR\n")
             elif (index == 45):
-                tmp.write("COMPUTE NONST  20120826.000000 "+togBtns.value+" HR 20120826.020000\n")
+                tmp.write("COMPUTE NONST  20120826.000000 "+togBtns.value+" HR 20120827.000000\n")
             else:
                 tmp.write(line)
             index+=1
