@@ -296,7 +296,7 @@ def configure(agave_username, machine_username, machine_name, project_name):
     
     cmd("files-upload -F input.txt -S ${STORAGE_MACHINE}/")
     
-    setvar("EMAIL=""")
+    setvar("EMAIL=ms.ysboss@gmail.com")
     
     print ("Successfully configured Agave")
 
@@ -417,7 +417,7 @@ def configure2(agave_username, exec_machine, storage_name, project_name):
     cmd("files-upload -F input.txt -S ${STORAGE_MACHINE}/")
     
     
-    setvar("EMAIL=""")
+    setvar("EMAIL=ms.ysboss@gmail.com")
     print ("Successfully configured Agave")
 
 
