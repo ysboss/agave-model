@@ -1,5 +1,4 @@
-# agave-model
-## Coastal-Modeling Collaborator
+## Coastal-Modeling Collaboratory
 
 To simplify installation, etc., this collaboratory is distributed as a docker container. Please make sure you have docker installed on the laptop or workstation from which you wish to use it.
 
