@@ -19,7 +19,7 @@ Why these arguments?
 
 ## Using the Collaboratory
 
-The first time you use the Collaboratory, you will need to configure it. You will need to provide your Agave password and username. You can get this credential from here: http://togo.agaveplatform.org/auth/#/login
+The first time you use the Collaboratory, you will need to configure it. To do this, click on the `configuration2.ipynb` notebook and execute the first cell. You will then be prompted to provide your Agave password and username. You can get this credential from here: http://togo.agaveplatform.org/auth/#/login
 
 Once you fill in this information, your screen should look similar to this:
 
