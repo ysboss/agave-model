@@ -671,7 +671,7 @@ tab_nest.set_title(2, 'Output')
 tab_nest.set_title(3, 'Show 1D plots')
 tab_nest.set_title(4, 'Show 2D plots')
 
-setvar("""PATH=$HOME/swan/cli/bin:$PATH""")
+setvar("""PATH=$HOME/swan/agave-model/bin:$PATH""")
 cmd("auth-tokens-refresh")
 clear_output()
 
