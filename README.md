@@ -3,7 +3,9 @@ Agave on Coastal models
 
 How to start the container
 
- docker run -it --rm -p 8003:8003 --name model -v /somedirectory/home:/home/jupuser gw18model
+```
+ docker run -it --rm -p 8003:8003 --name model -v /somedirectory/home:/home/jupuser stevenrbrandt/collaboratory
+```
 
 Why these arguments?
 
