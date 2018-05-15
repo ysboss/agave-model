@@ -2,12 +2,12 @@
 set -x
 cd /home/jupuser
 export HOME=/home/jupuser
-U=$(id -u)
-if [ $U = 0 ]
-then
-  echo Error: running as root >&2
-  exit 2
-fi
+#U=$(id -u)
+#if [ $U = 0 ]
+#then
+#  echo Error: running as root >&2
+#  exit 2
+#fi
 
 if [ ! -d agave-model ]
 then
@@ -27,7 +27,7 @@ else
   git checkout -- .
 
   # Pull the newest changes
-  git pull
+  git pull origin $(git rev-parse --abbrev-ref HEAD)
 fi
 
-jupyter notebook --ip=0.0.0.0 --port=8003 --no-browser 
+jupyter notebook --ip=0.0.0.0 --port=8003 --no-browser --allow-root
