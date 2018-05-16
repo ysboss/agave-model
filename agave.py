@@ -16,7 +16,7 @@ def configure(agave_username, machine_username, machine_name, project_name):
     setvar("""
     AGAVE_USERNAME="""+agave_username+"""
     MACHINE_USERNAME="""+machine_username+"""
-    BASE_APP_NAME="""+project_name+"""
+    BASE_APP_NAME=crcollaboratory
     PORT=22
     ALLOCATION=hpc_tutorials
     WORK_DIR=/work/${MACHINE_USERNAME}
@@ -152,9 +152,10 @@ def configure(agave_username, machine_username, machine_name, project_name):
 
     cmd("systems-addupdate -F ${EXEC_MACHINE}.txt")
     
-    writefile("swan-wrapper.txt","""
+    writefile("${APP_NAME}-wrapper.txt","""
     #!/bin/bash
-    echo 'running swan model'
+    trap '\${AGAVE_JOB_CALLBACK_FAILURE}' ERR
+    echo 'running \${simagename} model'
     # Setting the x flag will echo every
     # command onto stderr. This is
     # for debugging, so we can see what's
@@ -191,12 +192,12 @@ def configure(agave_username, machine_username, machine_name, project_name):
      exit 3
     fi
 
-    # Prepare the nodes to run the swan image
+    # Prepare the nodes to run the image
     export SING_OPTS="--bind \$PWD:/workdir --bind /var/spool --bind /etc/ssh/ssh_known_hosts --bind /work --bind /var/spool"
     for host in \$(cat nodefile.txt)
     do
         hostfile="\$HOME/.bash.\${host}.sh"
-        echo "export SING_IMAGE=/project/sbrandt/chemora/images/swan.simg" > \$hostfile
+        echo "export SING_IMAGE=/project/sbrandt/chemora/images/\${simagename}.simg" > \$hostfile
         echo "export SING_OPTS='\$SING_OPTS'" >> \$hostfile
     done
 
@@ -207,28 +208,23 @@ def configure(agave_username, machine_username, machine_name, project_name):
         cat nodefile.txt >> nodes.txt
     done
 
-    NP=\$(wc -l < nodes.txt)
+    export NP=\$(wc -l < nodes.txt)
 
     tar xzvf input.tgz
 
-    # Create a file to run the code
-    echo echo RUNNING SWAN > input/runswan.sh
-    echo cd /workdir/input >> input/runswan.sh
-    echo mpirun -np \$NP -machinefile /workdir/nodes.txt /model/swan4120/swan.exe >> input/runswan.sh
-
-    /project/singularity/2.4.2/bin/singularity exec \$SING_OPTS /project/sbrandt/chemora/images/swan.simg bash /workdir/input/runswan.sh
+    /project/singularity/2.4.2/bin/singularity exec \$SING_OPTS /project/sbrandt/chemora/images/\${simagename}.simg bash /usr/local/bin/runapp.sh
     mv input output
     rm -f output/PRINT*
     tar cvzf output.tar.gz output
     """)
     
     cmd("files-mkdir -S ${STORAGE_MACHINE} -N ${DEPLOYMENT_PATH}")
-    cmd("files-upload -F swan-wrapper.txt -S ${STORAGE_MACHINE} ${DEPLOYMENT_PATH}/")
+    cmd("files-upload -F ${APP_NAME}-wrapper.txt -S ${STORAGE_MACHINE} ${DEPLOYMENT_PATH}/")
     
     
     writefile("test.txt","""
     parfile="input.txt"
-    swan-wrapper.txt
+    ${APP_NAME}-wrapper.txt
     """)
     
     cmd("files-mkdir -S ${STORAGE_MACHINE} -N ${DEPLOYMENT_PATH}")
@@ -239,12 +235,12 @@ def configure(agave_username, machine_username, machine_name, project_name):
     {  
         "name":"${APP_NAME}",
         "version":"2.0",
-        "label":"SWAN",
+        "label":"${APP_NAME}",
         "shortDescription":"Run ISAAC app",
         "longDescription":"",
         "deploymentSystem":"${STORAGE_MACHINE}",
         "deploymentPath":"${DEPLOYMENT_PATH}",
-        "templatePath":"swan-wrapper.txt",
+        "templatePath":"${APP_NAME}-wrapper.txt",
         "testPath":"test.txt",
         "executionSystem":"${EXEC_MACHINE}",
         "executionType":"HPC",
@@ -270,7 +266,32 @@ def configure(agave_username, machine_username, machine_name, project_name):
         }   
 
     ],
-    "parameters":[],
+    "parameters":[
+    {
+      "id": "simagename",
+      "value": {
+        "visible": true,
+        "required": false,
+        "type": "string",
+        "order": 0,
+        "enquote": false,
+        "default": "python",
+        "validator": null
+      },
+      "details": {
+        "label": "Singularity Image",
+        "description": "The Singularity image to run: swan, funwave",
+        "argument": null,
+        "showArgument": false,
+        "repeatArgument": false
+      },
+      "semantics": {
+        "minCardinality": 0,
+        "maxCardinality": 1,
+        "ontology": []
+      }
+    }
+    ],
     "outputs":[  
         {  
             "id":"Output",
@@ -292,17 +313,16 @@ def configure(agave_username, machine_username, machine_name, project_name):
 
     setvar("APP_NAME=${APP_NAME}-2.0")
     
-    writefile("input.txt","")
-    
     cmd("files-upload -F input.txt -S ${STORAGE_MACHINE}/")
     
     setvar("EMAIL=ms.ysboss@gmail.com")
     
     print ("Successfully configured Agave")
 
-def submitJob(nodes,procs):
+def submitJob(nodes,procs,model):
     
-    setvar("JOB_NAME=test-job-3")
+    setvar("MODEL="+model)
+    setvar("JOB_NAME=job-${MODEL}")
     
     writefile("job.txt","""
     {
@@ -319,6 +339,7 @@ def submitJob(nodes,procs):
             "parfile": "input.tgz"
         },
         "parameters": {
+            "simagename":"${MODEL}"
         },
         "notifications": [
         {
@@ -408,14 +429,6 @@ def configure2(agave_username, exec_machine, storage_name, project_name):
     cmd("clients-create -p $AGAVE_PASSWD -S -N $APP_NAME -u $AGAVE_USERNAME",show=False)
     
     cmd("auth-tokens-create -u $AGAVE_USERNAME -p $AGAVE_PASSWD",show=False)
-    
-
-    
-   
-    writefile("input.txt","")
-    
-    cmd("files-upload -F input.txt -S ${STORAGE_MACHINE}/")
-    
     
     setvar("EMAIL=ms.ysboss@gmail.com")
     print ("Successfully configured Agave")

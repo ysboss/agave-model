@@ -224,6 +224,11 @@ def saveInput_Btn_clicked(a):
         
     rcmd = "TABLE  'BUOYS' HEAD  'buoy.tab' "+tb1_value+" "+tb2_value+" "+tb3_value+" "+tb4_value+" "+tb5_value+" "+tb6_value+" "+ tb7_value+" "+tb8_value+" "+tb9_value+" "+tb10_value+" "+tb11_value+" "+tb12_value+" OUT 20120826.000000 "+togBtns.value+" HR"
 
+    if not os.path.exists("input"):
+        cmd("mkdir -p input")
+    for fname in ["b02.bot","b02.wd","b02.xy","buoy10_2012.loc","INPUT","s"]:
+        if not os.path.exists("input/"+fname):
+            cmd("git checkout input/"+fname)
     with open("tmp","w") as tmp:
         f = open("input/INPUT","r+")
         index = 0;
@@ -310,7 +315,7 @@ run_item_layout = Layout(
 )
 
 
-runBtn = Button(description='Run SWAN', layout= Layout(
+runBtn = Button(description='Run', layout= Layout(
     display = 'flex',
     flex_flow = 'row',
     justify_content = 'center',
@@ -332,7 +337,14 @@ def runfun_btn_clicked(a):
     if (modelTitle.value == "SWAN"): 
         cmd("tar cvzf input.tgz input")
         cmd("files-upload -F input.tgz -S ${STORAGE_MACHINE} ${DEPLOYMENT_PATH}/")
-        submitJob(numnodeSlider.value,numprocSlider.value) 
+        submitJob(numnodeSlider.value,numprocSlider.value,"swan") 
+    elif (modelTitle.value == "Funwave-tvd"): 
+        cmd("rm -fr input")
+        cmd("mkdir input")
+        cmd("cp input.txt input")
+        cmd("tar cvzf input.tgz input")
+        cmd("files-upload -F input.tgz -S ${STORAGE_MACHINE} ${DEPLOYMENT_PATH}/")
+        submitJob(numnodeSlider.value,numprocSlider.value,"funwave") 
     
 runBtn.on_click(runfun_btn_clicked)
 
@@ -421,17 +433,20 @@ jobListBtn.on_click(jobList_btn_clicked)
 
 
 def jobOutput_btn_clicked(a):
-    jobid = jobSelect.value[:-9] 
-    rcmd = "jobs-output-list "+jobid
-    cout = cmd(rcmd)
-    out1 = cout["stdout"]
-    outputSelect.options = out1
+    g = re.match(r'^\S+',jobSelect.value)
+    if g:
+        jobid = g.group(0)
+        rcmd = "jobs-output-list "+jobid
+        cout = cmd(rcmd)
+        out1 = cout["stdout"]
+        outputSelect.options = out1
     
 jobOutputBtn.on_click(jobOutput_btn_clicked)
 
 def download_btn_clicked(a):
     try:
-        jobid = jobSelect.value[:-9] 
+        g = re.match(r'^\S+',jobSelect.value)
+        jobid = g.group(0)
         if(outputSelect.value.find('.')==-1):
             rcmd = "jobs-output-get -r "+ jobid +" "+ outputSelect.value
         else:
@@ -671,7 +686,7 @@ tab_nest.set_title(2, 'Output')
 tab_nest.set_title(3, 'Show 1D plots')
 tab_nest.set_title(4, 'Show 2D plots')
 
-setvar("""PATH=$HOME/swan/agave-model/bin:$PATH""")
+setvar("""PATH=$HOME/agave-model/bin:$PATH""")
 cmd("auth-tokens-refresh")
 clear_output()
 
