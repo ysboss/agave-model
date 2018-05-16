@@ -12,10 +12,10 @@ item_layout = Layout(
     width = '50%'
 )
 
-agaveText = Text()
-machineText = Text()
-baseappText = Text()
-machineNameText = Text()
+agaveText = Text(value="stevenrbrandt2")
+machineText = Text(value="sbrandt")
+baseappText = Text(value="collaboratory")
+machineNameText = Text(value="shelob.hpc.lsu.edu")
 confBtn = Button(description='Configure', layout= Layout(
     display = 'flex',
     flex_flow = 'row',

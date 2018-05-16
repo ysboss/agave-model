@@ -14,7 +14,7 @@ item_layout = Layout(
 agaveText = Text()
 execMachineText = Text(value="shelob-exec-stevenrbrandt2")
 machineNameText = Text(value="shelob-storage-stevenrbrandt23")
-appText = Text(value="testing-shelob-stevenrbrandt2-2.0")
+appText = Text(value="crcollaboratory-shelob-stevenrbrandt2-2.0")
 pbtokText = Text()
 confBtn = Button(description='Configure', layout= Layout(
     display = 'flex',
