@@ -1,4 +1,4 @@
-# Coastal-Modeling Collaboratory
+# Coastal Model Collaboratory (CMC)
 
 ## Installation and startup
 
