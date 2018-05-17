@@ -11,8 +11,8 @@ FileNumber_HOTSTART = 1
   !    PX,PY - processor numbers in X and Y
   !    NOTE: make sure consistency with mpirun -np n (px*py)
   !    
-PX = 2
-PY = 2
+PX =   2
+PY   =2
   ! --------------------DEPTH-------------------------------------
   ! Depth types, DEPTH_TYPE=DATA: from depth file
   !              DEPTH_TYPE=FLAT: idealized flat, need depth_flat
