@@ -1,4 +1,4 @@
-# Coastal Model Collaboratory (CMC)
+# Coastal Model Repository (CMR)
 
 ## Installation and startup
 
