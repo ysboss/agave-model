@@ -26,6 +26,8 @@ from shutil import copyfile
 
 from buoy import Buoytable
 
+from fwPlots import *
+
 from command import cmd
 
 ######################## Previous ############################################################
@@ -582,7 +584,7 @@ Show1DPlotsBox = Box(Show1D_items, layout= Layout(
 
 
 
-############################### Show 2D tab ##########################################
+############################### SWAN Show 2D tab ##########################################
 fig3,ax2 = plt2.subplots()
 def animate(index):
     
@@ -677,6 +679,53 @@ Show2DPlotsBox = Box(Show2D_items, layout= Layout(
 
 
 
+
+
+############################### Funwave Show 2D tab ##########################################
+
+
+
+surfaceFrame = IntSlider(value=0, min=0, max=31)
+surfaceInter = widgets.interactive(surfacePlot, index = surfaceFrame)
+
+
+
+frames = []
+for i in range(1,31):
+    frames += [np.genfromtxt("output/output/eta_%05d" % i)]
+
+def basicAnimation(frames):
+    size = len(frames)
+    
+    fig2, ax = plt.subplots(figsize=(12,12))
+    def animate1(i):
+        ax.clear()
+        pltres = plt.imshow(frames[i])
+        return pltres,
+    
+    anim = animation.FuncAnimation(fig2, animate1, frames=size, interval=200, repeat=True)
+    HTML(anim.to_html5_video())
+    
+#basicAnimation(frames)
+
+
+
+
+
+
+fwShow2d_items = [surfaceInter]
+fwShow2dBox = Box(fwShow2d_items, layout= Layout(
+ #   display = 'flex',
+    flex_flow = 'column',
+    align_items='stretch',
+    disabled=False
+))
+
+
+
+
+
+
         
 tab_nest = widgets.Tab()
 tab_nest.children = [inputBox, runBox,outputBox, Show1DPlotsBox, Show2DPlotsBox]
@@ -699,7 +748,7 @@ def on_change(change):
     if(modelTitle.value == "Funwave-tvd"):
         out.clear_output()
         with out:
-            tab_nest.children = [funBox, runBox,outputBox, Show1DPlotsBox, Show2DPlotsBox]
+            tab_nest.children = [funBox, runBox,outputBox, Show1DPlotsBox, fwShow2dBox]
             display(tab_nest)
     if(modelTitle.value == "Delft3D"):
         out.clear_output()
