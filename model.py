@@ -1,7 +1,10 @@
 from __future__ import print_function
 from ipywidgets import interact, interactive, fixed, interact_manual, Layout, Button, Box, FloatText, Text, Dropdown, Label, IntSlider, Textarea, Accordion, ToggleButton, ToggleButtons, Select
 import ipywidgets as widgets
-from IPython.display import display, clear_output
+from IPython.display import display, clear_output, HTML
+from matplotlib import animation, rc
+from mpl_toolkits.mplot3d import Axes3D
+
 #from pylab import *
 import matplotlib.pyplot as plt2
 import sys
@@ -19,6 +22,7 @@ from datetime import datetime
 import datetime
 from matplotlib import dates
 
+
 from agave import *
 from setvar import *
 
@@ -30,6 +34,8 @@ from fwPlots import *
 
 from command import cmd
 
+
+#plt.rcParams["animation.html"] = "jshtml"
 ######################## Previous ############################################################
 #Time = ""
 
@@ -686,34 +692,28 @@ Show2DPlotsBox = Box(Show2D_items, layout= Layout(
 
 
 surfaceFrame = IntSlider(value=0, min=0, max=31)
-surfaceInter = widgets.interactive(surfacePlot, index = surfaceFrame)
+surfaceInter = widgets.interactive(surfacePlot, frame = surfaceFrame)
+surfaceBox = Box([Label(value='Surface',layout = Layout(width = '50px')),surfaceInter])
 
+basicBtn = Button(description='display')
 
+ 
+basicOutput = widgets.Output()
 
-frames = []
-for i in range(1,31):
-    frames += [np.genfromtxt("output/output/eta_%05d" % i)]
-
-def basicAnimation(frames):
-    size = len(frames)
+def uploadInput_Btn_clicked(a):
+    frames = []
+    for i in range(1,31):
+        frames += [np.genfromtxt("output/output/eta_%05d" % i)]
+    anim = basicAnimation(frames)
+    with basicOutput:
+        display(HTML(anim.to_html5_video()))
     
-    fig2, ax = plt.subplots(figsize=(12,12))
-    def animate1(i):
-        ax.clear()
-        pltres = plt.imshow(frames[i])
-        return pltres,
+basicBtn.on_click(uploadInput_Btn_clicked)
     
-    anim = animation.FuncAnimation(fig2, animate1, frames=size, interval=200, repeat=True)
-    HTML(anim.to_html5_video())
-    
-#basicAnimation(frames)
+basicAnimBox = Box([Label(value='Basic animation', layout = Layout(width = '100px')),basicBtn], layout = Layout(width = '100%')) 
 
 
-
-
-
-
-fwShow2d_items = [surfaceInter]
+fwShow2d_items = [surfaceBox, basicAnimBox ,basicOutput]
 fwShow2dBox = Box(fwShow2d_items, layout= Layout(
  #   display = 'flex',
     flex_flow = 'column',
@@ -721,7 +721,7 @@ fwShow2dBox = Box(fwShow2d_items, layout= Layout(
     disabled=False
 ))
 
-
+display(basicOutput)
 
 
 
@@ -743,12 +743,14 @@ def on_change(change):
     if(modelTitle.value == "SWAN"):
         out.clear_output()
         with out:
+            tab_nest.set_title(3, 'Show 1D plots')
             tab_nest.children = [inputBox, runBox,outputBox, Show1DPlotsBox, Show2DPlotsBox]
             display(tab_nest)
     if(modelTitle.value == "Funwave-tvd"):
         out.clear_output()
         with out:
-            tab_nest.children = [funBox, runBox,outputBox, Show1DPlotsBox, fwShow2dBox]
+            tab_nest.set_title(3, 'Show 2D plots')
+            tab_nest.children = [funBox, runBox,outputBox, fwShow2dBox]
             display(tab_nest)
     if(modelTitle.value == "Delft3D"):
         out.clear_output()
