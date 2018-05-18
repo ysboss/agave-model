@@ -5,18 +5,12 @@ from matplotlib.ticker import LinearLocator, FormatStrFormatter
 import numpy as np
 from matplotlib import animation, rc
 from IPython.display import HTML
-rc('animation', html='html5')
-
-
-
-
     
-    
-def surfacePlot(index):
+def surfacePlot(frame):
     # SLURP IN THE DATA
-    if (index == 0):
+    if (frame == 0):
         return
-    f = np.genfromtxt("output/output/eta_%05d" % index)
+    f = np.genfromtxt("output/output/eta_%05d" % frame)
     xv = np.linspace(0,f.shape[1],f.shape[1])
     yv = np.linspace(0,f.shape[0],f.shape[0])
     x2,y2 = np.meshgrid(xv,yv)
@@ -44,35 +38,42 @@ def basicAnimation(frames):
         return pltres,
     
     anim = animation.FuncAnimation(fig2, animate1, frames=size, interval=200, repeat=True)
-    #HTML(anim.to_html5_video())
     return anim
 
     
-def animate2(i):
-    global ax
-    ax.clear()
-    # Change the viewing angle
-    ax.view_init(20,i*6)
-    ax.set_zlim(top=zmax,bottom=zmin)
-    # Cycle through the frames
-    f = frames[i % 10]
-    # vmax and vmin control the color normalization
-    surf = ax.plot_surface(x2, y2, f, cmap=cm.coolwarm,
-                       linewidth=0, antialiased=False, vmax=zmax, vmin=zmin)
-    return surf,
+
 
 
 def rotatingAnimation(frames):
     size = len(frames)
-    fig = plt.figure(figsize=(12,10))
-    ax = fig.gca(projection='3d')
+    if (size == 0):
+        return
+    f = np.genfromtxt("output/output/eta_%05d" % 1)
+    xv = np.linspace(0,f.shape[1],f.shape[1])
+    yv = np.linspace(0,f.shape[0],f.shape[0])
+    x2,y2 = np.meshgrid(xv,yv)
+    
+    fig3 = plt.figure(figsize=(12,10))
+    ax = fig3.gca(projection='3d')
     zmin = np.min(frames[0])
     zmax = np.max(frames[0])
     for i in range(1,size):
         zmin = min(zmin,np.min(frames[i]))
         zmax = max(zmax,np.max(frames[i]))
-    anim = animation.FuncAnimation(fig, animate2, frames=size, interval=200, repeat=True)
-    HTML(anim.to_html5_video())
+    def animate2(i):
+        ax.clear()
+        # Change the viewing angle
+        ax.view_init(20,i*6)
+        ax.set_zlim(top=zmax,bottom=zmin)
+        # Cycle through the frames
+        f = frames[i % 10]
+        # vmax and vmin control the color normalization
+        surf = ax.plot_surface(x2, y2, f, cmap=cm.coolwarm,
+                           linewidth=0, antialiased=False, vmax=zmax, vmin=zmin)
+        return surf,
+    
+    anim = animation.FuncAnimation(fig3, animate2, frames=size, interval=200, repeat=True)
+    return anim
     
     
     

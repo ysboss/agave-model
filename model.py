@@ -693,14 +693,12 @@ Show2DPlotsBox = Box(Show2D_items, layout= Layout(
 
 surfaceFrame = IntSlider(value=0, min=0, max=31)
 surfaceInter = widgets.interactive(surfacePlot, frame = surfaceFrame)
-surfaceBox = Box([Label(value='Surface',layout = Layout(width = '50px')),surfaceInter])
+surfaceBox = Box([Label(value='Surface',layout = Layout(width = '80px')),surfaceInter])
 
 basicBtn = Button(description='display')
-
- 
 basicOutput = widgets.Output()
 
-def uploadInput_Btn_clicked(a):
+def basic_Btn_clicked(a):
     frames = []
     for i in range(1,31):
         frames += [np.genfromtxt("output/output/eta_%05d" % i)]
@@ -708,22 +706,34 @@ def uploadInput_Btn_clicked(a):
     with basicOutput:
         display(HTML(anim.to_html5_video()))
     
-basicBtn.on_click(uploadInput_Btn_clicked)
+basicBtn.on_click(basic_Btn_clicked)
+basicAnimBox = Box([Label(value='Basic animation', layout = Layout(width = '130px')),basicBtn], layout = Layout(width = '80%')) 
+
+
+rotatingBtn = Button(description='display')
+rotatingOutput = widgets.Output()
+
+def rotating_Btn_clicked(a):
+    frames = []
+    for i in range(1,31):
+        frames += [np.genfromtxt("output/output/eta_%05d" % i)]
+    anim = rotatingAnimation(frames)
+    with rotatingOutput:
+        display(HTML(anim.to_html5_video()))
+
+rotatingBtn.on_click(rotating_Btn_clicked)
+rotatingAnimBox = Box([Label(value='Rotating animation', layout = Layout(width = '130px')),rotatingBtn], layout = Layout(width = '80%')) 
     
-basicAnimBox = Box([Label(value='Basic animation', layout = Layout(width = '100px')),basicBtn], layout = Layout(width = '100%')) 
 
 
-fwShow2d_items = [surfaceBox, basicAnimBox ,basicOutput]
+
+fwShow2d_items = [surfaceBox, basicAnimBox , basicOutput, rotatingAnimBox, rotatingOutput]
 fwShow2dBox = Box(fwShow2d_items, layout= Layout(
  #   display = 'flex',
     flex_flow = 'column',
     align_items='stretch',
     disabled=False
 ))
-
-display(basicOutput)
-
-
 
 
         
