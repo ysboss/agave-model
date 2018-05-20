@@ -339,9 +339,22 @@ abortBtn = Button(
     width = '50',
     disabled=False
 ))
-
+def modifyFWinput():
+    with open("input_template.txt","r") as temp:
+        with open("input.txt","w") as inputfile:
+            for line in temp.readlines():
+                PX = re.sub('(PX)\s*=\s*(\S+)',r'\1 = '+str(numnodeSlider.value), line)
+                PY = re.sub('(PY)\s*=\s*(\S+)',r'\1 = '+str(numprocSlider.value), line)
+                if (PX != line):
+                    inputfile.write(PX)
+                elif (PY != line):
+                    inputfile.write(PY)
+                else:
+                    inputfile.write(line)
+        inputfile.close()
+    temp.close()
 def runfun_btn_clicked(a):
-    
+    modifyFWinput()
     if (modelTitle.value == "SWAN"): 
         cmd("tar cvzf input.tgz input")
         cmd("files-upload -F input.tgz -S ${STORAGE_MACHINE} ${DEPLOYMENT_PATH}/")
@@ -355,6 +368,15 @@ def runfun_btn_clicked(a):
         submitJob(numnodeSlider.value,numprocSlider.value,"funwave") 
     
 runBtn.on_click(runfun_btn_clicked)
+
+
+# def reviseFwInput(nodes,processors):
+#     with open("input.txt","r") as fd:
+#         for line in fd.readlines():
+#             g = re.match("^(\w+)\s*=\s*(\S+)",line)
+#             if g:
+                
+
 
 def abort_btn_clicked(a):
     os.system('sudo pkill swan.exe')
