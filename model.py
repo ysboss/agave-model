@@ -1,7 +1,10 @@
 from __future__ import print_function
 from ipywidgets import interact, interactive, fixed, interact_manual, Layout, Button, Box, FloatText, Text, Dropdown, Label, IntSlider, Textarea, Accordion, ToggleButton, ToggleButtons, Select
 import ipywidgets as widgets
-from IPython.display import display, clear_output
+from IPython.display import display, clear_output, HTML
+from matplotlib import animation, rc
+from mpl_toolkits.mplot3d import Axes3D
+
 #from pylab import *
 import matplotlib.pyplot as plt2
 import sys
@@ -19,6 +22,7 @@ from datetime import datetime
 import datetime
 from matplotlib import dates
 
+
 from agave import *
 from setvar import *
 
@@ -26,8 +30,12 @@ from shutil import copyfile
 
 from buoy import Buoytable
 
+from fwPlots import *
+
 from command import cmd
 
+
+#plt.rcParams["animation.html"] = "jshtml"
 ######################## Previous ############################################################
 #Time = ""
 
@@ -331,9 +339,22 @@ abortBtn = Button(
     width = '50',
     disabled=False
 ))
-
+def modifyFWinput():
+    with open("input_template.txt","r") as temp:
+        with open("input.txt","w") as inputfile:
+            for line in temp.readlines():
+                PX = re.sub('(PX)\s*=\s*(\S+)',r'\1 = '+str(numnodeSlider.value), line)
+                PY = re.sub('(PY)\s*=\s*(\S+)',r'\1 = '+str(numprocSlider.value), line)
+                if (PX != line):
+                    inputfile.write(PX)
+                elif (PY != line):
+                    inputfile.write(PY)
+                else:
+                    inputfile.write(line)
+        inputfile.close()
+    temp.close()
 def runfun_btn_clicked(a):
-    
+    modifyFWinput()
     if (modelTitle.value == "SWAN"): 
         cmd("tar cvzf input.tgz input")
         cmd("files-upload -F input.tgz -S ${STORAGE_MACHINE} ${DEPLOYMENT_PATH}/")
@@ -347,6 +368,15 @@ def runfun_btn_clicked(a):
         submitJob(numnodeSlider.value,numprocSlider.value,"funwave") 
     
 runBtn.on_click(runfun_btn_clicked)
+
+
+# def reviseFwInput(nodes,processors):
+#     with open("input.txt","r") as fd:
+#         for line in fd.readlines():
+#             g = re.match("^(\w+)\s*=\s*(\S+)",line)
+#             if g:
+                
+
 
 def abort_btn_clicked(a):
     os.system('sudo pkill swan.exe')
@@ -582,7 +612,7 @@ Show1DPlotsBox = Box(Show1D_items, layout= Layout(
 
 
 
-############################### Show 2D tab ##########################################
+############################### SWAN Show 2D tab ##########################################
 fig3,ax2 = plt2.subplots()
 def animate(index):
     
@@ -677,6 +707,57 @@ Show2DPlotsBox = Box(Show2D_items, layout= Layout(
 
 
 
+
+
+############################### Funwave Show 2D tab ##########################################
+
+
+
+surfaceFrame = IntSlider(value=0, min=0, max=31)
+surfaceInter = widgets.interactive(surfacePlot, frame = surfaceFrame)
+surfaceBox = Box([Label(value='Surface',layout = Layout(width = '80px')),surfaceInter])
+
+basicBtn = Button(description='display')
+basicOutput = widgets.Output()
+
+def basic_Btn_clicked(a):
+    frames = []
+    for i in range(1,31):
+        frames += [np.genfromtxt("output/output/eta_%05d" % i)]
+    anim = basicAnimation(frames)
+    with basicOutput:
+        display(HTML(anim.to_html5_video()))
+    
+basicBtn.on_click(basic_Btn_clicked)
+basicAnimBox = Box([Label(value='Basic animation', layout = Layout(width = '130px')),basicBtn], layout = Layout(width = '80%')) 
+
+
+rotatingBtn = Button(description='display')
+rotatingOutput = widgets.Output()
+
+def rotating_Btn_clicked(a):
+    frames = []
+    for i in range(1,31):
+        frames += [np.genfromtxt("output/output/eta_%05d" % i)]
+    anim = rotatingAnimation(frames)
+    with rotatingOutput:
+        display(HTML(anim.to_html5_video()))
+
+rotatingBtn.on_click(rotating_Btn_clicked)
+rotatingAnimBox = Box([Label(value='Rotating animation', layout = Layout(width = '130px')),rotatingBtn], layout = Layout(width = '80%')) 
+    
+
+
+
+fwShow2d_items = [surfaceBox, basicAnimBox , basicOutput, rotatingAnimBox, rotatingOutput]
+fwShow2dBox = Box(fwShow2d_items, layout= Layout(
+ #   display = 'flex',
+    flex_flow = 'column',
+    align_items='stretch',
+    disabled=False
+))
+
+
         
 tab_nest = widgets.Tab()
 tab_nest.children = [inputBox, runBox,outputBox, Show1DPlotsBox, Show2DPlotsBox]
@@ -694,12 +775,14 @@ def on_change(change):
     if(modelTitle.value == "SWAN"):
         out.clear_output()
         with out:
+            tab_nest.set_title(3, 'Show 1D plots')
             tab_nest.children = [inputBox, runBox,outputBox, Show1DPlotsBox, Show2DPlotsBox]
             display(tab_nest)
     if(modelTitle.value == "Funwave-tvd"):
         out.clear_output()
         with out:
-            tab_nest.children = [funBox, runBox,outputBox, Show1DPlotsBox, Show2DPlotsBox]
+            tab_nest.set_title(3, 'Show 2D plots')
+            tab_nest.children = [funBox, runBox,outputBox, fwShow2dBox]
             display(tab_nest)
     if(modelTitle.value == "Delft3D"):
         out.clear_output()

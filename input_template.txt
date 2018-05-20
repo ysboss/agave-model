@@ -34,7 +34,7 @@ Nglob = 100
   ! ----------------- TIME----------------------------------
   ! time: total computational time/ plot time / screen interval 
   ! all in seconds
-TOTAL_TIME = 3.0
+TOTAL_TIME = 30.0
 PLOT_INTV = 1.0
 PLOT_INTV_STATION = 50000.0
 SCREEN_INTV = 1.0
