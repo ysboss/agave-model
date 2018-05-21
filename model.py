@@ -1,5 +1,5 @@
 from __future__ import print_function
-from ipywidgets import interact, interactive, fixed, interact_manual, Layout, Button, Box, FloatText, Text, Dropdown, Label, IntSlider, Textarea, Accordion, ToggleButton, ToggleButtons, Select
+from ipywidgets import interact, interactive, fixed, interact_manual, Layout, Button, Box,VBox, HBox, FloatText, Text, Dropdown, Label, IntSlider, Textarea, Accordion, ToggleButton, ToggleButtons, Select
 import ipywidgets as widgets
 from IPython.display import display, clear_output, HTML
 from matplotlib import animation, rc
@@ -314,6 +314,7 @@ funBox = Box(funwave_items, layout= Layout(
 
 
 
+
 ##################################### Run tab ################################
 run_item_layout = Layout(
     display = 'flex',
@@ -322,15 +323,16 @@ run_item_layout = Layout(
     width = '50%'
 )
 
+numnodeSlider = IntSlider(value=0, min=1, max=8, step=1)
+numprocSlider = IntSlider(value=0, min=1, max=16, step=1)
 
-runBtn = Button(description='Run', layout= Layout(
-    display = 'flex',
-    flex_flow = 'row',
-    justify_content = 'center',
-    width = '253px',
-    disabled=False
-))
+runBtn = Button(description='Run', button_style='info', layout= Layout(width = '50px'))
 
+run_items = [
+    Box([Label(value='Nodes', layout = Layout(width = '100px')), numnodeSlider], layout = run_item_layout),
+    Box([Label(value='Processors', layout=Layout(width = '100px')), numprocSlider], layout= run_item_layout),
+    Box([runBtn]),
+]
 
 def modifyFWinput():
     with open("input_template.txt","r") as temp:
@@ -363,25 +365,8 @@ def runfun_btn_clicked(a):
     
 runBtn.on_click(runfun_btn_clicked)
 
-machineText = Text()
-baseappText = Text()
 
-numnodeSlider = IntSlider(value=0, min=1, max=8, step=1)
-numprocSlider = IntSlider(value=0, min=1, max=16, step=1)
-
-run_items = [
-    Box([Label(value='Nodes', layout = Layout(width = '120px')), numnodeSlider], layout = run_item_layout),
-    Box([Label(value='Processors', layout=Layout(width = '120px')), numprocSlider], layout= run_item_layout),
-    Box([runBtn]),
-]
-
-runBox = Box(run_items, layout= Layout(
- #   display = 'flex',
-    flex_flow = 'column',
-    align_items='stretch',
-    disabled=False
-))
-
+runBox = VBox(run_items)
 
 
 
@@ -392,50 +377,17 @@ runBox = Box(run_items, layout= Layout(
 
 
 ################################# Output tab ###################################
-jobListBtn = Button(description='List jobs history', layout= Layout(
-    display = 'flex',
-    flex_flow = 'row',
-    justify_content = 'center',
-    width = '15%',
-    disabled=False
-))
+jobListBtn = Button(description='List jobs history', button_style='info', layout= Layout(width = '115px'))
 
-jobSelect = Select(
-    description='jobs history:',
-    disabled=False,
-    layout = Layout(width='60%')
-)
+jobSelect = Select(layout = Layout(width='100%'))
 
-abortBtn = Button(
-    description='Abort',button_style='danger',  layout= Layout(
-    display = 'flex',
-    flex_flow = 'row',
-    justify_content = 'center',
-    width = '50',
-    disabled=False
-))
+jobOutputBtn = Button(description='List job output', button_style='info', layout= Layout(width = '115px'))
 
-jobOutputBtn = Button(description='List job output', layout= Layout(
-    display = 'flex',
-    flex_flow = 'row',
-    justify_content = 'center',
-    width = '15%',
-    disabled=False
-))
+abortBtn = Button(description='Abort', button_style='danger', layout= Layout(width = 'auto'))
 
-outputSelect = Select(
-    description='job output:',
-    disabled=False,
-    layout = Layout(width='60%')
-)
+outputSelect = Select(layout = Layout(width='100%'))
 
-downloadOpBtn = Button(description='Get selected ouput', layout= Layout(
-    display = 'flex',
-    flex_flow = 'row',
-    justify_content = 'center',
-    width = '15%',
-    disabled=False
-))
+downloadOpBtn = Button(description='Download', button_style='info', layout= Layout(width = '115px'))
 
 def jobList_btn_clicked(a):
     cout = cmd("jobs-list -l 10")
@@ -492,18 +444,13 @@ downloadOpBtn.on_click(download_btn_clicked)
 
 output_items = [
     Box([jobListBtn]),
-    Box([jobSelect]),
-    Box([jobOutputBtn,abortBtn]),
-    Box([outputSelect]),
+    Box([jobSelect], layout = Layout(width='40%')),
+    Box([jobOutputBtn,abortBtn], layout = Layout(display = 'flex', justify_content = 'space-between', width='40%')),
+    Box([outputSelect], layout = Layout(width='40%')),
     Box([downloadOpBtn])
 ]
 
-outputBox = Box(output_items, layout= Layout(
- #   display = 'flex',
-    flex_flow = 'column',
-    align_items='stretch',
-    disabled=False
-))
+outputBox = VBox(output_items)
 
 
 
@@ -709,9 +656,9 @@ Show2DPlotsBox = Box(Show2D_items, layout= Layout(
 
 surfaceFrame = IntSlider(value=0, min=0, max=31)
 surfaceInter = widgets.interactive(surfacePlot, frame = surfaceFrame)
-surfaceBox = Box([Label(value='Surface Elevation',layout = Layout(width = '120px')),surfaceInter])
+surfaceBox = Box([Label(value='Surface Elevation'),surfaceInter])
 
-basicBtn = Button(description='display')
+basicBtn = Button(description='display',button_style='primary', layout=Layout(width='auto'))
 basicOutput = widgets.Output()
 
 def basic_Btn_clicked(a):
@@ -723,11 +670,11 @@ def basic_Btn_clicked(a):
         display(HTML(anim.to_html5_video()))
     
 basicBtn.on_click(basic_Btn_clicked)
-basicBox = Box([Label(value='2D animation', layout = Layout(width = '130px')),basicBtn], layout = Layout(width = '80%')) 
+basicBox = Box([Label(value='2D animation'),basicBtn], layout = Layout(width = '80%')) 
 basicAnimBox = Box([basicBox, basicOutput],layout = Layout(flex_flow = 'column', align_items='stretch',))
 
 
-rotatingBtn = Button(description='display')
+rotatingBtn = Button(description='display',button_style='info', layout=Layout(width='auto'))
 rotatingOutput = widgets.Output()
 
 def rotating_Btn_clicked(a):
@@ -739,26 +686,14 @@ def rotating_Btn_clicked(a):
         display(HTML(anim.to_html5_video()))
 
 rotatingBtn.on_click(rotating_Btn_clicked)
-rotatingBox = Box([Label(value='3D animation', layout = Layout(width = '130px')),rotatingBtn], layout = Layout(width = '80%'))
+rotatingBox = Box([Label(value='3D animation'),rotatingBtn], layout = Layout(width = '80%'))
 rotatingAnimBox = Box([rotatingBox, rotatingOutput], layout = Layout(flex_flow = 'column', align_items='stretch',))
-
-
 
 
 fwAcd =Accordion(children = [surfaceBox,basicAnimBox,rotatingAnimBox])
 fwAcd.set_title(0,'Surface Elevation Snapshots')
 fwAcd.set_title(1,'2D Animation')
 fwAcd.set_title(2,'3D Animation ')
-
-
-# fwShow2d_items = [surfaceBox, basicAnimBox , basicOutput, rotatingAnimBox, rotatingOutput]
-# fwShow2dBox = Box(fwShow2d_items, layout= Layout(
-#  #   display = 'flex',
-#     flex_flow = 'column',
-#     align_items='stretch',
-#     disabled=False
-# ))
-
 
 ################################ Finally ##########################################################
         
