@@ -513,7 +513,7 @@ outputBox = Box(output_items, layout= Layout(
 
 
 
-##################################### Show 1D tab ########################################
+##################################### SWAN Show 1D tab ########################################
 def showPlots(index):
     if(Yoption.value=='Choose one'):
         return
@@ -709,7 +709,7 @@ Show2DPlotsBox = Box(Show2D_items, layout= Layout(
 
 surfaceFrame = IntSlider(value=0, min=0, max=31)
 surfaceInter = widgets.interactive(surfacePlot, frame = surfaceFrame)
-surfaceBox = Box([Label(value='Surface',layout = Layout(width = '80px')),surfaceInter])
+surfaceBox = Box([Label(value='Surface Elevation',layout = Layout(width = '120px')),surfaceInter])
 
 basicBtn = Button(description='display')
 basicOutput = widgets.Output()
@@ -723,7 +723,8 @@ def basic_Btn_clicked(a):
         display(HTML(anim.to_html5_video()))
     
 basicBtn.on_click(basic_Btn_clicked)
-basicAnimBox = Box([Label(value='Basic animation', layout = Layout(width = '130px')),basicBtn], layout = Layout(width = '80%')) 
+basicBox = Box([Label(value='2D animation', layout = Layout(width = '130px')),basicBtn], layout = Layout(width = '80%')) 
+basicAnimBox = Box([basicBox, basicOutput],layout = Layout(flex_flow = 'column', align_items='stretch',))
 
 
 rotatingBtn = Button(description='display')
@@ -738,20 +739,28 @@ def rotating_Btn_clicked(a):
         display(HTML(anim.to_html5_video()))
 
 rotatingBtn.on_click(rotating_Btn_clicked)
-rotatingAnimBox = Box([Label(value='Rotating animation', layout = Layout(width = '130px')),rotatingBtn], layout = Layout(width = '80%')) 
-    
+rotatingBox = Box([Label(value='3D animation', layout = Layout(width = '130px')),rotatingBtn], layout = Layout(width = '80%'))
+rotatingAnimBox = Box([rotatingBox, rotatingOutput], layout = Layout(flex_flow = 'column', align_items='stretch',))
 
 
 
-fwShow2d_items = [surfaceBox, basicAnimBox , basicOutput, rotatingAnimBox, rotatingOutput]
-fwShow2dBox = Box(fwShow2d_items, layout= Layout(
- #   display = 'flex',
-    flex_flow = 'column',
-    align_items='stretch',
-    disabled=False
-))
+
+fwAcd =Accordion(children = [surfaceBox,basicAnimBox,rotatingAnimBox])
+fwAcd.set_title(0,'Surface Elevation Snapshots')
+fwAcd.set_title(1,'2D Animation')
+fwAcd.set_title(2,'3D Animation ')
 
 
+# fwShow2d_items = [surfaceBox, basicAnimBox , basicOutput, rotatingAnimBox, rotatingOutput]
+# fwShow2dBox = Box(fwShow2d_items, layout= Layout(
+#  #   display = 'flex',
+#     flex_flow = 'column',
+#     align_items='stretch',
+#     disabled=False
+# ))
+
+
+################################ Finally ##########################################################
         
 tab_nest = widgets.Tab()
 tab_nest.children = [inputBox, runBox,outputBox, Show1DPlotsBox, Show2DPlotsBox]
@@ -775,8 +784,8 @@ def on_change(change):
     if(modelTitle.value == "Funwave-tvd"):
         out.clear_output()
         with out:
-            tab_nest.set_title(3, 'Show 2D plots')
-            tab_nest.children = [funBox, runBox,outputBox, fwShow2dBox]
+            tab_nest.set_title(3, 'Visualization')
+            tab_nest.children = [funBox, runBox,outputBox, fwAcd]
             display(tab_nest)
     if(modelTitle.value == "Delft3D"):
         out.clear_output()
@@ -784,6 +793,7 @@ def on_change(change):
             tab_nest.children = [delft3dBox, runBox,outputBox, Show1DPlotsBox, Show2DPlotsBox]
             display(tab_nest)
            
+    
 modelTitle.observe(on_change)
 
 
