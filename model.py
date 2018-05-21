@@ -331,14 +331,7 @@ runBtn = Button(description='Run', layout= Layout(
     disabled=False
 ))
 
-abortBtn = Button(
-    description='Abort',button_style='danger',  layout= Layout(
-    display = 'flex',
-    flex_flow = 'row',
-    justify_content = 'center',
-    width = '50',
-    disabled=False
-))
+
 def modifyFWinput():
     with open("input_template.txt","r") as temp:
         with open("input.txt","w") as inputfile:
@@ -353,13 +346,14 @@ def modifyFWinput():
                     inputfile.write(line)
         inputfile.close()
     temp.close()
+    
 def runfun_btn_clicked(a):
-    modifyFWinput()
     if (modelTitle.value == "SWAN"): 
         cmd("tar cvzf input.tgz input")
         cmd("files-upload -F input.tgz -S ${STORAGE_MACHINE} ${DEPLOYMENT_PATH}/")
         submitJob(numnodeSlider.value,numprocSlider.value,"swan") 
     elif (modelTitle.value == "Funwave-tvd"): 
+        modifyFWinput()
         cmd("rm -fr input")
         cmd("mkdir input")
         cmd("cp input.txt input")
@@ -369,20 +363,6 @@ def runfun_btn_clicked(a):
     
 runBtn.on_click(runfun_btn_clicked)
 
-
-# def reviseFwInput(nodes,processors):
-#     with open("input.txt","r") as fd:
-#         for line in fd.readlines():
-#             g = re.match("^(\w+)\s*=\s*(\S+)",line)
-#             if g:
-                
-
-
-def abort_btn_clicked(a):
-    os.system('sudo pkill swan.exe')
-
-abortBtn.on_click(abort_btn_clicked)
-
 machineText = Text()
 baseappText = Text()
 
@@ -390,15 +370,9 @@ numnodeSlider = IntSlider(value=0, min=1, max=8, step=1)
 numprocSlider = IntSlider(value=0, min=1, max=16, step=1)
 
 run_items = [
-    
-    #Box([Label(value='Agave password', layout = Layout(width = '120px')), agavePwText], layout = run_item_layout),
     Box([Label(value='Nodes', layout = Layout(width = '120px')), numnodeSlider], layout = run_item_layout),
-    #Box([Label(value='Machine password', layout = Layout(width = '120px')), machinePwText], layout = run_item_layout),
-    #Box([Label(value='Pushbullet token', layout = Layout(width = '120px')), PbtokText], layout = run_item_layout),
-    #Box([Label(value='BaseApp name', layout = Layout(width = '120px')), baseappText], layout = run_item_layout),
-    
     Box([Label(value='Processors', layout=Layout(width = '120px')), numprocSlider], layout= run_item_layout),
-    Box([runBtn,abortBtn]),
+    Box([runBtn]),
 ]
 
 runBox = Box(run_items, layout= Layout(
@@ -432,6 +406,15 @@ jobSelect = Select(
     layout = Layout(width='60%')
 )
 
+abortBtn = Button(
+    description='Abort',button_style='danger',  layout= Layout(
+    display = 'flex',
+    flex_flow = 'row',
+    justify_content = 'center',
+    width = '50',
+    disabled=False
+))
+
 jobOutputBtn = Button(description='List job output', layout= Layout(
     display = 'flex',
     flex_flow = 'row',
@@ -460,6 +443,15 @@ def jobList_btn_clicked(a):
     jobSelect.options = out1
     
 jobListBtn.on_click(jobList_btn_clicked)
+
+def abort_btn_clicked(a):
+    g = re.match(r'^\S+',jobSelect.value)
+    if g:
+        jobid = g.group(0)
+        rcmd = "jobs-stop "+jobid
+        cmd(rcmd)
+
+abortBtn.on_click(abort_btn_clicked)
 
 
 def jobOutput_btn_clicked(a):
@@ -498,17 +490,13 @@ def download_btn_clicked(a):
 
 downloadOpBtn.on_click(download_btn_clicked)
 
-
-
 output_items = [
     Box([jobListBtn]),
     Box([jobSelect]),
-    Box([jobOutputBtn]),
+    Box([jobOutputBtn,abortBtn]),
     Box([outputSelect]),
     Box([downloadOpBtn])
 ]
-
-
 
 outputBox = Box(output_items, layout= Layout(
  #   display = 'flex',
@@ -516,6 +504,12 @@ outputBox = Box(output_items, layout= Layout(
     align_items='stretch',
     disabled=False
 ))
+
+
+
+
+
+
 
 
 
