@@ -333,7 +333,7 @@ plotTimeBox = Box([Label(value = 'Plot Interval (s)'), plotTimeText],
 timeBox = Box([totalTimeBox, plotTimeBox],layout = Layout(flex_flow = 'column'))
 
 etaTbtns = ToggleButtons(options=['True', 'False'])
-etaBox = Box([Label(value = 'Surface Elevation'), etaTbtns ],layout = Layout(width = '50%', justify_content = 'space-between'))
+etaBox = Box([Label(value = 'Surface Elevation'), etaTbtns],layout = Layout(width = '50%', justify_content = 'space-between'))
 
 uTbtns = ToggleButtons(options=['True', 'False'])
 uBox = Box([Label(value = 'U'), uTbtns ],layout = Layout(width = '50%', justify_content = 'space-between'))
@@ -349,45 +349,42 @@ fwInputAcd.set_title(1,'Output')
 
 fwUpInputBtn = Button(description='Update Input File',button_style='primary', layout=Layout(width='100%'))
 
-fwInputArea = Textarea(layout= Layout(width = '100%'))
+def convertTF(value):
+    if (value == "True"):
+        return "T"
+    elif (value == "False"):
+        return "F"
+    else:
+        return value
+
+def fwupdate_btn_clicked(a):
+    name_value_pairs = {
+        "TOTAL_TIME": totalTimeText.value,
+        "PLOT_INTV" : plotTimeText.value,
+        "ETA"       : convertTF(etaTbtns.value),
+        "U"          : convertTF(uTbtns.value),
+        "V"          : convertTF(vTbtns.value)
+    }
+    with open("input_template.txt","r") as template:
+        with open("input_tmp.txt","w+") as inputTmp:
+            for line in template.readlines():
+                g = re.match("^(TOTAL_TIME|PLOT_INTV|ETA|U|V)\s*=\s*(\S+)",line)
+                if g:
+                    name = g.group(1)
+                    if name in name_value_pairs:
+                        inputTmp.write(name+" = "+name_value_pairs[name]+"\n")
+                else:
+                    inputTmp.write(line)
+            inputTmp.close()
+        template.close()
+    fwInputArea.value = open("input_tmp.txt","r").read()
+    
+fwUpInputBtn.on_click(fwupdate_btn_clicked)
+
+fwInputArea = Textarea(layout= Layout(height = "300px",width = '100%'))
 
 fwInputBox = Box([fwInputAcd, fwUpInputBtn, fwInputArea], 
                  layout = Layout(flex_flow = 'column', align_items = 'center'))
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -406,7 +403,7 @@ run_item_layout = Layout(
 numnodeSlider = IntSlider(value=0, min=1, max=8, step=1)
 numprocSlider = IntSlider(value=0, min=1, max=16, step=1)
 
-runBtn = Button(description='Run', button_style='info', layout= Layout(width = '50px'))
+runBtn = Button(description='Run', button_style='primary', layout= Layout(width = '50px'))
 
 run_items = [
     Box([Label(value='Nodes', layout = Layout(width = '100px')), numnodeSlider], layout = run_item_layout),
@@ -415,19 +412,22 @@ run_items = [
 ]
 
 def modifyFWinput():
-    with open("input_template.txt","r") as temp:
+    name_value_pairs = {
+        "PX" : numnodeSlider.value,
+        "PY" : numprocSlider.value
+    }
+    with open("input_tem.txt","r") as tem:
         with open("input.txt","w") as inputfile:
             for line in temp.readlines():
-                PX = re.sub('(PX)\s*=\s*(\S+)',r'\1 = '+str(numnodeSlider.value), line)
-                PY = re.sub('(PY)\s*=\s*(\S+)',r'\1 = '+str(numprocSlider.value), line)
-                if (PX != line):
-                    inputfile.write(PX)
-                elif (PY != line):
-                    inputfile.write(PY)
+                g = re.match("^(PX|PY)\s*=\s*(\S+)",line)
+                if g:
+                    name = g.group(1)
+                    if name in name_value_pairs:
+                        inputfile.write(name+" = "+name_value_pairs[name]+"\n")
                 else:
                     inputfile.write(line)
-        inputfile.close()
-    temp.close()
+            inputfile.close()
+        tem.close()
     
 def runfun_btn_clicked(a):
     if (modelTitle.value == "SWAN"): 
@@ -457,17 +457,17 @@ runBox = VBox(run_items)
 
 
 ################################# Output tab ###################################
-jobListBtn = Button(description='List jobs history', button_style='info', layout= Layout(width = '115px'))
+jobListBtn = Button(description='List jobs history', button_style='primary', layout= Layout(width = '115px'))
 
-jobSelect = Select(layout = Layout(width='100%'))
+jobSelect = Select(layout = Layout(height = '150px', width='100%'))
 
-jobOutputBtn = Button(description='List job output', button_style='info', layout= Layout(width = '115px'))
+jobOutputBtn = Button(description='List job output', button_style='primary', layout= Layout(width = '115px'))
 
 abortBtn = Button(description='Abort', button_style='danger', layout= Layout(width = 'auto'))
 
-outputSelect = Select(layout = Layout(width='100%'))
+outputSelect = Select(layout = Layout(height = '150px', width='100%'))
 
-downloadOpBtn = Button(description='Download', button_style='info', layout= Layout(width = '115px'))
+downloadOpBtn = Button(description='Download', button_style='primary', layout= Layout(width = '115px'))
 
 def jobList_btn_clicked(a):
     cout = cmd("jobs-list -l 10")
@@ -524,9 +524,9 @@ downloadOpBtn.on_click(download_btn_clicked)
 
 output_items = [
     Box([jobListBtn]),
-    Box([jobSelect], layout = Layout(width='40%')),
-    Box([jobOutputBtn,abortBtn], layout = Layout(display = 'flex', justify_content = 'space-between', width='40%')),
-    Box([outputSelect], layout = Layout(width='40%')),
+    Box([jobSelect], layout = Layout(width='50%')),
+    Box([jobOutputBtn,abortBtn], layout = Layout(display = 'flex', justify_content = 'space-between', width='50%')),
+    Box([outputSelect], layout = Layout(width='50%')),
     Box([downloadOpBtn])
 ]
 
