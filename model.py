@@ -59,7 +59,7 @@ delft3dBox = Box(delft3d_items, layout= Layout(
     disabled=False
 ))
 
-######################## Input tab ############################################################
+######################## SWAN Input tab ############################################################
 
 
   
@@ -310,6 +310,86 @@ funBox = Box(funwave_items, layout= Layout(
     align_items='stretch',
     disabled=False
 ))
+
+
+
+
+
+
+
+
+
+##################################### Funwave-tvd Input tab ################################
+
+
+totalTimeText = Text()
+totalTimeBox = Box([Label(value = 'Total Computational Time (s)'), totalTimeText],
+                   layout = Layout(width = '55%', justify_content = 'space-between'))
+
+plotTimeText = Text()
+plotTimeBox = Box([Label(value = 'Plot Interval (s)'), plotTimeText],
+                  layout = Layout(width = '55%', justify_content = 'space-between'))
+
+timeBox = Box([totalTimeBox, plotTimeBox],layout = Layout(flex_flow = 'column'))
+
+etaTbtns = ToggleButtons(options=['True', 'False'])
+etaBox = Box([Label(value = 'Surface Elevation'), etaTbtns ],layout = Layout(width = '50%', justify_content = 'space-between'))
+
+uTbtns = ToggleButtons(options=['True', 'False'])
+uBox = Box([Label(value = 'U'), uTbtns ],layout = Layout(width = '50%', justify_content = 'space-between'))
+
+vTbtns = ToggleButtons(options=['True', 'False'])
+vBox = Box([Label(value = 'V'), vTbtns],layout = Layout(width = '50%', justify_content = 'space-between'))
+
+outputBox = Box([etaBox, uBox, vBox], layout = Layout(flex_flow = 'column'))
+
+fwInputAcd =Accordion(children = [timeBox,outputBox], layout= Layout(width = '100%'))
+fwInputAcd.set_title(0,'Time')
+fwInputAcd.set_title(1,'Output')
+
+fwUpInputBtn = Button(description='Update Input File',button_style='primary', layout=Layout(width='100%'))
+
+fwInputArea = Textarea(layout= Layout(width = '100%'))
+
+fwInputBox = Box([fwInputAcd, fwUpInputBtn, fwInputArea], 
+                 layout = Layout(flex_flow = 'column', align_items = 'center'))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -650,7 +730,7 @@ Show2DPlotsBox = Box(Show2D_items, layout= Layout(
 
 
 
-############################### Funwave Show 2D tab ##########################################
+############################### Funwave Visualization tab ##########################################
 
 
 
@@ -690,10 +770,21 @@ rotatingBox = Box([Label(value='3D animation'),rotatingBtn], layout = Layout(wid
 rotatingAnimBox = Box([rotatingBox, rotatingOutput], layout = Layout(flex_flow = 'column', align_items='stretch',))
 
 
-fwAcd =Accordion(children = [surfaceBox,basicAnimBox,rotatingAnimBox])
-fwAcd.set_title(0,'Surface Elevation Snapshots')
-fwAcd.set_title(1,'2D Animation')
-fwAcd.set_title(2,'3D Animation ')
+fwVisuAcd =Accordion(children = [surfaceBox,basicAnimBox,rotatingAnimBox])
+fwVisuAcd.set_title(0,'Surface Elevation Snapshots')
+fwVisuAcd.set_title(1,'2D Animation')
+fwVisuAcd.set_title(2,'3D Animation ')
+
+
+
+
+
+
+
+
+
+
+
 
 ################################ Finally ##########################################################
         
@@ -720,7 +811,7 @@ def on_change(change):
         out.clear_output()
         with out:
             tab_nest.set_title(3, 'Visualization')
-            tab_nest.children = [funBox, runBox,outputBox, fwAcd]
+            tab_nest.children = [fwInputBox, runBox,outputBox, fwVisuAcd]
             display(tab_nest)
     if(modelTitle.value == "Delft3D"):
         out.clear_output()
