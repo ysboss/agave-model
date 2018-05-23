@@ -1,5 +1,5 @@
 from __future__ import print_function
-from ipywidgets import interact, interactive, fixed, interact_manual, Layout, Button, Box,VBox, HBox, FloatText, Text, Dropdown, Label, IntSlider, Textarea, Accordion, ToggleButton, ToggleButtons, Select
+from ipywidgets import interact, interactive, fixed, interact_manual, Layout, Button, Box,VBox, HBox, FloatText, Text, Dropdown, Label, IntSlider, Textarea, Accordion, ToggleButton, ToggleButtons, Select, RadioButtons
 import ipywidgets as widgets
 from IPython.display import display, clear_output, HTML
 from matplotlib import animation, rc
@@ -61,30 +61,105 @@ delft3dBox = Box(delft3d_items, layout= Layout(
 
 ######################## SWAN Input tab ############################################################
 
-
-
-# etaTbtns = ToggleButtons(options=['True', 'False'])
-# etaBox = Box([Label(value = 'Surface Elevation'), etaTbtns],layout = Layout(width = '50%', justify_content = 'space-between'))
-
-modeTbtns = ToggleButtons(options=['STAT', 'NONSTAT'])
-dimTbtns = ToggleButtons(options=['ONED', 'TWOD'])
-modeBox = Box([Label(value = 'MODE'), modeTbtns, dimTbtns],layout = Layout(width = '80%', justify_content = 'space-between'))
+modeTbtns = ToggleButtons(options=['NONSTAT', 'STAT'], disabled=True)
+dimTbtns = ToggleButtons(options=['TWOD', 'ONED'])
+modeBox = Box([Label(value = 'MODE:'), modeTbtns, dimTbtns],layout = Layout(width = '80%', justify_content = 'space-between'))
 
 coordTbtns = ToggleButtons(options=['SPHE', 'CART'], layout = Layout(width = '1%'))
 spheTbtns = ToggleButtons(options=['CCM', 'QC'])
-coordBox = Box([Label(value = 'COORD'), coordTbtns, spheTbtns],layout = Layout(width = '80%', justify_content = 'space-between'))
-#ToggleButtons(options=['ONED', 'TWOD'], layout = Layout(display = 'column'))
+coordBox = Box([Label(value = 'COORD:'), coordTbtns, spheTbtns],
+               layout = Layout(width = '80%', justify_content = 'space-between'))
 
-modeStartBox = Box([modeBox, coordBox], layout = Layout(flex_flow = 'column'))
+setTbtns = ToggleButtons(options=['NAUT', 'CART'])
+setBox = Box([Label(value = 'SET:'), setTbtns],layout = Layout(width = '42.4%', justify_content = 'space-between'))
 
-swanInputAcd = Accordion(children = [modeStartBox,Box(),Box()], layout= Layout(width = '100%'))
+fricTbtns = ToggleButtons(options=['JONSWAP', 'COLL', 'MADS'])
+fricText = Text(layout = Layout(width='60px'))
+fricTxtBox = Box([fricText, Label(value = '(m2/s-3)')])
+fricBox = Box([Label(value = 'FRICTION:'), fricTbtns, fricTxtBox],
+              layout = Layout(width = '73.3%', justify_content = 'space-between'))
+
+modeStartBox = Box([modeBox, coordBox, setBox, fricBox], layout = Layout(flex_flow = 'column'))
+
+
+
+propTbtns = ToggleButtons(options=['BSBT', 'GSE'])
+propBox = Box([Label(value = 'PROP:'), propTbtns],layout = Layout(width = '42.4%', justify_content = 'space-between'))
+
+gen3Tbtns = ToggleButtons(options=['KOMEN', 'JANS', 'WESTH'])
+gen3Box = Box([Label(value = 'GEN3:'), gen3Tbtns],layout = Layout(width = '59.3%', justify_content = 'space-between'))
+
+modelInputBox = Box([propBox, gen3Box], layout = Layout(flex_flow = 'column'))
+
+
+timeBtns = ToggleButtons(options=['0.5', '1', '2'])
+timeBox = Box([Label(value = 'Time Step (h):', layout = Layout(width = '98px')), timeBtns], layout = Layout(width = '90%'))
+
+
+table = ['TIME','XP', 'YP', 'DEP', 'WIND', 'HS', 'DIR', 'RTP', 'PER', 'TM01', 'TM02', 'PDIR']
+
+table_items = []
+for i in range(len(table)):
+    name = table[i].lower()+'Btn'
+    name = ToggleButton(value = True,description = table[i])
+    table_items.append(name)
+    
+tableBtnsBox = Box(table_items,layout = Layout(width = '90%', justify_content = 'space-between'))
+tableBox = Box([Label(value = 'Table :', layout = Layout(width = '103px')), tableBtnsBox],layout = Layout(width = '90%'))
+               
+sp1dTbtn = ToggleButton(value = True,description = 'sp1d')
+sp2dTbtn = ToggleButton(value = False,description = 'sp2d')
+specBox = Box([Label(value = 'Spectral :', layout = Layout(width = '100px')), sp1dTbtn, sp2dTbtn], 
+              layout = Layout(width = '90%'))
+
+windBtn = ToggleButton(value = True,description = 'wind')
+hsBtn = ToggleButton(value = True,description = 'hs')
+dirBtn = ToggleButton(value = False,description = 'dir')
+perBtn = ToggleButton(value = False,description = 'per')
+blockBox = Box([Label(value = 'Block :', layout = Layout(width = '100px')), windBtn, hsBtn, dirBtn, perBtn], 
+               layout = Layout(width = '90%'))    
+    
+outputRequestBox = Box([timeBox, tableBox, specBox, blockBox], layout = Layout(flex_flow = 'column'))
+
+swanInputAcd = Accordion(children = [modeStartBox,modelInputBox,outputRequestBox], layout= Layout(width = '100%'))
 swanInputAcd.set_title(0,'Model Start-up')
 swanInputAcd.set_title(1,'Model Input')
 swanInputAcd.set_title(2,'Output Requests')
 
+SwanUpInputBtn = Button(description='Update Input File',button_style='primary', layout=Layout(width='100%'))
 
 
+def swanupdate_btn_clicked(a):
+    name_value_pairs = {
+        "MODE"      : modeTbtns.value+' '+dimTbtns.value,
+        "COORD"     : coordTbtns.value+' '+spheTbtns.value,
+        "SET"       : setTbtns.value,
+        "FRICTION"  : fricTbtns.value+' '+fricText.value,
+        "PROP"      : propTbtns.value,
+        "GEN3"      : gen3Tbtns.value+' AGROW'
+    }
+#     with open("input_template.txt","r") as template:
+#         with open("input_tmp.txt","w+") as inputTmp:
+#             for line in template.readlines():
+#                 g = re.match("^(TOTAL_TIME|PLOT_INTV|ETA|U|V)\s*=\s*(\S+)",line)
+#                 if g:
+#                     name = g.group(1)
+#                     if name in name_value_pairs:
+#                         inputTmp.write(name+" = "+name_value_pairs[name]+"\n")
+#                 else:
+#                     inputTmp.write(line)
+#             inputTmp.close()
+#         template.close()
+#     fwInputArea.value = open("input_tmp.txt","r").read()
+#     pass
+    
+SwanUpInputBtn.on_click(swanupdate_btn_clicked)
 
+SwanInputArea = Textarea(layout= Layout(height = "300px",width = '100%'))
+
+
+SwanInputBox = Box([swanInputAcd, SwanUpInputBtn, SwanInputArea], 
+                 layout = Layout(flex_flow = 'column', align_items = 'center'))
 
   
 # togBtns = ToggleButtons(options=['0.5', '1', '2'],
@@ -481,6 +556,7 @@ runBox = VBox(run_items)
 
 
 ################################# Output tab ###################################
+
 jobListBtn = Button(description='List jobs history', button_style='primary', layout= Layout(width = '115px'))
 
 jobSelect = Select(layout = Layout(height = '150px', width='100%'))
@@ -813,7 +889,7 @@ fwVisuAcd.set_title(2,'3D Animation ')
 ################################ Finally ##########################################################
         
 tab_nest = widgets.Tab()
-tab_nest.children = [swanInputAcd, runBox,outputBox, Show1DPlotsBox, Show2DPlotsBox]
+tab_nest.children = [SwanInputBox, runBox,outputBox, Show1DPlotsBox, Show2DPlotsBox]
 tab_nest.set_title(0, 'Input')
 tab_nest.set_title(1, 'Run')
 tab_nest.set_title(2, 'Output')
@@ -829,7 +905,7 @@ def on_change(change):
         out.clear_output()
         with out:
             tab_nest.set_title(3, 'Show 1D plots')
-            tab_nest.children = [swanInputAcd, runBox,outputBox, Show1DPlotsBox, Show2DPlotsBox]
+            tab_nest.children = [SwanInputBox, runBox,outputBox, Show1DPlotsBox, Show2DPlotsBox]
             display(tab_nest)
     if(modelTitle.value == "Funwave-tvd"):
         out.clear_output()
