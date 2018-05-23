@@ -1,5 +1,5 @@
 from __future__ import print_function
-from ipywidgets import interact, interactive, fixed, interact_manual, Layout, Button, Box, FloatText, Text, Dropdown, Label, IntSlider, Textarea, Accordion, ToggleButton, ToggleButtons, Select
+from ipywidgets import interact, interactive, fixed, interact_manual, Layout, Button, Box,VBox, HBox, FloatText, Text, Dropdown, Label, IntSlider, Textarea, Accordion, ToggleButton, ToggleButtons, Select, RadioButtons
 import ipywidgets as widgets
 from IPython.display import display, clear_output, HTML
 from matplotlib import animation, rc
@@ -59,257 +59,434 @@ delft3dBox = Box(delft3d_items, layout= Layout(
     disabled=False
 ))
 
-######################## Input tab ############################################################
+######################## SWAN Input tab ############################################################
 
+modeTbtns = ToggleButtons(options=['NONSTAT', 'STAT'], disabled=True)
+dimTbtns = ToggleButtons(options=['TWOD', 'ONED'])
+modeBox = Box([Label(value = 'MODE:'), modeTbtns, dimTbtns],layout = Layout(width = '80%', justify_content = 'space-between'))
+
+coordTbtns = ToggleButtons(options=['SPHE', 'CART'], layout = Layout(width = '1%'))
+spheTbtns = ToggleButtons(options=['CCM', 'QC'])
+coordBox = Box([Label(value = 'COORD:'), coordTbtns, spheTbtns],
+               layout = Layout(width = '80%', justify_content = 'space-between'))
+
+setTbtns = ToggleButtons(options=['NAUT', 'CART'])
+setBox = Box([Label(value = 'SET:'), setTbtns],layout = Layout(width = '42.4%', justify_content = 'space-between'))
+
+fricTbtns = ToggleButtons(options=['JONSWAP', 'COLL', 'MADS'])
+fricText = Text(layout = Layout(width='60px'))
+fricTxtBox = Box([fricText, Label(value = '(m2/s-3)')])
+fricBox = Box([Label(value = 'FRICTION:'), fricTbtns, fricTxtBox],
+              layout = Layout(width = '73.3%', justify_content = 'space-between'))
+
+modeStartBox = Box([modeBox, coordBox, setBox, fricBox], layout = Layout(flex_flow = 'column'))
+
+
+
+propTbtns = ToggleButtons(options=['BSBT', 'GSE'])
+propBox = Box([Label(value = 'PROP:'), propTbtns],layout = Layout(width = '42.4%', justify_content = 'space-between'))
+
+gen3Tbtns = ToggleButtons(options=['KOMEN', 'JANS', 'WESTH'])
+gen3Box = Box([Label(value = 'GEN3:'), gen3Tbtns],layout = Layout(width = '59.3%', justify_content = 'space-between'))
+
+modelInputBox = Box([propBox, gen3Box], layout = Layout(flex_flow = 'column'))
+
+
+timeBtns = ToggleButtons(options=['0.5', '1', '2'])
+timeBox = Box([Label(value = 'Time Step (h):', layout = Layout(width = '98px')), timeBtns], layout = Layout(width = '90%'))
+
+
+table = ['TIME','XP', 'YP', 'DEP', 'WIND', 'HS', 'DIR', 'RTP', 'PER', 'TM01', 'TM02', 'PDIR']
+
+table_items = []
+for i in range(len(table)):
+    name = table[i].lower()+'Btn'
+    name = ToggleButton(value = True,description = table[i])
+    table_items.append(name)
+    
+tableBtnsBox = Box(table_items,layout = Layout(width = '90%', justify_content = 'space-between'))
+tableBox = Box([Label(value = 'Table :', layout = Layout(width = '103px')), tableBtnsBox],layout = Layout(width = '90%'))
+               
+sp1dTbtn = ToggleButton(value = True,description = 'sp1d')
+sp2dTbtn = ToggleButton(value = False,description = 'sp2d')
+specBox = Box([Label(value = 'Spectral :', layout = Layout(width = '100px')), sp1dTbtn, sp2dTbtn], 
+              layout = Layout(width = '90%'))
+
+windBtn = ToggleButton(value = True,description = 'wind')
+hsBtn = ToggleButton(value = True,description = 'hs')
+dirBtn = ToggleButton(value = False,description = 'dir')
+perBtn = ToggleButton(value = False,description = 'per')
+blockBox = Box([Label(value = 'Block :', layout = Layout(width = '100px')), windBtn, hsBtn, dirBtn, perBtn], 
+               layout = Layout(width = '90%'))    
+    
+outputRequestBox = Box([timeBox, tableBox, specBox, blockBox], layout = Layout(flex_flow = 'column'))
+
+swanInputAcd = Accordion(children = [modeStartBox,modelInputBox,outputRequestBox], layout= Layout(width = '100%'))
+swanInputAcd.set_title(0,'Model Start-up')
+swanInputAcd.set_title(1,'Model Input')
+swanInputAcd.set_title(2,'Output Requests')
+
+SwanUpInputBtn = Button(description='Update Input File',button_style='primary', layout=Layout(width='100%'))
+
+
+def swanupdate_btn_clicked(a):
+    name_value_pairs = {
+        "MODE"      : modeTbtns.value+' '+dimTbtns.value,
+        "COORD"     : coordTbtns.value+' '+spheTbtns.value,
+        "SET"       : setTbtns.value,
+        "FRICTION"  : fricTbtns.value+' '+fricText.value,
+        "PROP"      : propTbtns.value,
+        "GEN3"      : gen3Tbtns.value+' AGROW'
+    }
+#     with open("input_template.txt","r") as template:
+#         with open("input_tmp.txt","w+") as inputTmp:
+#             for line in template.readlines():
+#                 g = re.match("^(TOTAL_TIME|PLOT_INTV|ETA|U|V)\s*=\s*(\S+)",line)
+#                 if g:
+#                     name = g.group(1)
+#                     if name in name_value_pairs:
+#                         inputTmp.write(name+" = "+name_value_pairs[name]+"\n")
+#                 else:
+#                     inputTmp.write(line)
+#             inputTmp.close()
+#         template.close()
+#     fwInputArea.value = open("input_tmp.txt","r").read()
+#     pass
+    
+SwanUpInputBtn.on_click(swanupdate_btn_clicked)
+
+SwanInputArea = Textarea(layout= Layout(height = "300px",width = '100%'))
+
+
+SwanInputBox = Box([swanInputAcd, SwanUpInputBtn, SwanInputArea], 
+                 layout = Layout(flex_flow = 'column', align_items = 'center'))
 
   
-togBtns = ToggleButtons(options=['0.5', '1', '2'],
-    description='',
-    disabled=False,)
+# togBtns = ToggleButtons(options=['0.5', '1', '2'],
+#     description='',
+#     disabled=False,)
 
-togBtn1 = ToggleButton(value = False, description = 'TIME')
-togBtn2 = ToggleButton(value = False, description = 'XP')
-togBtn3 = ToggleButton(value = False, description = 'YP')
-togBtn4 = ToggleButton(value = False, description = 'DEP')
-togBtn5 = ToggleButton(value = False, description = 'WIND')
-togBtn6 = ToggleButton(value = False, description = 'HS')
-togBtn7 = ToggleButton(value = False, description = 'DIR')
-togBtn8 = ToggleButton(value = False, description = 'RTP')
-togBtn9 = ToggleButton(value = False, description = 'PER')
-togBtn10 = ToggleButton(value = False, description = 'TM01')
-togBtn11 = ToggleButton(value = False, description = 'TM02')
-togBtn12 = ToggleButton(value = False, description = 'PDIR')
-togBtn13 = ToggleButton(value = False, description = 'Select All', button_style = 'success')
+# togBtn1 = ToggleButton(value = False, description = 'TIME')
+# togBtn2 = ToggleButton(value = False, description = 'XP')
+# togBtn3 = ToggleButton(value = False, description = 'YP')
+# togBtn4 = ToggleButton(value = False, description = 'DEP')
+# togBtn5 = ToggleButton(value = False, description = 'WIND')
+# togBtn6 = ToggleButton(value = False, description = 'HS')
+# togBtn7 = ToggleButton(value = False, description = 'DIR')
+# togBtn8 = ToggleButton(value = False, description = 'RTP')
+# togBtn9 = ToggleButton(value = False, description = 'PER')
+# togBtn10 = ToggleButton(value = False, description = 'TM01')
+# togBtn11 = ToggleButton(value = False, description = 'TM02')
+# togBtn12 = ToggleButton(value = False, description = 'PDIR')
+# togBtn13 = ToggleButton(value = False, description = 'Select All', button_style = 'success')
 
-togBtn14 = ToggleButton(value = False, description = 'sp1d')
-togBtn15 = ToggleButton(value = False, description = 'sp2d')
+# togBtn14 = ToggleButton(value = False, description = 'sp1d')
+# togBtn15 = ToggleButton(value = False, description = 'sp2d')
 
-togBtn16 = ToggleButton(value = False, description = 'wind')
-togBtn17 = ToggleButton(value = False, description = 'hs')
-togBtn18 = ToggleButton(value = False, description = 'dir')
-togBtn19 = ToggleButton(value = False, description = 'per')
+# togBtn16 = ToggleButton(value = False, description = 'wind')
+# togBtn17 = ToggleButton(value = False, description = 'hs')
+# togBtn18 = ToggleButton(value = False, description = 'dir')
+# togBtn19 = ToggleButton(value = False, description = 'per')
 
 
 
-tabBox = Box([Label(value='Table', layout = Layout(width = '280px')),togBtn1,togBtn2,togBtn3,
-              togBtn4,togBtn5,togBtn6,togBtn7,togBtn8,togBtn9,togBtn10,togBtn11,togBtn12], Layout = input_item_layout)
-togBtnsBox = Box([Label(value='Time Step (h)', layout = Layout(width = '100px')),togBtns],Layout = input_item_layout )
-specBox = Box([Label(value = 'Spectral Output', layout = Layout(width = '100px')), 
-               togBtn14, togBtn15], Layout = input_item_layout)
+# tabBox = Box([Label(value='Table', layout = Layout(width = '280px')),togBtn1,togBtn2,togBtn3,
+#               togBtn4,togBtn5,togBtn6,togBtn7,togBtn8,togBtn9,togBtn10,togBtn11,togBtn12], Layout = input_item_layout)
+# togBtnsBox = Box([Label(value='Time Step (h)', layout = Layout(width = '100px')),togBtns],Layout = input_item_layout )
+# specBox = Box([Label(value = 'Spectral Output', layout = Layout(width = '100px')), 
+#                togBtn14, togBtn15], Layout = input_item_layout)
 
-blocBox = Box([Label(value = 'Block Output', layout = Layout(width = '100px')), 
-               togBtn16, togBtn17, togBtn18, togBtn19], Layout = input_item_layout)
+# blocBox = Box([Label(value = 'Block Output', layout = Layout(width = '100px')), 
+#                togBtn16, togBtn17, togBtn18, togBtn19], Layout = input_item_layout)
 
-loadInputBtn =  Button(description='Load Input', layout= Layout(
-    display = 'flex',
-    flex_flow = 'row',
-    justify_content = 'center',
-    width = '20%',
-    disabled=False
-))
+# loadInputBtn =  Button(description='Load Input', layout= Layout(
+#     display = 'flex',
+#     flex_flow = 'row',
+#     justify_content = 'center',
+#     width = '20%',
+#     disabled=False
+# ))
 
-uploadInputBtn = Button(description='upload', layout= Layout(
-    display = 'flex',
-    flex_flow = 'row',
-    justify_content = 'center',
-    #width = '15%',
-    disabled=False
-))
+# uploadInputBtn = Button(description='upload', layout= Layout(
+#     display = 'flex',
+#     flex_flow = 'row',
+#     justify_content = 'center',
+#     #width = '15%',
+#     disabled=False
+# ))
 
-saveInputBtn = Button(description='Update Input', layout= Layout(
-    display = 'flex',
-    flex_flow = 'row',
-    justify_content = 'center',
-    #width = '20%',
-    disabled=False
-))
+# saveInputBtn = Button(description='Update Input', layout= Layout(
+#     display = 'flex',
+#     flex_flow = 'row',
+#     justify_content = 'center',
+#     #width = '20%',
+#     disabled=False
+# ))
 
-inputArea = Textarea(layout= Layout(
-    display = 'flex',
-    flex_flow = 'row',
-    justify_content = 'center',
-    width = '70%',
-    disabled=False
-))
+# inputArea = Textarea(layout= Layout(
+#     display = 'flex',
+#     flex_flow = 'row',
+#     justify_content = 'center',
+#     width = '70%',
+#     disabled=False
+# ))
 
-inputText = Text()
-#set_input(inputText)
+# inputText = Text()
+# #set_input(inputText)
 
-modelTitle = Dropdown(options=['SWAN', 'Funwave-tvd','Delft3D'])
+# modelTitle = Dropdown(options=['SWAN', 'Funwave-tvd','Delft3D'])
 
-input_items = [
-    #Box([Label(value='Upload File', layout = Layout(width = '125px')), inputText, upload_widget], layout = input_item_layout),
-    togBtnsBox,
-    tabBox,
-    specBox,
-    blocBox,
-    togBtn13,
-    saveInputBtn,
-    inputArea
-]
+# input_items = [
+#     #Box([Label(value='Upload File', layout = Layout(width = '125px')), inputText, upload_widget], layout = input_item_layout),
+#     togBtnsBox,
+#     tabBox,
+#     specBox,
+#     blocBox,
+#     togBtn13,
+#     saveInputBtn,
+#     inputArea
+# ]
 
-def uploadInput_Btn_clicked(a):
-    #os.system("mkdir -p input")
-    #rcmd = "cp -a "+inputText.value+"/. input/"
-    #cmd(rcmd)
-    #_upload()
-    pass
+# def uploadInput_Btn_clicked(a):
+#     #os.system("mkdir -p input")
+#     #rcmd = "cp -a "+inputText.value+"/. input/"
+#     #cmd(rcmd)
+#     #_upload()
+#     pass
 
-uploadInputBtn.on_click(uploadInput_Btn_clicked)
+# uploadInputBtn.on_click(uploadInput_Btn_clicked)
 
-def selectall_tBtn_clicked(a):
-    if (togBtn13.value == True):
-        togBtn1.value = True
-        togBtn2.value = True
-        togBtn3.value = True
-        togBtn4.value = True
-        togBtn5.value = True
-        togBtn6.value = True
-        togBtn7.value = True
-        togBtn8.value = True
-        togBtn9.value = True
-        togBtn10.value = True
-        togBtn11.value = True
-        togBtn12.value = True
-        togBtn14.value = True
-        togBtn15.value = True
-        togBtn16.value = True
-        togBtn17.value = True
-        togBtn18.value = True
-        togBtn19.value = True
-    else:
-        togBtn1.value = False
-        togBtn2.value = False
-        togBtn3.value = False
-        togBtn4.value = False
-        togBtn5.value = False
-        togBtn6.value = False
-        togBtn7.value = False
-        togBtn8.value = False
-        togBtn9.value = False
-        togBtn10.value = False
-        togBtn11.value = False
-        togBtn12.value = False
-        togBtn14.value = False
-        togBtn15.value = False
-        togBtn16.value = False
-        togBtn17.value = False
-        togBtn18.value = False
-        togBtn19.value = False
+# def selectall_tBtn_clicked(a):
+#     if (togBtn13.value == True):
+#         togBtn1.value = True
+#         togBtn2.value = True
+#         togBtn3.value = True
+#         togBtn4.value = True
+#         togBtn5.value = True
+#         togBtn6.value = True
+#         togBtn7.value = True
+#         togBtn8.value = True
+#         togBtn9.value = True
+#         togBtn10.value = True
+#         togBtn11.value = True
+#         togBtn12.value = True
+#         togBtn14.value = True
+#         togBtn15.value = True
+#         togBtn16.value = True
+#         togBtn17.value = True
+#         togBtn18.value = True
+#         togBtn19.value = True
+#     else:
+#         togBtn1.value = False
+#         togBtn2.value = False
+#         togBtn3.value = False
+#         togBtn4.value = False
+#         togBtn5.value = False
+#         togBtn6.value = False
+#         togBtn7.value = False
+#         togBtn8.value = False
+#         togBtn9.value = False
+#         togBtn10.value = False
+#         togBtn11.value = False
+#         togBtn12.value = False
+#         togBtn14.value = False
+#         togBtn15.value = False
+#         togBtn16.value = False
+#         togBtn17.value = False
+#         togBtn18.value = False
+#         togBtn19.value = False
         
-togBtn13.observe(selectall_tBtn_clicked, 'value')
+# togBtn13.observe(selectall_tBtn_clicked, 'value')
     
-def loadInput_Btn_clicked(a):
-    inputArea.value = open('input/INPUT','r').read()
+# def loadInput_Btn_clicked(a):
+#     inputArea.value = open('input/INPUT','r').read()
 
-loadInputBtn.on_click(loadInput_Btn_clicked)
+# loadInputBtn.on_click(loadInput_Btn_clicked)
 
-def judgeBtn(tb, value):
-    if (tb.value == True):
-        label = value;
-    else:
-        label = "";
-    return label
+# def judgeBtn(tb, value):
+#     if (tb.value == True):
+#         label = value;
+#     else:
+#         label = "";
+#     return label
 
-def saveInput_Btn_clicked(a):
-    #with open('input/INPUT','w') as output:
-    #    output.write(inputArea.value)
-    #cmd = "sed -i -e 's/TABLE/TABLE 234 "+togBtn1.description+"' INPUTtmp"
-    #print (togBtn1.value)
+# def saveInput_Btn_clicked(a):
+#     #with open('input/INPUT','w') as output:
+#     #    output.write(inputArea.value)
+#     #cmd = "sed -i -e 's/TABLE/TABLE 234 "+togBtn1.description+"' INPUTtmp"
+#     #print (togBtn1.value)
     
-    tb1_value = judgeBtn(togBtn1, "TIME")
-    tb2_value = judgeBtn(togBtn2, "XP")
-    tb3_value = judgeBtn(togBtn3, "YP")
-    tb4_value = judgeBtn(togBtn4, "DEP")
-    tb5_value = judgeBtn(togBtn5, "WIND")
-    tb6_value = judgeBtn(togBtn6, "HS")
-    tb7_value = judgeBtn(togBtn7, "DIR")
-    tb8_value = judgeBtn(togBtn8, "RTP")
-    tb9_value = judgeBtn(togBtn9, "PER")
-    tb10_value = judgeBtn(togBtn10, "TM01")
-    tb11_value = judgeBtn(togBtn11, "TM02")
-    tb12_value = judgeBtn(togBtn12, "PDIR")
+#     tb1_value = judgeBtn(togBtn1, "TIME")
+#     tb2_value = judgeBtn(togBtn2, "XP")
+#     tb3_value = judgeBtn(togBtn3, "YP")
+#     tb4_value = judgeBtn(togBtn4, "DEP")
+#     tb5_value = judgeBtn(togBtn5, "WIND")
+#     tb6_value = judgeBtn(togBtn6, "HS")
+#     tb7_value = judgeBtn(togBtn7, "DIR")
+#     tb8_value = judgeBtn(togBtn8, "RTP")
+#     tb9_value = judgeBtn(togBtn9, "PER")
+#     tb10_value = judgeBtn(togBtn10, "TM01")
+#     tb11_value = judgeBtn(togBtn11, "TM02")
+#     tb12_value = judgeBtn(togBtn12, "PDIR")
         
-    rcmd = "TABLE  'BUOYS' HEAD  'buoy.tab' "+tb1_value+" "+tb2_value+" "+tb3_value+" "+tb4_value+" "+tb5_value+" "+tb6_value+" "+ tb7_value+" "+tb8_value+" "+tb9_value+" "+tb10_value+" "+tb11_value+" "+tb12_value+" OUT 20120826.000000 "+togBtns.value+" HR"
+#     rcmd = "TABLE  'BUOYS' HEAD  'buoy.tab' "+tb1_value+" "+tb2_value+" "+tb3_value+" "+tb4_value+" "+tb5_value+" "+tb6_value+" "+ tb7_value+" "+tb8_value+" "+tb9_value+" "+tb10_value+" "+tb11_value+" "+tb12_value+" OUT 20120826.000000 "+togBtns.value+" HR"
 
-    if not os.path.exists("input"):
-        cmd("mkdir -p input")
-    for fname in ["b02.bot","b02.wd","b02.xy","buoy10_2012.loc","INPUT","s"]:
-        if not os.path.exists("input/"+fname):
-            cmd("git checkout input/"+fname)
-    with open("tmp","w") as tmp:
-        f = open("input/INPUT","r+")
-        index = 0;
-        lines = f.readlines()
-        for line in lines:
-            if (index == 36):
-                tmp.write(rcmd+'\n')
-            elif (index == 37):
-                if(togBtn14.value==True):
-                    tmp.write("SPEC 'BUOYS' SPEC1D ABS 'buoy_sp1d' OUT 20120826.000000 "+togBtns.value+" HR\n")
-                else:
-                    tmp.write("$SPEC 'BUOYS' SPEC1D ABS 'buoy_sp1d' OUT 20120826.000000 "+togBtns.value+" HR\n")
-            elif (index == 38):
-                if(togBtn15.value==True):
-                    tmp.write("SPEC 'BUOYS' SPEC1D ABS 'buoy_sp2d' OUT 20120826.000000 "+togBtns.value+" HR\n")
-                else:
-                    tmp.write("$SPEC 'BUOYS' SPEC1D ABS 'buoy_sp2d' OUT 20120826.000000 "+togBtns.value+" HR\n")
-            elif (index == 39):
-                if(togBtn16.value==True):
-                    tmp.write("BLOCK 'COMPGRID' HEADER 'wind' LAY 4 WIND OUT 20050919.000000 "+togBtns.value+" HR\n")
-                else:
-                    tmp.write("$BLOCK 'COMPGRID' HEADER 'wind' LAY 4 WIND OUT 20050919.000000 "+togBtns.value+" HR\n")
-            elif (index == 40):
-                if(togBtn17.value==True):
-                    tmp.write("BLOCK 'COMPGRID' HEADER 'hs' LAY 4 HS OUT 20050919.000000 "+togBtns.value+" HR\n")
-                else:
-                    tmp.write("$BLOCK 'COMPGRID' HEADER 'hs' LAY 4 HS OUT 20050919.000000 "+togBtns.value+" HR\n")
-            elif (index == 41):
-                if(togBtn18.value==True):
-                    tmp.write("BLOCK 'COMPGRID' HEADER 'dir' LAY 4 DIR OUT 20050919.000000 "+togBtns.value+" HR\n")
-                else:
-                    tmp.write("$BLOCK 'COMPGRID' HEADER 'dir' LAY 4 DIR OUT 20050919.000000 "+togBtns.value+" HR\n")
-            elif (index == 42):
-                if(togBtn19.value==True):
-                    tmp.write("BLOCK 'COMPGRID' HEADER 'per' LAY 4 PER OUT 20050919.000000 "+togBtns.value+" HR\n")
-                else:
-                    tmp.write("$BLOCK 'COMPGRID' HEADER 'per' LAY 4 PER OUT 20050919.000000 "+togBtns.value+" HR\n")
-            elif (index == 45):
-                tmp.write("COMPUTE NONST  20120826.000000 "+togBtns.value+" HR 20120827.000000\n")
-            else:
-                tmp.write(line)
-            index+=1
+#     if not os.path.exists("input"):
+#         cmd("mkdir -p input")
+#     for fname in ["b02.bot","b02.wd","b02.xy","buoy10_2012.loc","INPUT","s"]:
+#         if not os.path.exists("input/"+fname):
+#             cmd("git checkout input/"+fname)
+#     with open("tmp","w") as tmp:
+#         f = open("input/INPUT","r+")
+#         index = 0;
+#         lines = f.readlines()
+#         for line in lines:
+#             if (index == 36):
+#                 tmp.write(rcmd+'\n')
+#             elif (index == 37):
+#                 if(togBtn14.value==True):
+#                     tmp.write("SPEC 'BUOYS' SPEC1D ABS 'buoy_sp1d' OUT 20120826.000000 "+togBtns.value+" HR\n")
+#                 else:
+#                     tmp.write("$SPEC 'BUOYS' SPEC1D ABS 'buoy_sp1d' OUT 20120826.000000 "+togBtns.value+" HR\n")
+#             elif (index == 38):
+#                 if(togBtn15.value==True):
+#                     tmp.write("SPEC 'BUOYS' SPEC1D ABS 'buoy_sp2d' OUT 20120826.000000 "+togBtns.value+" HR\n")
+#                 else:
+#                     tmp.write("$SPEC 'BUOYS' SPEC1D ABS 'buoy_sp2d' OUT 20120826.000000 "+togBtns.value+" HR\n")
+#             elif (index == 39):
+#                 if(togBtn16.value==True):
+#                     tmp.write("BLOCK 'COMPGRID' HEADER 'wind' LAY 4 WIND OUT 20050919.000000 "+togBtns.value+" HR\n")
+#                 else:
+#                     tmp.write("$BLOCK 'COMPGRID' HEADER 'wind' LAY 4 WIND OUT 20050919.000000 "+togBtns.value+" HR\n")
+#             elif (index == 40):
+#                 if(togBtn17.value==True):
+#                     tmp.write("BLOCK 'COMPGRID' HEADER 'hs' LAY 4 HS OUT 20050919.000000 "+togBtns.value+" HR\n")
+#                 else:
+#                     tmp.write("$BLOCK 'COMPGRID' HEADER 'hs' LAY 4 HS OUT 20050919.000000 "+togBtns.value+" HR\n")
+#             elif (index == 41):
+#                 if(togBtn18.value==True):
+#                     tmp.write("BLOCK 'COMPGRID' HEADER 'dir' LAY 4 DIR OUT 20050919.000000 "+togBtns.value+" HR\n")
+#                 else:
+#                     tmp.write("$BLOCK 'COMPGRID' HEADER 'dir' LAY 4 DIR OUT 20050919.000000 "+togBtns.value+" HR\n")
+#             elif (index == 42):
+#                 if(togBtn19.value==True):
+#                     tmp.write("BLOCK 'COMPGRID' HEADER 'per' LAY 4 PER OUT 20050919.000000 "+togBtns.value+" HR\n")
+#                 else:
+#                     tmp.write("$BLOCK 'COMPGRID' HEADER 'per' LAY 4 PER OUT 20050919.000000 "+togBtns.value+" HR\n")
+#             elif (index == 45):
+#                 tmp.write("COMPUTE NONST  20120826.000000 "+togBtns.value+" HR 20120827.000000\n")
+#             else:
+#                 tmp.write(line)
+#             index+=1
     
-    copyfile("tmp","input/INPUT")
+#     copyfile("tmp","input/INPUT")
     
-    inputArea.value = open('input/INPUT','r').read()
+#     inputArea.value = open('input/INPUT','r').read()
     
-saveInputBtn.on_click(saveInput_Btn_clicked)
+# saveInputBtn.on_click(saveInput_Btn_clicked)
 
-inputBox = Box(input_items, layout= Layout(
- #   display = 'flex',
-    flex_flow = 'column',
-    align_items='stretch',
-    disabled=False
-))
-
-
+# inputBox = Box(input_items, layout= Layout(
+#  #   display = 'flex',
+#     flex_flow = 'column',
+#     align_items='stretch',
+#     disabled=False
+# ))
 
 
 
-funtogBtnsBox = Box([Label(value='Coming soon', layout = Layout(width = '100px'))],Layout = input_item_layout )
+
+
+# funtogBtnsBox = Box([Label(value='Coming soon', layout = Layout(width = '100px'))],Layout = input_item_layout )
                            
                            
-funwave_items=[
-    funtogBtnsBox
-]                        
+# funwave_items=[
+#     funtogBtnsBox
+# ]                        
 
-funBox = Box(funwave_items, layout= Layout(
- #   display = 'flex',
-    flex_flow = 'column',
-    align_items='stretch',
-    disabled=False
-))
+# funBox = Box(funwave_items, layout= Layout(
+#  #   display = 'flex',
+#     flex_flow = 'column',
+#     align_items='stretch',
+#     disabled=False
+# ))
+
+
+
+
+
+
+
+
+
+##################################### Funwave-tvd Input tab ################################
+
+
+totalTimeText = Text()
+totalTimeBox = Box([Label(value = 'Total Computational Time (s)'), totalTimeText],
+                   layout = Layout(width = '55%', justify_content = 'space-between'))
+
+plotTimeText = Text()
+plotTimeBox = Box([Label(value = 'Plot Interval (s)'), plotTimeText],
+                  layout = Layout(width = '55%', justify_content = 'space-between'))
+
+timeBox = Box([totalTimeBox, plotTimeBox],layout = Layout(flex_flow = 'column'))
+
+etaTbtns = ToggleButtons(options=['True', 'False'])
+etaBox = Box([Label(value = 'Surface Elevation'), etaTbtns],layout = Layout(width = '50%', justify_content = 'space-between'))
+
+uTbtns = ToggleButtons(options=['True', 'False'])
+uBox = Box([Label(value = 'U'), uTbtns ],layout = Layout(width = '50%', justify_content = 'space-between'))
+
+vTbtns = ToggleButtons(options=['True', 'False'])
+vBox = Box([Label(value = 'V'), vTbtns],layout = Layout(width = '50%', justify_content = 'space-between'))
+
+outputBox = Box([etaBox, uBox, vBox], layout = Layout(flex_flow = 'column'))
+
+fwInputAcd = Accordion(children = [timeBox,outputBox], layout= Layout(width = '100%'))
+fwInputAcd.set_title(0,'Time')
+fwInputAcd.set_title(1,'Output')
+
+fwUpInputBtn = Button(description='Update Input File',button_style='primary', layout=Layout(width='100%'))
+
+def convertTF(value):
+    if (value == "True"):
+        return "T"
+    elif (value == "False"):
+        return "F"
+    else:
+        return value
+
+def fwupdate_btn_clicked(a):
+    name_value_pairs = {
+        "TOTAL_TIME": totalTimeText.value,
+        "PLOT_INTV" : plotTimeText.value,
+        "ETA"       : convertTF(etaTbtns.value),
+        "U"          : convertTF(uTbtns.value),
+        "V"          : convertTF(vTbtns.value)
+    }
+    with open("input_template.txt","r") as template:
+        with open("input_tmp.txt","w+") as inputTmp:
+            for line in template.readlines():
+                g = re.match("^(TOTAL_TIME|PLOT_INTV|ETA|U|V)\s*=\s*(\S+)",line)
+                if g:
+                    name = g.group(1)
+                    if name in name_value_pairs:
+                        inputTmp.write(name+" = "+name_value_pairs[name]+"\n")
+                else:
+                    inputTmp.write(line)
+            inputTmp.close()
+        template.close()
+    fwInputArea.value = open("input_tmp.txt","r").read()
+    
+fwUpInputBtn.on_click(fwupdate_btn_clicked)
+
+fwInputArea = Textarea(layout= Layout(height = "300px",width = '100%'))
+
+fwInputBox = Box([fwInputAcd, fwUpInputBtn, fwInputArea], 
+                 layout = Layout(flex_flow = 'column', align_items = 'center'))
+
+
+
 
 
 
@@ -322,44 +499,42 @@ run_item_layout = Layout(
     width = '50%'
 )
 
+numnodeSlider = IntSlider(value=0, min=1, max=8, step=1)
+numprocSlider = IntSlider(value=0, min=1, max=16, step=1)
 
-runBtn = Button(description='Run', layout= Layout(
-    display = 'flex',
-    flex_flow = 'row',
-    justify_content = 'center',
-    width = '253px',
-    disabled=False
-))
+runBtn = Button(description='Run', button_style='primary', layout= Layout(width = '50px'))
 
-abortBtn = Button(
-    description='Abort',button_style='danger',  layout= Layout(
-    display = 'flex',
-    flex_flow = 'row',
-    justify_content = 'center',
-    width = '50',
-    disabled=False
-))
+run_items = [
+    Box([Label(value='Nodes', layout = Layout(width = '100px')), numnodeSlider], layout = run_item_layout),
+    Box([Label(value='Processors', layout=Layout(width = '100px')), numprocSlider], layout= run_item_layout),
+    Box([runBtn]),
+]
+
 def modifyFWinput():
-    with open("input_template.txt","r") as temp:
+    name_value_pairs = {
+        "PX" : numnodeSlider.value,
+        "PY" : numprocSlider.value
+    }
+    with open("input_tem.txt","r") as tem:
         with open("input.txt","w") as inputfile:
             for line in temp.readlines():
-                PX = re.sub('(PX)\s*=\s*(\S+)',r'\1 = '+str(numnodeSlider.value), line)
-                PY = re.sub('(PY)\s*=\s*(\S+)',r'\1 = '+str(numprocSlider.value), line)
-                if (PX != line):
-                    inputfile.write(PX)
-                elif (PY != line):
-                    inputfile.write(PY)
+                g = re.match("^(PX|PY)\s*=\s*(\S+)",line)
+                if g:
+                    name = g.group(1)
+                    if name in name_value_pairs:
+                        inputfile.write(name+" = "+name_value_pairs[name]+"\n")
                 else:
                     inputfile.write(line)
-        inputfile.close()
-    temp.close()
+            inputfile.close()
+        tem.close()
+    
 def runfun_btn_clicked(a):
-    modifyFWinput()
     if (modelTitle.value == "SWAN"): 
         cmd("tar cvzf input.tgz input")
         cmd("files-upload -F input.tgz -S ${STORAGE_MACHINE} ${DEPLOYMENT_PATH}/")
         submitJob(numnodeSlider.value,numprocSlider.value,"swan") 
     elif (modelTitle.value == "Funwave-tvd"): 
+        modifyFWinput()
         cmd("rm -fr input")
         cmd("mkdir input")
         cmd("cp input.txt input")
@@ -370,44 +545,7 @@ def runfun_btn_clicked(a):
 runBtn.on_click(runfun_btn_clicked)
 
 
-# def reviseFwInput(nodes,processors):
-#     with open("input.txt","r") as fd:
-#         for line in fd.readlines():
-#             g = re.match("^(\w+)\s*=\s*(\S+)",line)
-#             if g:
-                
-
-
-def abort_btn_clicked(a):
-    os.system('sudo pkill swan.exe')
-
-abortBtn.on_click(abort_btn_clicked)
-
-machineText = Text()
-baseappText = Text()
-
-numnodeSlider = IntSlider(value=0, min=1, max=8, step=1)
-numprocSlider = IntSlider(value=0, min=1, max=16, step=1)
-
-run_items = [
-    
-    #Box([Label(value='Agave password', layout = Layout(width = '120px')), agavePwText], layout = run_item_layout),
-    Box([Label(value='Nodes', layout = Layout(width = '120px')), numnodeSlider], layout = run_item_layout),
-    #Box([Label(value='Machine password', layout = Layout(width = '120px')), machinePwText], layout = run_item_layout),
-    #Box([Label(value='Pushbullet token', layout = Layout(width = '120px')), PbtokText], layout = run_item_layout),
-    #Box([Label(value='BaseApp name', layout = Layout(width = '120px')), baseappText], layout = run_item_layout),
-    
-    Box([Label(value='Processors', layout=Layout(width = '120px')), numprocSlider], layout= run_item_layout),
-    Box([runBtn,abortBtn]),
-]
-
-runBox = Box(run_items, layout= Layout(
- #   display = 'flex',
-    flex_flow = 'column',
-    align_items='stretch',
-    disabled=False
-))
-
+runBox = VBox(run_items)
 
 
 
@@ -418,41 +556,18 @@ runBox = Box(run_items, layout= Layout(
 
 
 ################################# Output tab ###################################
-jobListBtn = Button(description='List jobs history', layout= Layout(
-    display = 'flex',
-    flex_flow = 'row',
-    justify_content = 'center',
-    width = '15%',
-    disabled=False
-))
 
-jobSelect = Select(
-    description='jobs history:',
-    disabled=False,
-    layout = Layout(width='60%')
-)
+jobListBtn = Button(description='List jobs history', button_style='primary', layout= Layout(width = '115px'))
 
-jobOutputBtn = Button(description='List job output', layout= Layout(
-    display = 'flex',
-    flex_flow = 'row',
-    justify_content = 'center',
-    width = '15%',
-    disabled=False
-))
+jobSelect = Select(layout = Layout(height = '150px', width='100%'))
 
-outputSelect = Select(
-    description='job output:',
-    disabled=False,
-    layout = Layout(width='60%')
-)
+jobOutputBtn = Button(description='List job output', button_style='primary', layout= Layout(width = '115px'))
 
-downloadOpBtn = Button(description='Get selected ouput', layout= Layout(
-    display = 'flex',
-    flex_flow = 'row',
-    justify_content = 'center',
-    width = '15%',
-    disabled=False
-))
+abortBtn = Button(description='Abort', button_style='danger', layout= Layout(width = 'auto'))
+
+outputSelect = Select(layout = Layout(height = '150px', width='100%'))
+
+downloadOpBtn = Button(description='Download', button_style='primary', layout= Layout(width = '115px'))
 
 def jobList_btn_clicked(a):
     cout = cmd("jobs-list -l 10")
@@ -460,6 +575,15 @@ def jobList_btn_clicked(a):
     jobSelect.options = out1
     
 jobListBtn.on_click(jobList_btn_clicked)
+
+def abort_btn_clicked(a):
+    g = re.match(r'^\S+',jobSelect.value)
+    if g:
+        jobid = g.group(0)
+        rcmd = "jobs-stop "+jobid
+        cmd(rcmd)
+
+abortBtn.on_click(abort_btn_clicked)
 
 
 def jobOutput_btn_clicked(a):
@@ -498,28 +622,25 @@ def download_btn_clicked(a):
 
 downloadOpBtn.on_click(download_btn_clicked)
 
-
-
 output_items = [
     Box([jobListBtn]),
-    Box([jobSelect]),
-    Box([jobOutputBtn]),
-    Box([outputSelect]),
+    Box([jobSelect], layout = Layout(width='50%')),
+    Box([jobOutputBtn,abortBtn], layout = Layout(display = 'flex', justify_content = 'space-between', width='50%')),
+    Box([outputSelect], layout = Layout(width='50%')),
     Box([downloadOpBtn])
 ]
 
-
-
-outputBox = Box(output_items, layout= Layout(
- #   display = 'flex',
-    flex_flow = 'column',
-    align_items='stretch',
-    disabled=False
-))
+outputBox = VBox(output_items)
 
 
 
-##################################### Show 1D tab ########################################
+
+
+
+
+
+
+##################################### SWAN Show 1D tab ########################################
 def showPlots(index):
     if(Yoption.value=='Choose one'):
         return
@@ -709,15 +830,15 @@ Show2DPlotsBox = Box(Show2D_items, layout= Layout(
 
 
 
-############################### Funwave Show 2D tab ##########################################
+############################### Funwave Visualization tab ##########################################
 
 
 
 surfaceFrame = IntSlider(value=0, min=0, max=31)
 surfaceInter = widgets.interactive(surfacePlot, frame = surfaceFrame)
-surfaceBox = Box([Label(value='Surface',layout = Layout(width = '80px')),surfaceInter])
+surfaceBox = Box([Label(value='Surface Elevation'),surfaceInter])
 
-basicBtn = Button(description='display')
+basicBtn = Button(description='display',button_style='primary', layout=Layout(width='auto'))
 basicOutput = widgets.Output()
 
 def basic_Btn_clicked(a):
@@ -729,10 +850,11 @@ def basic_Btn_clicked(a):
         display(HTML(anim.to_html5_video()))
     
 basicBtn.on_click(basic_Btn_clicked)
-basicAnimBox = Box([Label(value='Basic animation', layout = Layout(width = '130px')),basicBtn], layout = Layout(width = '80%')) 
+basicBox = Box([Label(value='2D animation'),basicBtn], layout = Layout(width = '80%')) 
+basicAnimBox = Box([basicBox, basicOutput],layout = Layout(flex_flow = 'column', align_items='stretch',))
 
 
-rotatingBtn = Button(description='display')
+rotatingBtn = Button(description='display',button_style='info', layout=Layout(width='auto'))
 rotatingOutput = widgets.Output()
 
 def rotating_Btn_clicked(a):
@@ -744,23 +866,30 @@ def rotating_Btn_clicked(a):
         display(HTML(anim.to_html5_video()))
 
 rotatingBtn.on_click(rotating_Btn_clicked)
-rotatingAnimBox = Box([Label(value='Rotating animation', layout = Layout(width = '130px')),rotatingBtn], layout = Layout(width = '80%')) 
-    
+rotatingBox = Box([Label(value='3D animation'),rotatingBtn], layout = Layout(width = '80%'))
+rotatingAnimBox = Box([rotatingBox, rotatingOutput], layout = Layout(flex_flow = 'column', align_items='stretch',))
+
+
+fwVisuAcd =Accordion(children = [surfaceBox,basicAnimBox,rotatingAnimBox])
+fwVisuAcd.set_title(0,'Surface Elevation Snapshots')
+fwVisuAcd.set_title(1,'2D Animation')
+fwVisuAcd.set_title(2,'3D Animation ')
 
 
 
-fwShow2d_items = [surfaceBox, basicAnimBox , basicOutput, rotatingAnimBox, rotatingOutput]
-fwShow2dBox = Box(fwShow2d_items, layout= Layout(
- #   display = 'flex',
-    flex_flow = 'column',
-    align_items='stretch',
-    disabled=False
-))
 
 
+
+
+
+
+
+
+
+################################ Finally ##########################################################
         
 tab_nest = widgets.Tab()
-tab_nest.children = [inputBox, runBox,outputBox, Show1DPlotsBox, Show2DPlotsBox]
+tab_nest.children = [SwanInputBox, runBox,outputBox, Show1DPlotsBox, Show2DPlotsBox]
 tab_nest.set_title(0, 'Input')
 tab_nest.set_title(1, 'Run')
 tab_nest.set_title(2, 'Output')
@@ -776,13 +905,13 @@ def on_change(change):
         out.clear_output()
         with out:
             tab_nest.set_title(3, 'Show 1D plots')
-            tab_nest.children = [inputBox, runBox,outputBox, Show1DPlotsBox, Show2DPlotsBox]
+            tab_nest.children = [SwanInputBox, runBox,outputBox, Show1DPlotsBox, Show2DPlotsBox]
             display(tab_nest)
     if(modelTitle.value == "Funwave-tvd"):
         out.clear_output()
         with out:
-            tab_nest.set_title(3, 'Show 2D plots')
-            tab_nest.children = [funBox, runBox,outputBox, fwShow2dBox]
+            tab_nest.set_title(3, 'Visualization')
+            tab_nest.children = [fwInputBox, runBox,outputBox, fwVisuAcd]
             display(tab_nest)
     if(modelTitle.value == "Delft3D"):
         out.clear_output()
@@ -790,6 +919,7 @@ def on_change(change):
             tab_nest.children = [delft3dBox, runBox,outputBox, Show1DPlotsBox, Show2DPlotsBox]
             display(tab_nest)
            
+    
 modelTitle.observe(on_change)
 
 

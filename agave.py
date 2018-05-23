@@ -212,7 +212,7 @@ def configure(agave_username, machine_username, machine_name, project_name):
 
     tar xzvf input.tgz
 
-    /project/singularity/2.4.2/bin/singularity exec \$SING_OPTS /project/sbrandt/chemora/images/\${simagename}.simg bash /usr/local/bin/runapp.sh
+    /project/singularity/bin/singularity exec \$SING_OPTS /project/sbrandt/chemora/images/\${simagename}.simg bash /usr/local/bin/runapp.sh
     mv input output
     rm -f output/PRINT*
     tar cvzf output.tar.gz output
