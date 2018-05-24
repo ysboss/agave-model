@@ -61,7 +61,7 @@ delft3dBox = Box(delft3d_items, layout= Layout(
 
 ######################## SWAN Input tab ############################################################
 
-modeTbtns = ToggleButtons(options=['NONSTAT', 'STAT'], disabled=True)
+modeTbtns = ToggleButtons(options=['NONSTAT', 'STAT'])
 dimTbtns = ToggleButtons(options=['TWOD', 'ONED'])
 modeBox = Box([Label(value = 'MODE:'), modeTbtns, dimTbtns],layout = Layout(width = '80%', justify_content = 'space-between'))
 
@@ -80,8 +80,6 @@ fricBox = Box([Label(value = 'FRICTION:'), fricTbtns, fricTxtBox],
               layout = Layout(width = '73.3%', justify_content = 'space-between'))
 
 modeStartBox = Box([modeBox, coordBox, setBox, fricBox], layout = Layout(flex_flow = 'column'))
-
-
 
 propTbtns = ToggleButtons(options=['BSBT', 'GSE'])
 propBox = Box([Label(value = 'PROP:'), propTbtns],layout = Layout(width = '42.4%', justify_content = 'space-between'))
@@ -107,16 +105,16 @@ for i in range(len(table)):
 tableBtnsBox = Box(table_items,layout = Layout(width = '90%', justify_content = 'space-between'))
 tableBox = Box([Label(value = 'Table :', layout = Layout(width = '103px')), tableBtnsBox],layout = Layout(width = '90%'))
                
-sp1dTbtn = ToggleButton(value = True,description = 'sp1d')
-sp2dTbtn = ToggleButton(value = False,description = 'sp2d')
+sp1dTbtn = ToggleButton(value = True,description = 'spec1d')
+sp2dTbtn = ToggleButton(value = False,description = 'spec2d')
 specBox = Box([Label(value = 'Spectral :', layout = Layout(width = '100px')), sp1dTbtn, sp2dTbtn], 
               layout = Layout(width = '90%'))
 
-windBtn = ToggleButton(value = True,description = 'wind')
-hsBtn = ToggleButton(value = True,description = 'hs')
-dirBtn = ToggleButton(value = False,description = 'dir')
-perBtn = ToggleButton(value = False,description = 'per')
-blockBox = Box([Label(value = 'Block :', layout = Layout(width = '100px')), windBtn, hsBtn, dirBtn, perBtn], 
+windTbtn = ToggleButton(value = True,description = 'wind')
+hsTbtn = ToggleButton(value = True,description = 'hs')
+dirTbtn = ToggleButton(value = False,description = 'dir')
+perTbtn = ToggleButton(value = False,description = 'per')
+blockBox = Box([Label(value = 'Block :', layout = Layout(width = '100px')), windTbtn, hsTbtn, dirTbtn, perTbtn], 
                layout = Layout(width = '90%'))    
     
 outputRequestBox = Box([timeBox, tableBox, specBox, blockBox], layout = Layout(flex_flow = 'column'))
@@ -128,30 +126,54 @@ swanInputAcd.set_title(2,'Output Requests')
 
 SwanUpInputBtn = Button(description='Update Input File',button_style='primary', layout=Layout(width='100%'))
 
-
 def swanupdate_btn_clicked(a):
+    cmd("tar -zxvf input_swan.tgz")
+    cmd("mv input_swan/INPUT input_SWAN/INPUT_template")
+    table_vars = ""
+    for i in range (len(table_items)):
+        if table_items[i].value == True:
+            table_vars += ' '+table_items[i].description
+        
     name_value_pairs = {
         "MODE"      : modeTbtns.value+' '+dimTbtns.value,
         "COORD"     : coordTbtns.value+' '+spheTbtns.value,
         "SET"       : setTbtns.value,
         "FRICTION"  : fricTbtns.value+' '+fricText.value,
         "PROP"      : propTbtns.value,
-        "GEN3"      : gen3Tbtns.value+' AGROW'
+        "GEN3"      : gen3Tbtns.value+' AGROW',
+        "TIME_STEP" : timeBtns.value+' HR',
+        "TABLE"     : table_vars,
+        "SPEC1D"    : sp1dTbtn.value,
+        "SPEC2D"    : sp2dTbtn.value,
+        "WIND"      : windTbtn.value,
+        "HS"        : hsTbtn.value,
+        "DIR"       : dirTbtn.value,
+        "PER"       : perTbtn.value
     }
-#     with open("input_template.txt","r") as template:
-#         with open("input_tmp.txt","w+") as inputTmp:
-#             for line in template.readlines():
-#                 g = re.match("^(TOTAL_TIME|PLOT_INTV|ETA|U|V)\s*=\s*(\S+)",line)
-#                 if g:
-#                     name = g.group(1)
-#                     if name in name_value_pairs:
-#                         inputTmp.write(name+" = "+name_value_pairs[name]+"\n")
-#                 else:
-#                     inputTmp.write(line)
-#             inputTmp.close()
-#         template.close()
-#     fwInputArea.value = open("input_tmp.txt","r").read()
-#     pass
+    with open("input_SWAN/INPUT_template","r") as template:
+        with open("input_SWAN/INPUT","w+") as ipt:
+            for line in template.readlines():
+                g = re.match("^(MODE|COORD|SET|FRICTION|PROP|GEN3)\s*",line)
+                h = re.match("^(TABLE)(\s*\S*\s\S*\s*\S*)[\w\s]*(OUT\s\S*)(\s*\d\s*\w*)",line)
+                r = re.match("(^(SPEC|BLOCK)[\s\S]*(SPEC1D|SPEC2D|WIND|HS|DIR|PER)[\s\S]*)(\s*\d\s*\w*)",line)
+                if g: 
+                    name = g.group(1)
+                    if name in name_value_pairs:
+                        ipt.write(name+" "+name_value_pairs[name]+"\n")
+                elif h:
+                    ipt.write(h.group(1)+h.group(2)+name_value_pairs[h.group(1)]+' '+h.group(3)
+                              +' '+name_value_pairs['TIME_STEP']+"\n")
+                elif r:
+                    if name_value_pairs[r.group(3)] == True:
+                        ipt.write(r.group(1)+name_value_pairs['TIME_STEP']+"\n")
+                    else:
+                        ipt.write("$"+r.group(0)+"\n")
+                else:
+                    ipt.write(line)
+            ipt.close()
+        template.close()
+   
+    SwanInputArea.value = open("input_SWAN/INPUT","r").read()
     
 SwanUpInputBtn.on_click(swanupdate_btn_clicked)
 
@@ -161,257 +183,7 @@ SwanInputArea = Textarea(layout= Layout(height = "300px",width = '100%'))
 SwanInputBox = Box([swanInputAcd, SwanUpInputBtn, SwanInputArea], 
                  layout = Layout(flex_flow = 'column', align_items = 'center'))
 
-  
-# togBtns = ToggleButtons(options=['0.5', '1', '2'],
-#     description='',
-#     disabled=False,)
-
-# togBtn1 = ToggleButton(value = False, description = 'TIME')
-# togBtn2 = ToggleButton(value = False, description = 'XP')
-# togBtn3 = ToggleButton(value = False, description = 'YP')
-# togBtn4 = ToggleButton(value = False, description = 'DEP')
-# togBtn5 = ToggleButton(value = False, description = 'WIND')
-# togBtn6 = ToggleButton(value = False, description = 'HS')
-# togBtn7 = ToggleButton(value = False, description = 'DIR')
-# togBtn8 = ToggleButton(value = False, description = 'RTP')
-# togBtn9 = ToggleButton(value = False, description = 'PER')
-# togBtn10 = ToggleButton(value = False, description = 'TM01')
-# togBtn11 = ToggleButton(value = False, description = 'TM02')
-# togBtn12 = ToggleButton(value = False, description = 'PDIR')
-# togBtn13 = ToggleButton(value = False, description = 'Select All', button_style = 'success')
-
-# togBtn14 = ToggleButton(value = False, description = 'sp1d')
-# togBtn15 = ToggleButton(value = False, description = 'sp2d')
-
-# togBtn16 = ToggleButton(value = False, description = 'wind')
-# togBtn17 = ToggleButton(value = False, description = 'hs')
-# togBtn18 = ToggleButton(value = False, description = 'dir')
-# togBtn19 = ToggleButton(value = False, description = 'per')
-
-
-
-# tabBox = Box([Label(value='Table', layout = Layout(width = '280px')),togBtn1,togBtn2,togBtn3,
-#               togBtn4,togBtn5,togBtn6,togBtn7,togBtn8,togBtn9,togBtn10,togBtn11,togBtn12], Layout = input_item_layout)
-# togBtnsBox = Box([Label(value='Time Step (h)', layout = Layout(width = '100px')),togBtns],Layout = input_item_layout )
-# specBox = Box([Label(value = 'Spectral Output', layout = Layout(width = '100px')), 
-#                togBtn14, togBtn15], Layout = input_item_layout)
-
-# blocBox = Box([Label(value = 'Block Output', layout = Layout(width = '100px')), 
-#                togBtn16, togBtn17, togBtn18, togBtn19], Layout = input_item_layout)
-
-# loadInputBtn =  Button(description='Load Input', layout= Layout(
-#     display = 'flex',
-#     flex_flow = 'row',
-#     justify_content = 'center',
-#     width = '20%',
-#     disabled=False
-# ))
-
-# uploadInputBtn = Button(description='upload', layout= Layout(
-#     display = 'flex',
-#     flex_flow = 'row',
-#     justify_content = 'center',
-#     #width = '15%',
-#     disabled=False
-# ))
-
-# saveInputBtn = Button(description='Update Input', layout= Layout(
-#     display = 'flex',
-#     flex_flow = 'row',
-#     justify_content = 'center',
-#     #width = '20%',
-#     disabled=False
-# ))
-
-# inputArea = Textarea(layout= Layout(
-#     display = 'flex',
-#     flex_flow = 'row',
-#     justify_content = 'center',
-#     width = '70%',
-#     disabled=False
-# ))
-
-# inputText = Text()
-# #set_input(inputText)
-
-# modelTitle = Dropdown(options=['SWAN', 'Funwave-tvd','Delft3D'])
-
-# input_items = [
-#     #Box([Label(value='Upload File', layout = Layout(width = '125px')), inputText, upload_widget], layout = input_item_layout),
-#     togBtnsBox,
-#     tabBox,
-#     specBox,
-#     blocBox,
-#     togBtn13,
-#     saveInputBtn,
-#     inputArea
-# ]
-
-# def uploadInput_Btn_clicked(a):
-#     #os.system("mkdir -p input")
-#     #rcmd = "cp -a "+inputText.value+"/. input/"
-#     #cmd(rcmd)
-#     #_upload()
-#     pass
-
-# uploadInputBtn.on_click(uploadInput_Btn_clicked)
-
-# def selectall_tBtn_clicked(a):
-#     if (togBtn13.value == True):
-#         togBtn1.value = True
-#         togBtn2.value = True
-#         togBtn3.value = True
-#         togBtn4.value = True
-#         togBtn5.value = True
-#         togBtn6.value = True
-#         togBtn7.value = True
-#         togBtn8.value = True
-#         togBtn9.value = True
-#         togBtn10.value = True
-#         togBtn11.value = True
-#         togBtn12.value = True
-#         togBtn14.value = True
-#         togBtn15.value = True
-#         togBtn16.value = True
-#         togBtn17.value = True
-#         togBtn18.value = True
-#         togBtn19.value = True
-#     else:
-#         togBtn1.value = False
-#         togBtn2.value = False
-#         togBtn3.value = False
-#         togBtn4.value = False
-#         togBtn5.value = False
-#         togBtn6.value = False
-#         togBtn7.value = False
-#         togBtn8.value = False
-#         togBtn9.value = False
-#         togBtn10.value = False
-#         togBtn11.value = False
-#         togBtn12.value = False
-#         togBtn14.value = False
-#         togBtn15.value = False
-#         togBtn16.value = False
-#         togBtn17.value = False
-#         togBtn18.value = False
-#         togBtn19.value = False
-        
-# togBtn13.observe(selectall_tBtn_clicked, 'value')
-    
-# def loadInput_Btn_clicked(a):
-#     inputArea.value = open('input/INPUT','r').read()
-
-# loadInputBtn.on_click(loadInput_Btn_clicked)
-
-# def judgeBtn(tb, value):
-#     if (tb.value == True):
-#         label = value;
-#     else:
-#         label = "";
-#     return label
-
-# def saveInput_Btn_clicked(a):
-#     #with open('input/INPUT','w') as output:
-#     #    output.write(inputArea.value)
-#     #cmd = "sed -i -e 's/TABLE/TABLE 234 "+togBtn1.description+"' INPUTtmp"
-#     #print (togBtn1.value)
-    
-#     tb1_value = judgeBtn(togBtn1, "TIME")
-#     tb2_value = judgeBtn(togBtn2, "XP")
-#     tb3_value = judgeBtn(togBtn3, "YP")
-#     tb4_value = judgeBtn(togBtn4, "DEP")
-#     tb5_value = judgeBtn(togBtn5, "WIND")
-#     tb6_value = judgeBtn(togBtn6, "HS")
-#     tb7_value = judgeBtn(togBtn7, "DIR")
-#     tb8_value = judgeBtn(togBtn8, "RTP")
-#     tb9_value = judgeBtn(togBtn9, "PER")
-#     tb10_value = judgeBtn(togBtn10, "TM01")
-#     tb11_value = judgeBtn(togBtn11, "TM02")
-#     tb12_value = judgeBtn(togBtn12, "PDIR")
-        
-#     rcmd = "TABLE  'BUOYS' HEAD  'buoy.tab' "+tb1_value+" "+tb2_value+" "+tb3_value+" "+tb4_value+" "+tb5_value+" "+tb6_value+" "+ tb7_value+" "+tb8_value+" "+tb9_value+" "+tb10_value+" "+tb11_value+" "+tb12_value+" OUT 20120826.000000 "+togBtns.value+" HR"
-
-#     if not os.path.exists("input"):
-#         cmd("mkdir -p input")
-#     for fname in ["b02.bot","b02.wd","b02.xy","buoy10_2012.loc","INPUT","s"]:
-#         if not os.path.exists("input/"+fname):
-#             cmd("git checkout input/"+fname)
-#     with open("tmp","w") as tmp:
-#         f = open("input/INPUT","r+")
-#         index = 0;
-#         lines = f.readlines()
-#         for line in lines:
-#             if (index == 36):
-#                 tmp.write(rcmd+'\n')
-#             elif (index == 37):
-#                 if(togBtn14.value==True):
-#                     tmp.write("SPEC 'BUOYS' SPEC1D ABS 'buoy_sp1d' OUT 20120826.000000 "+togBtns.value+" HR\n")
-#                 else:
-#                     tmp.write("$SPEC 'BUOYS' SPEC1D ABS 'buoy_sp1d' OUT 20120826.000000 "+togBtns.value+" HR\n")
-#             elif (index == 38):
-#                 if(togBtn15.value==True):
-#                     tmp.write("SPEC 'BUOYS' SPEC1D ABS 'buoy_sp2d' OUT 20120826.000000 "+togBtns.value+" HR\n")
-#                 else:
-#                     tmp.write("$SPEC 'BUOYS' SPEC1D ABS 'buoy_sp2d' OUT 20120826.000000 "+togBtns.value+" HR\n")
-#             elif (index == 39):
-#                 if(togBtn16.value==True):
-#                     tmp.write("BLOCK 'COMPGRID' HEADER 'wind' LAY 4 WIND OUT 20050919.000000 "+togBtns.value+" HR\n")
-#                 else:
-#                     tmp.write("$BLOCK 'COMPGRID' HEADER 'wind' LAY 4 WIND OUT 20050919.000000 "+togBtns.value+" HR\n")
-#             elif (index == 40):
-#                 if(togBtn17.value==True):
-#                     tmp.write("BLOCK 'COMPGRID' HEADER 'hs' LAY 4 HS OUT 20050919.000000 "+togBtns.value+" HR\n")
-#                 else:
-#                     tmp.write("$BLOCK 'COMPGRID' HEADER 'hs' LAY 4 HS OUT 20050919.000000 "+togBtns.value+" HR\n")
-#             elif (index == 41):
-#                 if(togBtn18.value==True):
-#                     tmp.write("BLOCK 'COMPGRID' HEADER 'dir' LAY 4 DIR OUT 20050919.000000 "+togBtns.value+" HR\n")
-#                 else:
-#                     tmp.write("$BLOCK 'COMPGRID' HEADER 'dir' LAY 4 DIR OUT 20050919.000000 "+togBtns.value+" HR\n")
-#             elif (index == 42):
-#                 if(togBtn19.value==True):
-#                     tmp.write("BLOCK 'COMPGRID' HEADER 'per' LAY 4 PER OUT 20050919.000000 "+togBtns.value+" HR\n")
-#                 else:
-#                     tmp.write("$BLOCK 'COMPGRID' HEADER 'per' LAY 4 PER OUT 20050919.000000 "+togBtns.value+" HR\n")
-#             elif (index == 45):
-#                 tmp.write("COMPUTE NONST  20120826.000000 "+togBtns.value+" HR 20120827.000000\n")
-#             else:
-#                 tmp.write(line)
-#             index+=1
-    
-#     copyfile("tmp","input/INPUT")
-    
-#     inputArea.value = open('input/INPUT','r').read()
-    
-# saveInputBtn.on_click(saveInput_Btn_clicked)
-
-# inputBox = Box(input_items, layout= Layout(
-#  #   display = 'flex',
-#     flex_flow = 'column',
-#     align_items='stretch',
-#     disabled=False
-# ))
-
-
-
-
-
-# funtogBtnsBox = Box([Label(value='Coming soon', layout = Layout(width = '100px'))],Layout = input_item_layout )
-                           
-                           
-# funwave_items=[
-#     funtogBtnsBox
-# ]                        
-
-# funBox = Box(funwave_items, layout= Layout(
-#  #   display = 'flex',
-#     flex_flow = 'column',
-#     align_items='stretch',
-#     disabled=False
-# ))
-
-
-
+ 
 
 
 
@@ -457,6 +229,8 @@ def convertTF(value):
         return value
 
 def fwupdate_btn_clicked(a):
+    cmd("tar -zxvf input_funwave.tgz")
+    cmd("mv input_funwave/input.txt input_funwave/input_template.txt")
     name_value_pairs = {
         "TOTAL_TIME": totalTimeText.value,
         "PLOT_INTV" : plotTimeText.value,
@@ -464,8 +238,8 @@ def fwupdate_btn_clicked(a):
         "U"          : convertTF(uTbtns.value),
         "V"          : convertTF(vTbtns.value)
     }
-    with open("input_template.txt","r") as template:
-        with open("input_tmp.txt","w+") as inputTmp:
+    with open("input_funwave/input_template.txt","r") as template:
+        with open("input_funwave/input_tmp.txt","w+") as inputTmp:
             for line in template.readlines():
                 g = re.match("^(TOTAL_TIME|PLOT_INTV|ETA|U|V)\s*=\s*(\S+)",line)
                 if g:
@@ -476,7 +250,7 @@ def fwupdate_btn_clicked(a):
                     inputTmp.write(line)
             inputTmp.close()
         template.close()
-    fwInputArea.value = open("input_tmp.txt","r").read()
+    fwInputArea.value = open("input_funwave/input_tmp.txt","r").read()
     
 fwUpInputBtn.on_click(fwupdate_btn_clicked)
 
@@ -515,8 +289,8 @@ def modifyFWinput():
         "PX" : numnodeSlider.value,
         "PY" : numprocSlider.value
     }
-    with open("input_tem.txt","r") as tem:
-        with open("input.txt","w") as inputfile:
+    with open("input_funwave/input_tem.txt","r") as tem:
+        with open("input_funwave/input.txt","w") as inputfile:
             for line in temp.readlines():
                 g = re.match("^(PX|PY)\s*=\s*(\S+)",line)
                 if g:
@@ -537,7 +311,7 @@ def runfun_btn_clicked(a):
         modifyFWinput()
         cmd("rm -fr input")
         cmd("mkdir input")
-        cmd("cp input.txt input")
+        cmd("cp input_funwave/input.txt input")
         cmd("tar cvzf input.tgz input")
         cmd("files-upload -F input.tgz -S ${STORAGE_MACHINE} ${DEPLOYMENT_PATH}/")
         submitJob(numnodeSlider.value,numprocSlider.value,"funwave") 
