@@ -9,7 +9,6 @@ from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt2
 import sys
 import numpy as np
-from numpy import NaN
 import os
 import re
 #from upload import upload_widget, set_input
@@ -20,7 +19,6 @@ from matplotlib.dates import date2num
 import time
 from datetime import datetime
 import datetime
-from matplotlib import dates
 
 
 from agave import *
@@ -28,9 +26,8 @@ from setvar import *
 
 from shutil import copyfile
 
-from buoy import Buoytable
-
 from fwPlots import *
+from swanPlots import *
 
 from command import cmd
 
@@ -418,190 +415,26 @@ outputBox = VBox(output_items)
 
 
 
-##################################### SWAN Show 1D tab ########################################
-def showPlots(index):
-    if(Yoption.value=='Choose one'):
-        return
-    plt.clf()
-    plt.cla()
-    plt.close()
-    with open("output/INPUT") as input_file:
-        for line in input_file:
-            if line.startswith("$"):
-                continue
-            else:
-                data = line.strip().split()
-                if line.startswith("POINTS"):
-                    buoy_point = "%s" % (data[3].strip('\''))
-                elif line.startswith("TABLE"):
-                    buoy_table = "%s" % (data[3].strip('\''))
-                else:
-                    continue
-    input_file.close()
-    key_list=[]
-    with open("output/"+buoy_point) as file1:
-        for line in file1:
-                data = line.strip().split()
-                fname_k = "%s,%s" % (data[0],data[1])
-                key_list.append(fname_k)
-    filelist = dict(zip(key_list,range(len(key_list))))
-    
-    fig_size = []
-    fig_size.append(15)
-    fig_size.append(8)
-    plt.rcParams["figure.figsize"] = fig_size
-    
-    Buoytable1 = Buoytable("output/"+buoy_table)
-    
-    for igauge in range(1,11):
-        axs=plt.subplot(5,2,int(igauge)) # the first subplot in the first figure
-        if (Yoption.value=='Hsig'):
-            pts = axs.plot(Buoytable1.get_Time(igauge-1), Buoytable1.get_Hsig(igauge-1))
-        if (Yoption.value=='PkDir'):
-            pts = axs.plot(Buoytable1.get_Time(igauge-1), Buoytable1.get_PkDir(igauge-1))
-        if (Yoption.value=='RTpeak'):
-            pts = axs.plot(Buoytable1.get_Time(igauge-1), Buoytable1.get_RTpeak(igauge-1))
-        if (Yoption.value=='X_Windv'):
-            pts = axs.plot(Buoytable1.get_Time(igauge-1), Buoytable1.get_X_Windv(igauge-1))
-        if (Yoption.value=='Y_Windv'):
-            pts = axs.plot(Buoytable1.get_Time(igauge-1), Buoytable1.get_Y_Windv(igauge-1))
-            
-        #pts = axs.plot(Buoytable1.get_Time(igauge-1), Buoytable1.get_X_Windv(igauge-1))
-        if (int(igauge)<=8):
-            plt.xticks([])
-        if (int(igauge)>=9):
-            plt.xlabel("Date m/d/y")
-            axs.xaxis.set_major_locator(dates.DayLocator(interval=1))
-            axs.xaxis.set_major_formatter(mdates.DateFormatter('%m/%d/%Y'))
-            plt.xticks(rotation=45,fontsize=8)
-        if (int(igauge)==1 or int(igauge)==3 or int(igauge)==5 or int(igauge)==7 or int(igauge)==9):
-            if (Yoption.value=='Hsig'):
-                plt.ylabel(Yoption.value+' (m)')
-            if (Yoption.value=='PkDir'):
-                plt.ylabel(Yoption.value+' (degr)')
-            if (Yoption.value=='RTpeak'):
-                plt.ylabel(Yoption.value+' (sec)')
-            if (Yoption.value=='X_Windv'):
-                plt.ylabel(Yoption.value+' (m/s)')
-            if (Yoption.value=='Y_Windv'):
-                plt.ylabel(Yoption.value+' (m/s)')
-        plt.title('buoy %s' %(igauge),fontsize=8)
-        plt.setp(pts, 'color', 'b', 'linewidth', 2.0)
-    
-    plt.show()
-    
-    
+##################################### SWAN Visualization tab ########################################
+
 Yoption = Dropdown(options=['Choose one','Hsig','RTpeak','PkDir','X_Windv','Y_Windv'])
-plotsInter = widgets.interactive(showPlots, index = Yoption )
+plotsInter = widgets.interactive(oneDPlots, Y_axis = Yoption )
+oneDBox = Box([plotsInter])
 
 
-Show1D_items = [plotsInter]
-Show1DPlotsBox = Box(Show1D_items, layout= Layout(
- #   display = 'flex',
-    flex_flow = 'column',
-    align_items='stretch',
-    disabled=False
-))
-
-
-
-
-
-
-
-
-
-############################### SWAN Show 2D tab ##########################################
-fig3,ax2 = plt2.subplots()
-def animate(index):
-    
-    if (hsIndex.value == 0): 
-        return 
-    
-    ax2.clear()
-    
-    xy_grid = np.loadtxt('output/b02.xy')
-    longitude = xy_grid[0:109]
-    for i in range(109):
-        for j in range(181):
-            if(longitude[i][j]==(-999.0000000000)):
-                longitude[i][j]= NaN
-    latitude = xy_grid[109:218]
-    for i in range(109):
-        for j in range(181):
-            if(latitude[i][j]==(-999.0000000000)):
-                latitude[i][j]= NaN
-    
-    hsfilename='output/hsTmp/hs_'+str(index)
-    
-    hs_value = np.loadtxt(hsfilename)
-    hs_2d = np.reshape(hs_value,(109,181))
-    hs_2d_final = hs_2d*0.01
-    plt2.contourf(longitude,latitude,hs_2d_final,30)
-    plt2.colorbar()
-    #plt.colorbar(ticks=[0,0.5,1,1.5,2])
-    plt2.title("hs(m)")
-    plt2.ylabel("latitude($^\circ$)")
-    plt2.xlabel("longitude($^\circ$)")
-    plt2.xlim(-110,-50)
-    plt2.ylim(0,50)
-    plt2.show()
-
+hsPreprocessBtn = Button(description='HS preprocess',button_style='primary', layout=Layout(width='auto'))
+hsPreprocessBtn.on_click(hsPreprocess_btn_clicked)
 
 
 hsIndex = IntSlider(value=0, min=0, max=120)
-hsInter = widgets.interactive(animate, index = hsIndex)
+hsInter = widgets.interactive(twoDAnimate, Time_Step = hsIndex)
+
+twoDBox = Box([hsPreprocessBtn, hsInter], layout = Layout(flex_flow = 'column', align_items='stretch'))
 
 
-hsPreprocessBtn = Button(description='HS Preprocess', layout= Layout(
-    display = 'flex',
-    flex_flow = 'row',
-    justify_content = 'center',
-    width = '403px',
-    disabled=False
-))
-
-def hsPreprocess_btn_clicked(a):
-    os.system("mkdir -p output/hsTmp")
-    for m in range(120):
-        hs_array_time2=[]
-        for j in range(109):
-            fo = open("output/hs", "r+")
-            datalines1 = fo.readlines()[9+j+231*m]
-        
-            p1 = datalines1.split()
-            for i in range(1,152):
-                hs_array_time2.append(p1[i])
-            fo = open("output/hs", "r+")
-            datalines2 = fo.readlines()[122+j+231*m]
-            p2 = datalines2.split()
-            for i in range(1,31):
-                hs_array_time2.append(p2[i])
-        fo.close()
-        hsfilename = 'output/hsTmp/hs_'+str(m+1)
-        hs_file_object_time2 = open(hsfilename, 'w')
-        for ip in hs_array_time2:
-            if(ip=="-900."): 
-                ip="NaN"
-            hs_file_object_time2.write(ip)
-            hs_file_object_time2.write('\n')
-        hs_file_object_time2.close()
-
-    fig_size = []
-    fig_size.append(15)
-    fig_size.append(8)
-
-#showBtn.on_click(showPlot_btn_clicked)
-hsPreprocessBtn.on_click(hsPreprocess_btn_clicked)
-
-Show2D_items = [hsPreprocessBtn,hsInter]
-Show2DPlotsBox = Box(Show2D_items, layout= Layout(
- #   display = 'flex',
-    flex_flow = 'column',
-    align_items='stretch',
-    disabled=False
-))
-
+swanVisuAcd =Accordion(children = [oneDBox,twoDBox])
+swanVisuAcd.set_title(0,'1D ')
+swanVisuAcd.set_title(1,'2D ')
 
 
 
@@ -609,8 +442,6 @@ Show2DPlotsBox = Box(Show2D_items, layout= Layout(
 
 
 ############################### Funwave Visualization tab ##########################################
-
-
 
 surfaceFrame = IntSlider(value=0, min=0, max=31)
 surfaceInter = widgets.interactive(surfacePlot, frame = surfaceFrame)
@@ -645,7 +476,7 @@ def rotating_Btn_clicked(a):
 
 rotatingBtn.on_click(rotating_Btn_clicked)
 rotatingBox = Box([Label(value='3D animation'),rotatingBtn], layout = Layout(width = '80%'))
-rotatingAnimBox = Box([rotatingBox, rotatingOutput], layout = Layout(flex_flow = 'column', align_items='stretch',))
+rotatingAnimBox = Box([rotatingBox, rotatingOutput], layout = Layout(flex_flow = 'column', align_items='stretch'))
 
 
 fwVisuAcd =Accordion(children = [surfaceBox,basicAnimBox,rotatingAnimBox])
@@ -659,20 +490,14 @@ fwVisuAcd.set_title(2,'3D Animation ')
 
 
 
-
-
-
-
-
 ################################ Finally ##########################################################
         
 tab_nest = widgets.Tab()
-tab_nest.children = [SwanInputBox, runBox,outputBox, Show1DPlotsBox, Show2DPlotsBox]
+tab_nest.children = [SwanInputBox, runBox, outputBox, swanVisuAcd]
 tab_nest.set_title(0, 'Input')
 tab_nest.set_title(1, 'Run')
 tab_nest.set_title(2, 'Output')
-tab_nest.set_title(3, 'Show 1D plots')
-tab_nest.set_title(4, 'Show 2D plots')
+tab_nest.set_title(3, 'Visualization')
 
 setvar("""PATH=$HOME/agave-model/bin:$PATH""")
 cmd("auth-tokens-refresh")
@@ -682,19 +507,17 @@ def on_change(change):
     if(modelTitle.value == "SWAN"):
         out.clear_output()
         with out:
-            tab_nest.set_title(3, 'Show 1D plots')
-            tab_nest.children = [SwanInputBox, runBox,outputBox, Show1DPlotsBox, Show2DPlotsBox]
+            tab_nest.children = [SwanInputBox, runBox, outputBox, swanVisuAcd]
             display(tab_nest)
     if(modelTitle.value == "Funwave-tvd"):
         out.clear_output()
         with out:
-            tab_nest.set_title(3, 'Visualization')
-            tab_nest.children = [fwInputBox, runBox,outputBox, fwVisuAcd]
+            tab_nest.children = [fwInputBox, runBox, outputBox, fwVisuAcd]
             display(tab_nest)
     if(modelTitle.value == "Delft3D"):
         out.clear_output()
         with out:
-            tab_nest.children = [delft3dBox, runBox,outputBox, Show1DPlotsBox, Show2DPlotsBox]
+            tab_nest.children = [delft3dBox, runBox, outputBox, swanVisuAcd]
             display(tab_nest)
            
     
