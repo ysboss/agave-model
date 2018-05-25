@@ -74,7 +74,7 @@ fricTbtns = ToggleButtons(options=['JONSWAP', 'COLL', 'MADS'])
 fricText = Text(layout = Layout(width='60px'))
 fricTxtBox = Box([fricText, HTMLMath(value = r"\(m^2\)/\(s^3\)")])
 fricBox = Box([Label(value = 'FRICTION:'), fricTbtns, fricTxtBox],
-              layout = Layout(width = '73.3%', justify_content = 'space-between'))
+              layout = Layout(width = '72%', justify_content = 'space-between'))
 
 modeStartBox = Box([modeBox, coordBox, setBox, fricBox], layout = Layout(flex_flow = 'column'))
 
@@ -280,19 +280,19 @@ numprocSlider = IntSlider(value=0, min=1, max=16, step=1)
 runBtn = Button(description='Run', button_style='primary', layout= Layout(width = '50px'))
 
 run_items = [
-    Box([Label(value='Nodes', layout = Layout(width = '100px')), numnodeSlider], layout = run_item_layout),
-    Box([Label(value='Processors', layout=Layout(width = '100px')), numprocSlider], layout= run_item_layout),
+    Box([Label(value='The number of nodes', layout = Layout(width = '350px')), numnodeSlider], layout = run_item_layout),
+    Box([Label(value='The number of Processors of each node', layout=Layout(width = '350px')), numprocSlider], layout= run_item_layout),
     Box([runBtn]),
 ]
 
 def modifyFWinput():
     name_value_pairs = {
-        "PX" : numnodeSlider.value,
-        "PY" : numprocSlider.value
+        "PX" : str(numnodeSlider.value),
+        "PY" : str(numprocSlider.value)
     }
-    with open("input_funwave/input_tem.txt","r") as tem:
+    with open("input_funwave/input_tmp.txt","r") as tmp:
         with open("input_funwave/input.txt","w") as inputfile:
-            for line in temp.readlines():
+            for line in tmp.readlines():
                 g = re.match("^(PX|PY)\s*=\s*(\S+)",line)
                 if g:
                     name = g.group(1)
@@ -301,7 +301,7 @@ def modifyFWinput():
                 else:
                     inputfile.write(line)
             inputfile.close()
-        tem.close()
+        tmp.close()
     
 def runfun_btn_clicked(a):
     if (modelTitle.value == "SWAN"): 
@@ -463,7 +463,7 @@ basicBox = Box([Label(value='2D animation'),basicBtn], layout = Layout(width = '
 basicAnimBox = Box([basicBox, basicOutput],layout = Layout(flex_flow = 'column', align_items='stretch',))
 
 
-rotatingBtn = Button(description='display',button_style='info', layout=Layout(width='auto'))
+rotatingBtn = Button(description='display',button_style='primary', layout=Layout(width='auto'))
 rotatingOutput = widgets.Output()
 
 def rotating_Btn_clicked(a):
