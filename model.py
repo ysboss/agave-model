@@ -156,6 +156,7 @@ def swanupdate_btn_clicked(a):
                 g = re.match("^(MODE|COORD|SET|FRICTION|PROP|GEN3)\s*",line)
                 h = re.match("^(TABLE)(\s*\S*\s\S*\s*\S*)[\w\s]*(OUT\s\S*)(\s*\d\s*\w*)",line)
                 r = re.match("(^(SPEC|BLOCK)[\s\S]*(SPEC1D|SPEC2D|WIND|HS|DIR|PER)[\s\S]*)(\s*\d\s*\w*)",line)
+                s = re.match("^(COMPUTE)\s\S*\s*(\d*\.\d*)\s*(\d\s\S*)\s*(\d*\.\d*)",line)
                 if g: 
                     name = g.group(1)
                     if name in name_value_pairs:
@@ -168,6 +169,9 @@ def swanupdate_btn_clicked(a):
                         ipt.write(r.group(1)+name_value_pairs['TIME_STEP']+"\n")
                     else:
                         ipt.write("$"+r.group(0)+"\n")
+                elif s:
+                    ipt.write(s.group(1)+' '+modeTbtns.value+' '+s.group(2)+' '+name_value_pairs['TIME_STEP']
+                              +' '+s.group(4)+"\n")
                 else:
                     ipt.write(line)
             ipt.close()
