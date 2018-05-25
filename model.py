@@ -1,5 +1,5 @@
 from __future__ import print_function
-from ipywidgets import interact, interactive, fixed, interact_manual, Layout, Button, Box,VBox, HBox, FloatText, Text, Dropdown, Label, IntSlider, Textarea, Accordion, ToggleButton, ToggleButtons, Select, RadioButtons
+from ipywidgets import interact, interactive, fixed, interact_manual, Layout, Button, Box,VBox, HBox, FloatText, Text, Dropdown, Label, IntSlider, Textarea, Accordion, ToggleButton, ToggleButtons, Select, RadioButtons, HTMLMath
 import ipywidgets as widgets
 from IPython.display import display, clear_output, HTML
 from matplotlib import animation, rc
@@ -72,7 +72,7 @@ setBox = Box([Label(value = 'SET:'), setTbtns],layout = Layout(width = '42.4%', 
 
 fricTbtns = ToggleButtons(options=['JONSWAP', 'COLL', 'MADS'])
 fricText = Text(layout = Layout(width='60px'))
-fricTxtBox = Box([fricText, Label(value = '(m2/s-3)')])
+fricTxtBox = Box([fricText, HTMLMath(value = r"\(m^2\)/\(s^3\)")])
 fricBox = Box([Label(value = 'FRICTION:'), fricTbtns, fricTxtBox],
               layout = Layout(width = '73.3%', justify_content = 'space-between'))
 
