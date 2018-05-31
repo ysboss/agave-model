@@ -32,9 +32,7 @@ from swanPlots import *
 from command import cmd
 
 
-#plt.rcParams["animation.html"] = "jshtml"
 ######################## Previous ############################################################
-#Time = ""
 
 input_item_layout = Layout(
     display = 'flex',
@@ -48,7 +46,7 @@ modelTitle = Dropdown(options=['SWAN', 'Funwave-tvd','Delft3D'])
 modelBox = Box([Label(value='Model', layout = Layout(width = '100px')), modelTitle], layout = input_item_layout)
 
 
-delft3d_items=[Label(value='Coming soon too', layout = Layout(width = '200px'))]   
+delft3d_items=[Label(value='Coming soon', layout = Layout(width = '200px'))]   
 delft3dBox = Box(delft3d_items, layout= Layout(
  #   display = 'flex',
     flex_flow = 'column',
@@ -252,7 +250,7 @@ def fwupdate_btn_clicked(a):
             inputTmp.close()
         template.close()
     fwInputArea.value = open("input_funwave/input_tmp.txt","r").read()
-    
+    surfaceFrame.max = int(float(totalTimeText.value))/int(float(plotTimeText.value))
 fwUpInputBtn.on_click(fwupdate_btn_clicked)
 
 fwInputArea = Textarea(layout= Layout(height = "300px",width = '100%'))
@@ -305,16 +303,38 @@ def modifyFWinput():
     
 def runfun_btn_clicked(a):
     if (modelTitle.value == "SWAN"): 
+        cmd("rm -fr input")
+        cmd("mkdir input")
+        cmd("cp input_swan/* input")
+        
+#         cmd("tar cvzf input_swan_${AGAVE_USERNAME}_$(date +%Y-%m-%dT_H-%M-%S).tgz input")
+#         cmd("files-upload -F input_swan_${AGAVE_USERNAME}_* -S ${STORAGE_MACHINE} ${DEPLOYMENT_PATH}/")
         cmd("tar cvzf input.tgz input")
         cmd("files-upload -F input.tgz -S ${STORAGE_MACHINE} ${DEPLOYMENT_PATH}/")
+
         submitJob(numnodeSlider.value,numprocSlider.value,"swan") 
+        
     elif (modelTitle.value == "Funwave-tvd"): 
         modifyFWinput()
         cmd("rm -fr input")
         cmd("mkdir input")
         cmd("cp input_funwave/input.txt input")
+        
         cmd("tar cvzf input.tgz input")
         cmd("files-upload -F input.tgz -S ${STORAGE_MACHINE} ${DEPLOYMENT_PATH}/")
+        
+        
+#         files = os.listdir('.')
+#         for name in files:
+#             if name.startswith('input_funwave_'):
+#                 cmd("rm -f "+name)
+#                 cmd("files-delete -S ${STORAGE_MACHINE} ${DEPLOYMENT_PATH}/"+name)
+#         cmd("tar cvzf input_funwave_${AGAVE_USERNAME}_$(date +%Y-%m-%d_%H-%M-%S).tgz input")
+#         files = os.listdir('.')
+#         for name in files:
+#             if name.startswith('input_funwave_'):
+#                 cmd("files-upload -F "+name+" -S ${STORAGE_MACHINE} ${DEPLOYMENT_PATH}/")
+        
         submitJob(numnodeSlider.value,numprocSlider.value,"funwave") 
     
 runBtn.on_click(runfun_btn_clicked)
@@ -452,7 +472,7 @@ basicOutput = widgets.Output()
 
 def basic_Btn_clicked(a):
     frames = []
-    for i in range(1,31):
+    for i in range(1,surfaceFrame.max):
         frames += [np.genfromtxt("output/output/eta_%05d" % i)]
     anim = basicAnimation(frames)
     with basicOutput:
@@ -468,7 +488,7 @@ rotatingOutput = widgets.Output()
 
 def rotating_Btn_clicked(a):
     frames = []
-    for i in range(1,31):
+    for i in range(1,surfaceFrame.max):
         frames += [np.genfromtxt("output/output/eta_%05d" % i)]
     anim = rotatingAnimation(frames)
     with rotatingOutput:
