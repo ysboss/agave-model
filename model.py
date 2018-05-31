@@ -306,12 +306,10 @@ def runfun_btn_clicked(a):
         cmd("rm -fr input")
         cmd("mkdir input")
         cmd("cp input_swan/* input")
-        
-#         cmd("tar cvzf input_swan_${AGAVE_USERNAME}_$(date +%Y-%m-%dT_H-%M-%S).tgz input")
-#         cmd("files-upload -F input_swan_${AGAVE_USERNAME}_* -S ${STORAGE_MACHINE} ${DEPLOYMENT_PATH}/")
         cmd("tar cvzf input.tgz input")
-        cmd("files-upload -F input.tgz -S ${STORAGE_MACHINE} ${DEPLOYMENT_PATH}/")
-
+        setvar("INPUT_DIR=${AGAVE_USERNAME}_$(date +%Y-%m-%d_%H-%M-%S)")
+        cmd("files-mkdir -S ${STORAGE_MACHINE} -N ${DEPLOYMENT_PATH}/${INPUT_DIR}")
+        cmd("files-upload -F input.tgz -S ${STORAGE_MACHINE} ${DEPLOYMENT_PATH}/${INPUT_DIR}/")
         submitJob(numnodeSlider.value,numprocSlider.value,"swan") 
         
     elif (modelTitle.value == "Funwave-tvd"): 
@@ -319,22 +317,10 @@ def runfun_btn_clicked(a):
         cmd("rm -fr input")
         cmd("mkdir input")
         cmd("cp input_funwave/input.txt input")
-        
         cmd("tar cvzf input.tgz input")
-        cmd("files-upload -F input.tgz -S ${STORAGE_MACHINE} ${DEPLOYMENT_PATH}/")
-        
-        
-#         files = os.listdir('.')
-#         for name in files:
-#             if name.startswith('input_funwave_'):
-#                 cmd("rm -f "+name)
-#                 cmd("files-delete -S ${STORAGE_MACHINE} ${DEPLOYMENT_PATH}/"+name)
-#         cmd("tar cvzf input_funwave_${AGAVE_USERNAME}_$(date +%Y-%m-%d_%H-%M-%S).tgz input")
-#         files = os.listdir('.')
-#         for name in files:
-#             if name.startswith('input_funwave_'):
-#                 cmd("files-upload -F "+name+" -S ${STORAGE_MACHINE} ${DEPLOYMENT_PATH}/")
-        
+        setvar("INPUT_DIR=${AGAVE_USERNAME}_$(date +%Y-%m-%d_%H-%M-%S)")
+        cmd("files-mkdir -S ${STORAGE_MACHINE} -N ${DEPLOYMENT_PATH}/${INPUT_DIR}")
+        cmd("files-upload -F input.tgz -S ${STORAGE_MACHINE} ${DEPLOYMENT_PATH}/${INPUT_DIR}/")
         submitJob(numnodeSlider.value,numprocSlider.value,"funwave") 
     
 runBtn.on_click(runfun_btn_clicked)

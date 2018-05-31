@@ -211,6 +211,7 @@ def configure(agave_username, machine_username, machine_name, project_name):
     export NP=\$(wc -l < nodes.txt)
 
     tar xzvf input.tgz
+    
 
     /project/singularity/bin/singularity exec \$SING_OPTS /project/sbrandt/chemora/images/\${simagename}.simg bash /usr/local/bin/runapp.sh
     mv input output
@@ -336,7 +337,7 @@ def submitJob(nodes,procs,model):
         "archive": false,
         "archiveSystem": "${STORAGE_MACHINE}",
         "inputs": {
-            "parfile": "input.tgz"
+            "input tarball": "agave://${STORAGE_MACHINE}/${HOME_DIR}/${DEPLOYMENT_PATH}/${INPUT_DIR}/input.tgz"
         },
         "parameters": {
             "simagename":"${MODEL}"
@@ -415,6 +416,7 @@ def configure2(agave_username, exec_machine, storage_name, project_name):
     STORAGE_MACHINE="""+storage_name+"""
     DEPLOYMENT_PATH=agave-deployment
     EXEC_MACHINE="""+exec_machine+"""
+    HOME_DIR=/home/sbrandt
     QUEUE=checkpt
     """)
    
