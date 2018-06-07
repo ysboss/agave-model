@@ -69,7 +69,7 @@ setTbtns = ToggleButtons(options=['NAUT', 'CART'])
 setBox = Box([Label(value = 'SET:'), setTbtns],layout = Layout(width = '42.4%', justify_content = 'space-between'))
 
 fricTbtns = ToggleButtons(options=['JONSWAP', 'COLL', 'MADS'])
-fricText = Text(layout = Layout(width='60px'))
+fricText = Text(value = '0.067', layout = Layout(width='60px'))
 fricTxtBox = Box([fricText, HTMLMath(value = r"\(m^2\)/\(s^3\)")])
 fricBox = Box([Label(value = 'FRICTION:'), fricTbtns, fricTxtBox],
               layout = Layout(width = '72%', justify_content = 'space-between'))
