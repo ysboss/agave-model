@@ -451,7 +451,7 @@ swanVisuAcd.set_title(1,'2D ')
 
 surfaceFrame = IntSlider(value=0, min=0, max=31)
 surfaceInter = widgets.interactive(surfacePlot, frame = surfaceFrame)
-surfaceBox = Box([Label(value='Surface Elevation'),surfaceInter])
+surfaceBox = Box([Label(value='Surface Elevation snapshot'),surfaceInter])
 
 basicBtn = Button(description='display',button_style='primary', layout=Layout(width='auto'))
 basicOutput = widgets.Output()
@@ -463,9 +463,9 @@ def basic_Btn_clicked(a):
     anim = basicAnimation(frames)
     with basicOutput:
         display(HTML(anim.to_html5_video()))
-    
+
 basicBtn.on_click(basic_Btn_clicked)
-basicBox = Box([Label(value='2D animation'),basicBtn], layout = Layout(width = '80%')) 
+basicBox = Box([Label(value='Surface Elevation animation'),basicBtn], layout = Layout(width = '80%'))
 basicAnimBox = Box([basicBox, basicOutput],layout = Layout(flex_flow = 'column', align_items='stretch',))
 
 
@@ -481,18 +481,14 @@ def rotating_Btn_clicked(a):
         display(HTML(anim.to_html5_video()))
 
 rotatingBtn.on_click(rotating_Btn_clicked)
-rotatingBox = Box([Label(value='3D animation'),rotatingBtn], layout = Layout(width = '80%'))
-rotatingAnimBox = Box([rotatingBox, rotatingOutput], layout = Layout(flex_flow = 'column', align_items='stretch'))
+rotatingBox = Box([Label(value='Surface Elevation animation'),rotatingBtn], layout = Layout(width = '80%'))
+rotatingAnimBox = Box([surfaceBox, rotatingBox, rotatingOutput], layout = Layout(flex_flow = 'column', align_items='stretch'))
 
 
-fwVisuAcd =Accordion(children = [surfaceBox,basicAnimBox,rotatingAnimBox])
-fwVisuAcd.set_title(0,'Surface Elevation Snapshots')
-fwVisuAcd.set_title(1,'2D Animation')
-fwVisuAcd.set_title(2,'3D Animation ')
-
-
-
-
+fwVisuAcd =Accordion(children = [Box(), basicAnimBox,rotatingAnimBox])
+fwVisuAcd.set_title(0,'1D')
+fwVisuAcd.set_title(1,'2D')
+fwVisuAcd.set_title(2,'3D')
 
 
 
