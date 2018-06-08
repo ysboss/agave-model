@@ -58,11 +58,11 @@ delft3dBox = Box(delft3d_items, layout= Layout(
 
 modeTbtns = ToggleButtons(options=['NONSTAT', 'STAT'])
 dimTbtns = ToggleButtons(options=['TWOD', 'ONED'])
-modeBox = Box([Label(value = 'MODE:'), modeTbtns, dimTbtns],layout = Layout(width = '80%', justify_content = 'space-between'))
+modeBox = Box([Label(value = 'MODE: '), modeTbtns, dimTbtns],layout = Layout(width = '80%', justify_content = 'space-between'))
 
-coordTbtns = ToggleButtons(options=['SPHE', 'CART'], layout = Layout(width = '1%'))
+coordTbtns = ToggleButtons(options=['SPHE', 'CART'])
 spheTbtns = ToggleButtons(options=['CCM', 'QC'])
-coordBox = Box([Label(value = 'COORD:'), coordTbtns, spheTbtns],
+coordBox = Box([Label(value = 'COOR:'), coordTbtns, spheTbtns],
                layout = Layout(width = '80%', justify_content = 'space-between'))
 
 setTbtns = ToggleButtons(options=['NAUT', 'CART'])
@@ -305,7 +305,7 @@ def runfun_btn_clicked(a):
     if (modelTitle.value == "SWAN"): 
         cmd("rm -fr input")
         cmd("mkdir input")
-        cmd("cp input_swan/* input")
+        cmd("cp -r input_swan/* input")
         cmd("tar cvzf input.tgz input")
         setvar("INPUT_DIR=${AGAVE_USERNAME}_$(date +%Y-%m-%d_%H-%M-%S)")
         cmd("files-mkdir -S ${STORAGE_MACHINE} -N ${DEPLOYMENT_PATH}/${INPUT_DIR}")
