@@ -75,10 +75,47 @@ def rotatingAnimation(frames):
     anim = animation.FuncAnimation(fig3, animate2, frames=size, interval=200, repeat=True)
     return anim
     
+def waterDepth():
+    # Generate X_file 
+    # 1 2 3 4 ...... 600
+    # 1 2 3 4 ...... 600
+    # 1 2 3 4 ...... 600
+    fileX = open('output/X_file','w')
+    for i in range(200):
+        for j in range(600):
+            fileX.write(str(j+1)+' ')
+        fileX.write('\n')
+    fileX.close()
     
+    # Generate Y_file
+    # 1 1 1 1 ...... 1
+    # 2 2 2 2 ...... 2
+    #  ...... 
+    # 200 200 ...... 200
+    fileY = open('output/Y_file','w')    
+    for i in range(200):
+        for j in range(600):
+            fileY.write(str(i+1)+' ')
+        fileY.write('\n')
+    fileY.close()
+
+    # Load X_file and Y_file and get real dimension
+    X = np.loadtxt('output/X_file')
+    X_value = X*0.05
+    Y = np.loadtxt('output/Y_file')
+    Y_value = Y*0.10
     
-    
-    
+    # Load depth file
+    Depth = np.loadtxt('output/dep.out')
+    depplot = plt.contourf(X_value, Y_value, Depth, 100)
+    plt.title("Water depth (m)")
+    plt.colorbar()
+    plt.xlabel("X (m)")
+    plt.ylabel("Y (m)")
+    plt.tight_layout()
+    #plt4.savefig("water depth.png")
+    #return plt
+    plt.show()
     
     
     
