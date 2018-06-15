@@ -466,7 +466,25 @@ def basic_Btn_clicked(a):
 
 basicBtn.on_click(basic_Btn_clicked)
 basicBox = Box([Label(value='Surface Elevation animation'),basicBtn], layout = Layout(width = '80%'))
-basicAnimBox = Box([basicBox, basicOutput],layout = Layout(flex_flow = 'column', align_items='stretch',))
+
+
+depthBtn = Button(description='display',button_style='primary', layout=Layout(width='auto'))
+depthOutput = widgets.Output()
+
+def depth_Btn_clicked(a):
+    #plt = waterDepth()
+    with depthOutput:
+        display(waterDepth())
+
+depthBtn.on_click(depth_Btn_clicked)
+depthBox = Box([Label(value='Water Depth'),depthBtn],layout = Layout(width = '80%'))
+
+
+
+basicAnimBox = Box([depthBox, depthOutput, basicBox, basicOutput],layout = Layout(flex_flow = 'column', align_items='stretch',))
+
+
+
 
 
 rotatingBtn = Button(description='display',button_style='primary', layout=Layout(width='auto'))
