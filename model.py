@@ -459,17 +459,20 @@ basicOutput = widgets.Output()
 def basic_Btn_clicked(a):
     frames = []
     for i in range(1,surfaceFrame.max):
-        frames += [np.genfromtxt("output/output/eta_%05d" % i)]
+#         frames += [np.genfromtxt("output/output/eta_%05d" % i)]
+        frames += [np.genfromtxt("output/f1/eta_%05d" % i)]
     anim = basicAnimation(frames)
     with basicOutput:
         display(HTML(anim.to_html5_video()))
 
 basicBtn.on_click(basic_Btn_clicked)
-basicBox = Box([Label(value='Surface Elevation animation'),basicBtn], layout = Layout(width = '80%'))
+basicBox = Box([Label(value='Surface Elevation animation 2'),basicBtn], layout = Layout(width = '80%'))
 
 
 depthBtn = Button(description='display',button_style='primary', layout=Layout(width='auto'))
 depthOutput = widgets.Output()
+
+
 
 def depth_Btn_clicked(a):
     #plt = waterDepth()
@@ -480,10 +483,23 @@ depthBtn.on_click(depth_Btn_clicked)
 depthBox = Box([Label(value='Water Depth'),depthBtn],layout = Layout(width = '80%'))
 
 
+TwoDsnapFrame = IntSlider(value=0, min=0, max=1501)
+TwoDsnapInter = widgets.interactive(TwoDsnapPlot, frame = TwoDsnapFrame)
+TwoDsnapBox = Box([Label(value='Surface Elevation snapshot'),TwoDsnapInter])
 
-basicAnimBox = Box([depthBox, depthOutput, basicBox, basicOutput],layout = Layout(flex_flow = 'column', align_items='stretch',))
+TwoDanimBtn = Button(description='display',button_style='primary', layout=Layout(width='auto'))
+TwoDanimOutput = widgets.Output()
+
+def TwoDanim_Btn_clicked(a):
+    anim = TwoDsnapAnim()
+    with TwoDanimOutput:
+        display(HTML(anim.to_html5_video()))
+TwoDanimBtn.on_click(TwoDanim_Btn_clicked)
+TwoDanimBox = Box([Label(value='Surface Elevation animation'), TwoDanimBtn], layout = Layout(width = '80%'))
 
 
+basicAnimBox = Box([depthBox, depthOutput, TwoDsnapBox, TwoDanimBox, TwoDanimOutput, basicBox, basicOutput],
+                   layout = Layout(flex_flow = 'column', align_items='stretch',))
 
 
 
@@ -493,7 +509,8 @@ rotatingOutput = widgets.Output()
 def rotating_Btn_clicked(a):
     frames = []
     for i in range(1,surfaceFrame.max):
-        frames += [np.genfromtxt("output/output/eta_%05d" % i)]
+#         frames += [np.genfromtxt("output/output/eta_%05d" % i)]
+        frames += [np.genfromtxt("output/f1/eta_%05d" % i)]
     anim = rotatingAnimation(frames)
     with rotatingOutput:
         display(HTML(anim.to_html5_video()))
