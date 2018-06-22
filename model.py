@@ -259,6 +259,50 @@ fwInputBox = Box([fwInputAcd, fwUpInputBtn, fwInputArea],
                  layout = Layout(flex_flow = 'column', align_items = 'center'))
 
 
+############Create paras gui###############
+# getinputBtn = Button(description='input_temp',button_style='primary', layout=Layout(width='20%'))
+
+# inputBox = Box(layout = Layout(flex_flow = 'column'))
+# def getinput_btn_clicked(a):
+#     items = []
+# #     testLabel = Label(discription="hahaha")
+# #     testBtn = Button(discription='input',button_style='primary')
+# #     items.append(testLabel)
+# #     items.append(testBtn)
+    
+#     with open("input_funwave/input-t.txt","r") as fd:
+#         for line in fd.readlines():
+#             g = re.search(r'\${(.*)}',line)
+#             if g:
+#                 for match in re.findall(r'(\w+)=("[^"]*"|\'[^\']*|[^,\n]*)',g.group(1)):
+#                     if match[0] == 'value':
+#                         label = line.split()[0]+'Label'
+#                         label = Label(value = line.split()[0].upper()+":")
+#                         text = line.split()[0]+"Text"
+#                         text = Text()
+#                         box = line.split()[0]+'Box'
+#                         box = Box([label, text])
+#                         items.append(box)
+#                     if match[0] == 'option':
+#                         label = line.split()[0]+'Label'
+#                         label = Label(value = line.split()[0].upper()+":")
+#                         togBtns = line.split()[0]+'Tbs'
+#                         togBtns = ToggleButtons(options=['True', 'False'])
+#                         box = line.split()[0]+'Box'
+#                         box = Box([label, togBtns]) 
+#                         items.append(box)
+                        
+# #                 name = line.split()[0]+'label'
+# #                 name = Label(value=line.split()[0],description = line.split()[0])
+# #                 items.append(name)
+#     inputBox.children = items
+    
+# getinputBtn.on_click(getinput_btn_clicked)
+
+# fwUpInputBtn = Button(description='Update Input File',button_style='primary', layout=Layout(width='100%'))
+# fwInputArea = Textarea(layout= Layout(height = "300px",width = '100%'))
+# fwInputBox = Box([getinputBtn, inputBox, fwUpInputBtn, fwInputArea], 
+#                   layout = Layout(flex_flow = 'column', align_items = 'center'))
 
 
 
