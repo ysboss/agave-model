@@ -6,6 +6,72 @@ import numpy as np
 from matplotlib import animation, rc
 from IPython.display import HTML
     
+
+def fwOneD(Y_axis):
+    if(Y_axis =='Choose one'):
+        return
+    plt.clf()
+    plt.cla()
+    plt.close()
+    
+    
+    fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2)
+    fig.subplots_adjust(left=0.2, wspace=0.4, hspace=0.4)
+    
+    X = []
+    y1 = []
+    y2 = []
+    y3 = []
+    y4 = []
+
+    
+    for frame in range(31):
+        if (frame<9):
+            y = np.loadtxt('output/f1/'+Y_axis+'_0000'+str(frame+1))
+        if (9<=frame<99):
+            y = np.loadtxt('output/f1/'+Y_axis+'_000'+str(frame+1))
+        if (99<=frame<999):
+            y = np.loadtxt('output/f1/'+Y_axis+'_00'+str(frame+1))
+        if (999<=frame):
+            y = np.loadtxt('output/f1/'+Y_axis+'_0'+str(frame+1))
+    
+        y1.append(y[0][0])
+        y2.append(y[20][100])
+        y3.append(y[50][250])
+        y4.append(y[80][450])
+        
+    for i in range(31):
+        time = '%.2f' % ((i)*1)
+        X.append(time)
+
+
+    ax1.plot(X, y1)
+    ax1.set_title("Location 1")
+    ax1.set_ylabel(Y_axis+" (m)")
+
+    ax2.plot(X, y2)
+    ax2.set_title("Location 2")
+    #ax2.set_ylabel("Elevation")
+
+    ax3.plot(X, y3)
+    ax3.set_title("Location 3")
+    ax3.set_ylabel(Y_axis+" (m)")
+    ax3.set_xlabel("Time (s)")
+
+    ax4.plot(X, y4)
+    ax4.set_title("Location 4")
+    ax4.set_xlabel("Time (s)")
+
+    fig_size = []
+    fig_size.append(15)
+    fig_size.append(8)
+    plt.rcParams["figure.figsize"] = fig_size
+    
+    plt.show()
+
+    
+    
+    
 def surfacePlot(frame):
     # SLURP IN THE DATA
     if (frame == 0):
@@ -27,6 +93,7 @@ def surfacePlot(frame):
     fig.colorbar(surf)
     plt.show()
     
+
 
 
 def basicAnimation(frames):
@@ -101,10 +168,10 @@ def waterDepth():
         fileY.write('\n')
     fileY.close()
 
-    fig_size = []
-    fig_size.append(8)
-    fig_size.append(5)
-    plt.rcParams["figure.figsize"] = fig_size
+#     fig_size = []
+#     fig_size.append(8)
+#     fig_size.append(5)
+#     plt.rcParams["figure.figsize"] = fig_size
     
     # Load X_file and Y_file and get real dimension
     X = np.loadtxt('output/f2/X_file')
@@ -124,8 +191,35 @@ def waterDepth():
     #return plt
     plt.show()
     
+def depProfile(N):
+    if (N==0):
+        return
+    depthfile = open('output/f2/depth.txt','r')
+    depthdata = depthfile.readlines()[N-1]
+    p = depthdata.split()
+
+    # load depth data to dep_value
+    dep_value = []
+    for i in range(600):
+        dep_value.append(-abs(float(p[i])))
+
+    # create x_value
+    x_value = []
+    for i in range(600):
+        x_value.append((i+1)*0.05)
     
-def TwoDsnapAnim():
+    
+    fig, ax = plt.subplots()
+    ax.plot(x_value, dep_value, color = '#B06939')
+    ax.fill_between(x_value,-1, dep_value, facecolor='#33FFFF')
+    plt.xlabel("X (m)")
+    plt.ylabel("Depth (m)")
+    plt.title("Depth at N = "+str(N))
+    plt.show()
+    
+    
+    
+def TwoDsnapAnim(start, end):
     fig4 = plt.figure()
     fig4,ax = plt.subplots()
     X = np.loadtxt('output/f2/X_file')
@@ -158,7 +252,7 @@ def TwoDsnapAnim():
         return ax
 
     # make animate 
-    anim = animation.FuncAnimation(fig4,animate,50,interval=10,blit=False)
+    anim = animation.FuncAnimation(fig4,animate,np.arange(int(start/0.02), int(end/0.02)), interval=10,blit=False)
     return anim
     
 def TwoDsnapPlot(frame):    

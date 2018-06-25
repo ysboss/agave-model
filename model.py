@@ -1,5 +1,5 @@
 from __future__ import print_function
-from ipywidgets import interact, interactive, fixed, interact_manual, Layout, Button, Box,VBox, HBox, FloatText, Text, Dropdown, Label, IntSlider, Textarea, Accordion, ToggleButton, ToggleButtons, Select, RadioButtons, HTMLMath
+from ipywidgets import interact, interactive, fixed, interact_manual, Layout, Button, Box,VBox, HBox, FloatText, Text, Dropdown, Label, IntSlider, Textarea, Accordion, ToggleButton, ToggleButtons, Select, RadioButtons, HTMLMath, FloatRangeSlider
 import ipywidgets as widgets
 from IPython.display import display, clear_output, HTML
 from matplotlib import animation, rc
@@ -493,6 +493,12 @@ swanVisuAcd.set_title(1,'2D ')
 
 ############################### Funwave Visualization tab ##########################################
 
+
+fwYoption = Dropdown(options=['Choose one','eta','u','v'])
+fwplotsInter = widgets.interactive(fwOneD, Y_axis = fwYoption )
+fwoneDBox = Box([fwplotsInter])
+
+
 surfaceFrame = IntSlider(value=0, min=0, max=31)
 surfaceInter = widgets.interactive(surfacePlot, frame = surfaceFrame)
 surfaceBox = Box([Label(value='Surface Elevation snapshot'),surfaceInter])
@@ -527,22 +533,34 @@ depthBtn.on_click(depth_Btn_clicked)
 depthBox = Box([Label(value='Water Depth'),depthBtn],layout = Layout(width = '80%'))
 
 
+depProfileN = IntSlider(value=0, min=0, max=200)
+depProfileInter = widgets.interactive(depProfile, N = depProfileN)
+depProfileBox = Box([Label(value='Depth Profile Snapshot'), depProfileInter])
+
+
+
 TwoDsnapFrame = IntSlider(value=0, min=0, max=1501)
 TwoDsnapInter = widgets.interactive(TwoDsnapPlot, frame = TwoDsnapFrame)
 TwoDsnapBox = Box([Label(value='Surface Elevation snapshot'),TwoDsnapInter])
+
+
+TwoDanimRange = FloatRangeSlider(value=[5,7], min=0.0, max=30, step=0.02,
+                                 description='Time period (s):',readout=True,readout_format='.2f', layout = Layout(width ="60%"))
 
 TwoDanimBtn = Button(description='display',button_style='primary', layout=Layout(width='auto'))
 TwoDanimOutput = widgets.Output()
 
 def TwoDanim_Btn_clicked(a):
-    anim = TwoDsnapAnim()
+    anim = TwoDsnapAnim(TwoDanimRange.value[0],TwoDanimRange.value[1])
+    TwoDanimOutput.clear_output()
     with TwoDanimOutput:
         display(HTML(anim.to_html5_video()))
 TwoDanimBtn.on_click(TwoDanim_Btn_clicked)
-TwoDanimBox = Box([Label(value='Surface Elevation animation'), TwoDanimBtn], layout = Layout(width = '80%'))
+TwoDanimBox = Box([Label(value='Surface Elevation animation'), TwoDanimRange, TwoDanimBtn], 
+                  layout = Layout(width = '80%', justify_content = 'space-between'))
 
 
-basicAnimBox = Box([depthBox, depthOutput, TwoDsnapBox, TwoDanimBox, TwoDanimOutput, basicBox, basicOutput],
+basicAnimBox = Box([depthBox, depthOutput,depProfileBox, TwoDsnapBox, TwoDanimBox, TwoDanimOutput, basicBox, basicOutput],
                    layout = Layout(flex_flow = 'column', align_items='stretch',))
 
 
@@ -564,7 +582,7 @@ rotatingBox = Box([Label(value='Surface Elevation animation'),rotatingBtn], layo
 rotatingAnimBox = Box([surfaceBox, rotatingBox, rotatingOutput], layout = Layout(flex_flow = 'column', align_items='stretch'))
 
 
-fwVisuAcd =Accordion(children = [Box(), basicAnimBox,rotatingAnimBox])
+fwVisuAcd = Accordion([fwoneDBox, basicAnimBox,rotatingAnimBox])
 fwVisuAcd.set_title(0,'1D')
 fwVisuAcd.set_title(1,'2D')
 fwVisuAcd.set_title(2,'3D')
