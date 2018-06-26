@@ -192,117 +192,140 @@ SwanInputBox = Box([swanInputAcd, SwanUpInputBtn, SwanInputArea],
 ##################################### Funwave-tvd Input tab ################################
 
 
-totalTimeText = Text()
-totalTimeBox = Box([Label(value = 'Total Computational Time (s)'), totalTimeText],
-                   layout = Layout(width = '55%', justify_content = 'space-between'))
+# totalTimeText = Text()
+# totalTimeBox = Box([Label(value = 'Total Computational Time (s)'), totalTimeText],
+#                    layout = Layout(width = '55%', justify_content = 'space-between'))
 
-plotTimeText = Text()
-plotTimeBox = Box([Label(value = 'Plot Interval (s)'), plotTimeText],
-                  layout = Layout(width = '55%', justify_content = 'space-between'))
+# plotTimeText = Text()
+# plotTimeBox = Box([Label(value = 'Plot Interval (s)'), plotTimeText],
+#                   layout = Layout(width = '55%', justify_content = 'space-between'))
 
-timeBox = Box([totalTimeBox, plotTimeBox],layout = Layout(flex_flow = 'column'))
+# timeBox = Box([totalTimeBox, plotTimeBox],layout = Layout(flex_flow = 'column'))
 
-etaTbtns = ToggleButtons(options=['True', 'False'])
-etaBox = Box([Label(value = 'Surface Elevation'), etaTbtns],layout = Layout(width = '50%', justify_content = 'space-between'))
+# etaTbtns = ToggleButtons(options=['True', 'False'])
+# etaBox = Box([Label(value = 'Surface Elevation'), etaTbtns],layout = Layout(width = '50%', justify_content = 'space-between'))
 
-uTbtns = ToggleButtons(options=['True', 'False'])
-uBox = Box([Label(value = 'U'), uTbtns ],layout = Layout(width = '50%', justify_content = 'space-between'))
+# uTbtns = ToggleButtons(options=['True', 'False'])
+# uBox = Box([Label(value = 'U'), uTbtns ],layout = Layout(width = '50%', justify_content = 'space-between'))
 
-vTbtns = ToggleButtons(options=['True', 'False'])
-vBox = Box([Label(value = 'V'), vTbtns],layout = Layout(width = '50%', justify_content = 'space-between'))
+# vTbtns = ToggleButtons(options=['True', 'False'])
+# vBox = Box([Label(value = 'V'), vTbtns],layout = Layout(width = '50%', justify_content = 'space-between'))
 
-outputBox = Box([etaBox, uBox, vBox], layout = Layout(flex_flow = 'column'))
+# outputBox = Box([etaBox, uBox, vBox], layout = Layout(flex_flow = 'column'))
 
-fwInputAcd = Accordion(children = [timeBox,outputBox], layout= Layout(width = '100%'))
-fwInputAcd.set_title(0,'Time')
-fwInputAcd.set_title(1,'Output')
+# fwInputAcd = Accordion(children = [timeBox,outputBox], layout= Layout(width = '100%'))
+# fwInputAcd.set_title(0,'Time')
+# fwInputAcd.set_title(1,'Output')
 
-fwUpInputBtn = Button(description='Update Input File',button_style='primary', layout=Layout(width='100%'))
+# fwUpInputBtn = Button(description='Update Input File',button_style='primary', layout=Layout(width='100%'))
 
-def convertTF(value):
-    if (value == "True"):
-        return "T"
-    elif (value == "False"):
-        return "F"
-    else:
-        return value
+# def convertTF(value):
+#     if (value == "True"):
+#         return "T"
+#     elif (value == "False"):
+#         return "F"
+#     else:
+#         return value
 
-def fwupdate_btn_clicked(a):
-    cmd("tar -zxvf input_funwave.tgz")
-    cmd("mv input_funwave/input.txt input_funwave/input_template.txt")
-    name_value_pairs = {
-        "TOTAL_TIME": totalTimeText.value,
-        "PLOT_INTV" : plotTimeText.value,
-        "ETA"       : convertTF(etaTbtns.value),
-        "U"          : convertTF(uTbtns.value),
-        "V"          : convertTF(vTbtns.value)
-    }
-    with open("input_funwave/input_template.txt","r") as template:
-        with open("input_funwave/input_tmp.txt","w+") as inputTmp:
-            for line in template.readlines():
-                g = re.match("^(TOTAL_TIME|PLOT_INTV|ETA|U|V)\s*=\s*(\S+)",line)
-                if g:
-                    name = g.group(1)
-                    if name in name_value_pairs:
-                        inputTmp.write(name+" = "+name_value_pairs[name]+"\n")
-                else:
-                    inputTmp.write(line)
-            inputTmp.close()
-        template.close()
-    fwInputArea.value = open("input_funwave/input_tmp.txt","r").read()
-    surfaceFrame.max = int(float(totalTimeText.value))/int(float(plotTimeText.value))
-fwUpInputBtn.on_click(fwupdate_btn_clicked)
+# def fwupdate_btn_clicked(a):
+#     cmd("tar -zxvf input_funwave.tgz")
+#     cmd("mv input_funwave/input.txt input_funwave/input_template.txt")
+#     name_value_pairs = {
+#         "TOTAL_TIME": totalTimeText.value,
+#         "PLOT_INTV" : plotTimeText.value,
+#         "ETA"       : convertTF(etaTbtns.value),
+#         "U"          : convertTF(uTbtns.value),
+#         "V"          : convertTF(vTbtns.value)
+#     }
+#     with open("input_funwave/input_template.txt","r") as template:
+#         with open("input_funwave/input_tmp.txt","w+") as inputTmp:
+#             for line in template.readlines():
+#                 g = re.match("^(TOTAL_TIME|PLOT_INTV|ETA|U|V)\s*=\s*(\S+)",line)
+#                 if g:
+#                     name = g.group(1)
+#                     if name in name_value_pairs:
+#                         inputTmp.write(name+" = "+name_value_pairs[name]+"\n")
+#                 else:
+#                     inputTmp.write(line)
+#             inputTmp.close()
+#         template.close()
+#     fwInputArea.value = open("input_funwave/input_tmp.txt","r").read()
+#     surfaceFrame.max = int(float(totalTimeText.value))/int(float(plotTimeText.value))
+# fwUpInputBtn.on_click(fwupdate_btn_clicked)
 
-fwInputArea = Textarea(layout= Layout(height = "300px",width = '100%'))
+# fwInputArea = Textarea(layout= Layout(height = "300px",width = '100%'))
 
-fwInputBox = Box([fwInputAcd, fwUpInputBtn, fwInputArea], 
-                 layout = Layout(flex_flow = 'column', align_items = 'center'))
+# fwInputBox = Box([fwInputAcd, fwUpInputBtn, fwInputArea], 
+#                  layout = Layout(flex_flow = 'column', align_items = 'center'))
 
 
 ############Create paras gui###############
-# getinputBtn = Button(description='input_temp',button_style='primary', layout=Layout(width='20%'))
 
-# inputBox = Box(layout = Layout(flex_flow = 'column'))
-# def getinput_btn_clicked(a):
-#     items = []
-# #     testLabel = Label(discription="hahaha")
-# #     testBtn = Button(discription='input',button_style='primary')
-# #     items.append(testLabel)
-# #     items.append(testBtn)
+fwInputdd=Dropdown(options=['Choose Input Template','Basic template'])
+
+
+parvals = {}
+inputBox = Box(layout = Layout(flex_flow = 'column'))
+
+def fw_on_change(change):
+    inputTmp = ''
+    items = []
+    if(fwInputdd.value == 'Choose Input Template'):
+        return
+    if(fwInputdd.value == 'Basic template'):
+        inputTmp = 'input_funwave/basic_template.txt'
     
-#     with open("input_funwave/input-t.txt","r") as fd:
-#         for line in fd.readlines():
-#             g = re.search(r'\${(.*)}',line)
-#             if g:
-#                 for match in re.findall(r'(\w+)=("[^"]*"|\'[^\']*|[^,\n]*)',g.group(1)):
-#                     if match[0] == 'value':
-#                         label = line.split()[0]+'Label'
-#                         label = Label(value = line.split()[0].upper()+":")
-#                         text = line.split()[0]+"Text"
-#                         text = Text()
-#                         box = line.split()[0]+'Box'
-#                         box = Box([label, text])
-#                         items.append(box)
-#                     if match[0] == 'option':
-#                         label = line.split()[0]+'Label'
-#                         label = Label(value = line.split()[0].upper()+":")
-#                         togBtns = line.split()[0]+'Tbs'
-#                         togBtns = ToggleButtons(options=['True', 'False'])
-#                         box = line.split()[0]+'Box'
-#                         box = Box([label, togBtns]) 
-#                         items.append(box)
+    with open(inputTmp,"r") as fd:
+        for line in fd.readlines():
+            g = re.search(r'(\w+)\s*=\s*\${(.*)}',line)
+            if g:
+                for match in re.findall(r'(\w+)=("[^"]*"|\'[^\']*|[^,\n]*)',g.group(2)):
+                    if match[0] == 'value':
+                        label = line.split()[0]+'Label'
+                        label = Label(value = line.split()[0].upper()+":")
+                        text = line.split()[0]
+                        text = Text()
+                        box = line.split()[0]+'Box'
+                        box = Box([label, text],layout = Layout(width = '100%', justify_content = 'space-between'))
+                        items.append(box)
+                    if match[0] == 'option':
+                        label = line.split()[0]+'Label'
+                        label = Label(value = line.split()[0].upper()+":")
+                        togBtns = line.split()[0]
+                        togBtns = ToggleButtons(options=['T', 'F'])
+                        box = line.split()[0]+'Box'
+                        box = Box([label, togBtns], layout = Layout(width = '100%', justify_content = 'space-between')) 
+                        items.append(box)
                         
-# #                 name = line.split()[0]+'label'
-# #                 name = Label(value=line.split()[0],description = line.split()[0])
-# #                 items.append(name)
-#     inputBox.children = items
+    inputBox.children = items
     
-# getinputBtn.on_click(getinput_btn_clicked)
+fwInputdd.observe(fw_on_change)
+    
+def fwUpInput_btn_clicked(a):
+    inputTmp = ''
+    if(fwInputdd.value == 'Basic template'):
+        inputTmp = 'input_funwave/basic_template.txt'
+        
+    with open("input_funwave/input_1.txt", "w") as fw:
+        with open(inputTmp, "r") as fd:
+            k=0
+            for line in fd.readlines():
+                g = re.search(r'(\w+)\s*=\s*\${(.*)}',line)
+                if g:
+                    print("%s = %s" % (g.group(1),inputBox.children[k].children[1].value),file=fw)
+                    k+=1
+                else:
+                    print(line, end='', file=fw)
+     
+    fwInputArea.value = open("input_funwave/input_1.txt","r").read()
+    surfaceFrame.max = int(float(inputBox.children[0].children[1].value))/int(float(inputBox.children[1].children[1].value))
+            
+fwUpInputBtn = Button(description='Update Input File',button_style='primary', layout=Layout(width='100%'))
+fwUpInputBtn.on_click(fwUpInput_btn_clicked)
 
-# fwUpInputBtn = Button(description='Update Input File',button_style='primary', layout=Layout(width='100%'))
-# fwInputArea = Textarea(layout= Layout(height = "300px",width = '100%'))
-# fwInputBox = Box([getinputBtn, inputBox, fwUpInputBtn, fwInputArea], 
-#                   layout = Layout(flex_flow = 'column', align_items = 'center'))
+fwInputArea = Textarea(layout= Layout(height = "300px",width = '100%'))
+fwInputBox = Box([fwInputdd, inputBox, fwUpInputBtn, fwInputArea], 
+                  layout = Layout(flex_flow = 'column', align_items = 'center'))
 
 
 
