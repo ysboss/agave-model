@@ -268,6 +268,7 @@ parvals = {}
 inputBox = Box(layout = Layout(flex_flow = 'column'))
 
 def fw_on_change(change):
+    cmd("tar -zxvf input_funwave.tgz")
     inputTmp = ''
     items = []
     if(fwInputdd.value == 'Choose Input Template'):
@@ -306,7 +307,7 @@ def fwUpInput_btn_clicked(a):
     if(fwInputdd.value == 'Basic template'):
         inputTmp = 'input_funwave/basic_template.txt'
         
-    with open("input_funwave/input_1.txt", "w") as fw:
+    with open("input_funwave/input_tmp.txt", "w") as fw:
         with open(inputTmp, "r") as fd:
             k=0
             for line in fd.readlines():
@@ -317,7 +318,7 @@ def fwUpInput_btn_clicked(a):
                 else:
                     print(line, end='', file=fw)
      
-    fwInputArea.value = open("input_funwave/input_1.txt","r").read()
+    fwInputArea.value = open("input_funwave/input_tmp.txt","r").read()
     surfaceFrame.max = int(float(inputBox.children[0].children[1].value))/int(float(inputBox.children[1].children[1].value))
             
 fwUpInputBtn = Button(description='Update Input File',button_style='primary', layout=Layout(width='100%'))
