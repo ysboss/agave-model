@@ -563,28 +563,42 @@ depProfileBox = Box([Label(value='Depth Profile Snapshot'), depProfileInter])
 
 
 
-TwoDsnapFrame = IntSlider(value=0, min=0, max=1501)
-TwoDsnapInter = widgets.interactive(TwoDsnapPlot, frame = TwoDsnapFrame)
-TwoDsnapBox = Box([Label(value='Surface Elevation snapshot'),TwoDsnapInter])
-
-
-TwoDanimRange = FloatRangeSlider(value=[5,7], min=0.0, max=30, step=0.02,
+depProfileAnimaRange = FloatRangeSlider(value=[5,7], min=0.0, max=30, step=0.02,
                                  description='Time period (s):',readout=True,readout_format='.2f', layout = Layout(width ="60%"))
-
-TwoDanimBtn = Button(description='display',button_style='primary', layout=Layout(width='auto'))
-TwoDanimOutput = widgets.Output()
-
-def TwoDanim_Btn_clicked(a):
-    anim = TwoDsnapAnim(TwoDanimRange.value[0],TwoDanimRange.value[1])
-    TwoDanimOutput.clear_output()
-    with TwoDanimOutput:
+depProfileAnimBtn = Button(description='display',button_style='primary', layout=Layout(width='auto'))
+depProfileAnimOutput = widgets.Output()
+def depProfileAnim_Btn_clicked(a):
+    anim = depProfileWithEta(depProfileAnimaRange.value[0], depProfileAnimaRange.value[1])
+    depProfileAnimOutput.clear_output()
+    with depProfileAnimOutput:
         display(HTML(anim.to_html5_video()))
-TwoDanimBtn.on_click(TwoDanim_Btn_clicked)
-TwoDanimBox = Box([Label(value='Surface Elevation animation'), TwoDanimRange, TwoDanimBtn], 
+depProfileAnimBtn.on_click(depProfileAnim_Btn_clicked)
+depProfileAnimBox = Box([Label(value='Cross-shore profile animation'), depProfileAnimaRange, depProfileAnimBtn], 
                   layout = Layout(width = '80%', justify_content = 'space-between'))
 
 
-basicAnimBox = Box([depthBox, depthOutput,depProfileBox, TwoDsnapBox, TwoDanimBox, TwoDanimOutput, basicBox, basicOutput],
+
+twoDsnapFrame = IntSlider(value=0, min=0, max=1501)
+twoDsnapInter = widgets.interactive(twoDsnapPlot, frame = twoDsnapFrame)
+twoDsnapBox = Box([Label(value='Surface Elevation snapshot'),twoDsnapInter])
+
+
+twoDanimRange = FloatRangeSlider(value=[5,7], min=0.0, max=30, step=0.02,
+                                 description='Time period (s):',readout=True,readout_format='.2f', layout = Layout(width ="60%"))
+twoDanimBtn = Button(description='display',button_style='primary', layout=Layout(width='auto'))
+twoDanimOutput = widgets.Output()
+def twoDanim_Btn_clicked(a):
+    anim = twoDsnapAnim(twoDanimRange.value[0],twoDanimRange.value[1])
+    twoDanimOutput.clear_output()
+    with twoDanimOutput:
+        display(HTML(anim.to_html5_video()))
+twoDanimBtn.on_click(twoDanim_Btn_clicked)
+twoDanimBox = Box([Label(value='Surface Elevation animation'), twoDanimRange, twoDanimBtn], 
+                  layout = Layout(width = '80%', justify_content = 'space-between'))
+
+
+basicAnimBox = Box([depthBox, depthOutput,depProfileBox, depProfileAnimBox, depProfileAnimOutput, 
+                    twoDsnapBox, twoDanimBox, twoDanimOutput, basicBox, basicOutput],
                    layout = Layout(flex_flow = 'column', align_items='stretch',))
 
 
