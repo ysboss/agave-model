@@ -29,15 +29,15 @@ def fwOneD(Y_axis):
 
     
     for frame in range(31):
-        if (frame<9):
-            y = np.loadtxt(opdir+'f1/'+Y_axis+'_0000'+str(frame+1))
-        if (9<=frame<99):
-            y = np.loadtxt(opdir+'f1/'+Y_axis+'_000'+str(frame+1))
-        if (99<=frame<999):
-            y = np.loadtxt(opdir+'f1/'+Y_axis+'_00'+str(frame+1))
-        if (999<=frame):
-            y = np.loadtxt(opdir+'f1/'+Y_axis+'_0'+str(frame+1))
-    
+#         if (frame<9):
+#             y = np.loadtxt(opdir+'f1/'+Y_axis+'_0000'+str(frame+1))
+#         if (9<=frame<99):
+#             y = np.loadtxt(opdir+'f1/'+Y_axis+'_000'+str(frame+1))
+#         if (99<=frame<999):
+#             y = np.loadtxt(opdir+'f1/'+Y_axis+'_00'+str(frame+1))
+#         if (999<=frame):
+#             y = np.loadtxt(opdir+'f1/'+Y_axis+'_0'+str(frame+1))
+        y = np.loadtxt(opdir+'f1/'+Y_axis+'_%05d' % (frame+1))
         y1.append(y[0][0])
         y2.append(y[20][100])
         y3.append(y[50][250])
@@ -186,14 +186,7 @@ def depProfileWithEta(start, end):
 # create etas that contains all of needing eta data
     etas = []
     for i in range(1501):
-        if (i<9):
-            etafile = open(opdir+'f2/eta_000'+str(i+1),'r')
-        if (9<=i<99):
-            etafile = open(opdir+'f2/eta_00'+str(i+1),'r')
-        if (99<=i<999):
-            etafile = open(opdir+'f2/eta_0'+str(i+1),'r')
-        if (999<=i):
-            etafile = open(opdir+'f2/eta_'+str(i+1),'r')
+        etafile = open(opdir+'f2/eta_%04d' % (i+1))
         etadata = etafile.readlines()[10]
         etap = etadata.split()
         eta_value = []
@@ -236,14 +229,7 @@ def twoDsnapAnim(start, end):
     
     def animate(i):
         ax.clear()
-        if (i<9):
-            Eta = np.loadtxt(opdir+'f2/eta_000'+str(i+1))
-        if (9<=i<99):
-            Eta = np.loadtxt(opdir+'f2/eta_00'+str(i+1))
-        if (99<=i<999):
-            Eta = np.loadtxt(opdir+'f2/eta_0'+str(i+1))
-        if (999<=i):
-            Eta = np.loadtxt(opdir+'f2/eta_'+str(i+1))
+        Eta = np.loadtxt(opdir+'f2/eta_%04d' % (i+1))
         img = ax.contourf(X_value, Y_value, Eta, 100)
         plt.colorbar(img)
         plt.close()
@@ -265,14 +251,7 @@ def twoDsnapPlot(frame):
     Y = np.loadtxt(opdir+'f2/Y_file')
     Y_value = Y*0.10
     
-    if (frame<9):
-        Eta = np.loadtxt(opdir+'f2/eta_000'+str(frame+1))
-    if (9<=frame<99):
-        Eta = np.loadtxt(opdir+'f2/eta_00'+str(frame+1))
-    if (99<=frame<999):
-        Eta = np.loadtxt(opdir+'f2/eta_0'+str(frame+1))
-    if (999<=frame):
-        Eta = np.loadtxt(opdir+'f2/eta_'+str(frame+1))
+    Eta = np.loadtxt(opdir+'f2/eta_%04d' % (i+1))
     etaplot = plt.contourf(X_value, Y_value, Eta, 100)
     time = (frame-1)*0.02
     plt.title("Surface elevation (m) at t = "+str(time))
