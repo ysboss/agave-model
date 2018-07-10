@@ -8,6 +8,8 @@ from IPython.display import HTML
     
 opdir = "output-tmp/"
     
+############################################### 1D #############################################
+
 def fwOneD(Y_axis):
     if(Y_axis =='Choose one'):
         return
@@ -70,32 +72,8 @@ def fwOneD(Y_axis):
     
     plt.show()
 
-    
-    
-    
-def surfacePlot(frame):
-    # SLURP IN THE DATA
-    if (frame == 0):
-        return
-#     f = np.genfromtxt("output/output/eta_%05d" % frame)
-    f = np.genfromtxt(opdir+'f1/eta_%05d' % frame)
-    xv = np.linspace(0,f.shape[1],f.shape[1])
-    yv = np.linspace(0,f.shape[0],f.shape[0])
-    x2,y2 = np.meshgrid(xv,yv)
-    fig = plt.figure(figsize=(12,10))
-    ax = fig.gca(projection='3d')
-    ax.clear()
-    # This is the viewing angle, theta and phi
-    ax.view_init(20,60)
-    # For more colormaps, see https://matplotlib.org/examples/color/colormaps_reference.html
-    # The strides make the image really sharp. They slow down the rendering, however.
-    surf = ax.plot_surface(x2, y2, f, cmap=cm.coolwarm,
-                           linewidth=0, antialiased=False, rstride=1, cstride=1)
-    fig.colorbar(surf)
-    plt.show()
-    
 
-
+############################################### 2D #############################################
 
 def basicAnimation(frames):
     size = len(frames)
@@ -110,40 +88,6 @@ def basicAnimation(frames):
     return anim
 
     
-
-
-
-def rotatingAnimation(frames):
-    size = len(frames)
-    if (size == 0):
-        return
-#     f = np.genfromtxt("output/output/eta_%05d" % 1)
-    f = np.genfromtxt(opdir+'f1/eta_%05d' % 1)
-    xv = np.linspace(0,f.shape[1],f.shape[1])
-    yv = np.linspace(0,f.shape[0],f.shape[0])
-    x2,y2 = np.meshgrid(xv,yv)
-    
-    fig3 = plt.figure(figsize=(12,10))
-    ax = fig3.gca(projection='3d')
-    zmin = np.min(frames[0])
-    zmax = np.max(frames[0])
-    for i in range(1,size):
-        zmin = min(zmin,np.min(frames[i]))
-        zmax = max(zmax,np.max(frames[i]))
-    def animate2(i):
-        ax.clear()
-        # Change the viewing angle
-        ax.view_init(20,i*6)
-        ax.set_zlim(top=zmax,bottom=zmin)
-        # Cycle through the frames
-        f = frames[i % 10]
-        # vmax and vmin control the color normalization
-        surf = ax.plot_surface(x2, y2, f, cmap=cm.coolwarm,
-                           linewidth=0, antialiased=False, vmax=zmax, vmin=zmin)
-        return surf,
-    
-    anim = animation.FuncAnimation(fig3, animate2, frames=size, interval=200, repeat=True)
-    return anim
     
 def waterDepth():
     # Generate X_file 
@@ -211,8 +155,8 @@ def depProfile(N):
     
     
     fig, ax = plt.subplots()
-    ax.plot(x_value, dep_value, color = '#33FFFF')
-    ax.fill_between(x_value,-1, dep_value, facecolor='#B06939')
+    ax.plot(x_value, dep_value, color = '#FFFF00')
+    ax.fill_between(x_value,-1, dep_value, facecolor='#FFFF00')
     plt.xlabel("X (m)")
     plt.ylabel("Depth (m)")
     plt.title("Depth at N = "+str(N))
@@ -262,9 +206,9 @@ def depProfileWithEta(start, end):
     def animate(i):
         ax.clear()
         ax.plot(x_value, etas[i], color='#33FFFF')
-        ax.plot(x_value, dep_value, color='#B06939')
+        ax.plot(x_value, dep_value, color='#FFFF00')
         ax.fill_between(x_value,-1, etas[i], facecolor='#33FFFF')
-        ax.fill_between(x_value,-1, dep_value, facecolor='#B06939')
+        ax.fill_between(x_value,-1, dep_value, facecolor='#FFFF00')
         time = '%.2f' % ((i+1)*0.02)
         ax.set_title('Time = '+ time +' sec')
         plt.ylim(-0.45,0.1)
@@ -339,4 +283,65 @@ def twoDsnapPlot(frame):
     plt.show()
     
     
+############################################### 3D #############################################    
+    
+def surfacePlot(frame):
+    # SLURP IN THE DATA
+    if (frame == 0):
+        return
+#     f = np.genfromtxt("output/output/eta_%05d" % frame)
+    f = np.genfromtxt(opdir+'f1/eta_%05d' % frame)
+    xv = np.linspace(0,f.shape[1],f.shape[1])
+    yv = np.linspace(0,f.shape[0],f.shape[0])
+    x2,y2 = np.meshgrid(xv,yv)
+    fig = plt.figure(figsize=(12,10))
+    ax = fig.gca(projection='3d')
+    ax.clear()
+    # This is the viewing angle, theta and phi
+    ax.view_init(20,60)
+    # For more colormaps, see https://matplotlib.org/examples/color/colormaps_reference.html
+    # The strides make the image really sharp. They slow down the rendering, however.
+    surf = ax.plot_surface(x2, y2, f, cmap=cm.coolwarm,
+                           linewidth=0, antialiased=False, rstride=1, cstride=1)
+    fig.colorbar(surf)
+    plt.show()
+    
+    
+def rotatingAnimation(frames):
+    size = len(frames)
+    if (size == 0):
+        return
+#     f = np.genfromtxt("output/output/eta_%05d" % 1)
+    f = np.genfromtxt(opdir+'f1/eta_%05d' % 1)
+    xv = np.linspace(0,f.shape[1],f.shape[1])
+    yv = np.linspace(0,f.shape[0],f.shape[0])
+    x2,y2 = np.meshgrid(xv,yv)
+    
+    fig3 = plt.figure(figsize=(12,10))
+    ax = fig3.gca(projection='3d')
+    zmin = np.min(frames[0])
+    zmax = np.max(frames[0])
+    for i in range(1,size):
+        zmin = min(zmin,np.min(frames[i]))
+        zmax = max(zmax,np.max(frames[i]))
+    def animate2(i):
+        ax.clear()
+        # Change the viewing angle
+        ax.view_init(20,i*6)
+        ax.set_zlim(top=zmax,bottom=zmin)
+        # Cycle through the frames
+        f = frames[i % 10]
+        # vmax and vmin control the color normalization
+        surf = ax.plot_surface(x2, y2, f, cmap=cm.coolwarm,
+                           linewidth=0, antialiased=False, vmax=zmax, vmin=zmin)
+        return surf,
+    
+    anim = animation.FuncAnimation(fig3, animate2, frames=size, interval=200, repeat=True)
+    return anim
+
+
+
+
+    
+
     
