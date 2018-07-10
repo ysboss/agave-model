@@ -268,7 +268,7 @@ parvals = {}
 inputBox = Box(layout = Layout(flex_flow = 'column'))
 
 def fw_on_change(change):
-    cmd("tar -zxvf input_funwave.tgz")
+    cmd("tar -xvf input_funwave.tgz")
     inputTmp = ''
     items = []
     if(fwInputdd.value == 'Choose Input Template'):
@@ -523,10 +523,6 @@ fwplotsInter = widgets.interactive(fwOneD, Y_axis = fwYoption )
 fwoneDBox = Box([fwplotsInter])
 
 
-surfaceFrame = IntSlider(value=0, min=0, max=31)
-surfaceInter = widgets.interactive(surfacePlot, frame = surfaceFrame)
-surfaceBox = Box([Label(value='Surface Elevation snapshot'),surfaceInter])
-
 basicBtn = Button(description='display',button_style='primary', layout=Layout(width='auto'))
 basicOutput = widgets.Output()
 
@@ -534,7 +530,7 @@ def basic_Btn_clicked(a):
     frames = []
     for i in range(1,surfaceFrame.max):
 #         frames += [np.genfromtxt("output/output/eta_%05d" % i)]
-        frames += [np.genfromtxt("output/f1/eta_%05d" % i)]
+        frames += [np.genfromtxt("output-tmp/f1/eta_%05d" % i)]
     anim = basicAnimation(frames)
     with basicOutput:
         display(HTML(anim.to_html5_video()))
@@ -603,6 +599,11 @@ basicAnimBox = Box([depthBox, depthOutput,depProfileBox, depProfileAnimBox, depP
 
 
 
+
+surfaceFrame = IntSlider(value=0, min=0, max=31)
+surfaceInter = widgets.interactive(surfacePlot, frame = surfaceFrame)
+surfaceBox = Box([Label(value='Surface Elevation snapshot'),surfaceInter])
+
 rotatingBtn = Button(description='display',button_style='primary', layout=Layout(width='auto'))
 rotatingOutput = widgets.Output()
 
@@ -610,7 +611,7 @@ def rotating_Btn_clicked(a):
     frames = []
     for i in range(1,surfaceFrame.max):
 #         frames += [np.genfromtxt("output/output/eta_%05d" % i)]
-        frames += [np.genfromtxt("output/f1/eta_%05d" % i)]
+        frames += [np.genfromtxt("output-tmp/f1/eta_%05d" % i)]
     anim = rotatingAnimation(frames)
     with rotatingOutput:
         display(HTML(anim.to_html5_video()))
@@ -618,6 +619,7 @@ def rotating_Btn_clicked(a):
 rotatingBtn.on_click(rotating_Btn_clicked)
 rotatingBox = Box([Label(value='Surface Elevation animation'),rotatingBtn], layout = Layout(width = '80%'))
 rotatingAnimBox = Box([surfaceBox, rotatingBox, rotatingOutput], layout = Layout(flex_flow = 'column', align_items='stretch'))
+
 
 
 fwVisuAcd = Accordion([fwoneDBox, basicAnimBox,rotatingAnimBox])

@@ -12,7 +12,7 @@ import matplotlib.dates as mdates
 from command import cmd
 from numpy import NaN
 
-
+opdir = "output-tmp/swan/"
 
 def oneDPlots(Y_axis):
     if(Y_axis =='Choose one'):
@@ -20,7 +20,7 @@ def oneDPlots(Y_axis):
     plt.clf()
     plt.cla()
     plt.close()
-    with open("output/INPUT") as input_file:
+    with open(opdir+'INPUT') as input_file:
         for line in input_file:
             if line.startswith("$"):
                 continue
@@ -34,7 +34,7 @@ def oneDPlots(Y_axis):
                     continue
     input_file.close()
     key_list=[]
-    with open("output/"+buoy_point) as file1:
+    with open(opdir+buoy_point) as file1:
         for line in file1:
                 data = line.strip().split()
                 fname_k = "%s,%s" % (data[0],data[1])
@@ -46,7 +46,7 @@ def oneDPlots(Y_axis):
     fig_size.append(8)
     plt.rcParams["figure.figsize"] = fig_size
     
-    Buoytable1 = Buoytable("output/"+buoy_table)
+    Buoytable1 = Buoytable(opdir+buoy_table)
     
     for igauge in range(1,11):
         axs=plt.subplot(5,2,int(igauge)) # the first subplot in the first figure
@@ -90,19 +90,19 @@ def hsPreprocess_btn_clicked(a):
     for m in range(120):
         hs_array_time2=[]
         for j in range(109):
-            fo = open("output/hs", "r+")
+            fo = open(opdir+'hs', "r+")
             datalines1 = fo.readlines()[9+j+231*m]
         
             p1 = datalines1.split()
             for i in range(1,152):
                 hs_array_time2.append(p1[i])
-            fo = open("output/hs", "r+")
+            fo = open(opdir+'hs', "r+")
             datalines2 = fo.readlines()[122+j+231*m]
             p2 = datalines2.split()
             for i in range(1,31):
                 hs_array_time2.append(p2[i])
         fo.close()
-        hsfilename = 'output/hsTmp/hs_'+str(m+1)
+        hsfilename = opdir+'hsTmp/hs_'+str(m+1)
         hs_file_object_time2 = open(hsfilename, 'w')
         for ip in hs_array_time2:
             if(ip=="-900."): 
@@ -125,7 +125,7 @@ def twoDAnimate(Time_Step):
     
     ax2.clear()
     
-    xy_grid = np.loadtxt('output/b02.xy')
+    xy_grid = np.loadtxt(opdir+'b02.xy')
     longitude = xy_grid[0:109]
     for i in range(109):
         for j in range(181):
@@ -137,7 +137,7 @@ def twoDAnimate(Time_Step):
             if(latitude[i][j]==(-999.0000000000)):
                 latitude[i][j]= NaN
     
-    hsfilename='output/hsTmp/hs_'+str(Time_Step)
+    hsfilename=opdir+'hsTmp/hs_'+str(Time_Step)
     
     hs_value = np.loadtxt(hsfilename)
     hs_2d = np.reshape(hs_value,(109,181))
