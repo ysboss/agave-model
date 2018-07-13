@@ -12,7 +12,7 @@ import matplotlib.dates as mdates
 from command import cmd
 from numpy import NaN
 
-opdir = "output-tmp/swan/"
+opdir = "output/"
 
 def oneDPlots(Y_axis):
     if(Y_axis =='Choose one'):

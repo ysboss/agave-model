@@ -192,119 +192,53 @@ SwanInputBox = Box([swanInputAcd, SwanUpInputBtn, SwanInputArea],
 ##################################### Funwave-tvd Input tab ################################
 
 
-# totalTimeText = Text()
-# totalTimeBox = Box([Label(value = 'Total Computational Time (s)'), totalTimeText],
-#                    layout = Layout(width = '55%', justify_content = 'space-between'))
-
-# plotTimeText = Text()
-# plotTimeBox = Box([Label(value = 'Plot Interval (s)'), plotTimeText],
-#                   layout = Layout(width = '55%', justify_content = 'space-between'))
-
-# timeBox = Box([totalTimeBox, plotTimeBox],layout = Layout(flex_flow = 'column'))
-
-# etaTbtns = ToggleButtons(options=['True', 'False'])
-# etaBox = Box([Label(value = 'Surface Elevation'), etaTbtns],layout = Layout(width = '50%', justify_content = 'space-between'))
-
-# uTbtns = ToggleButtons(options=['True', 'False'])
-# uBox = Box([Label(value = 'U'), uTbtns ],layout = Layout(width = '50%', justify_content = 'space-between'))
-
-# vTbtns = ToggleButtons(options=['True', 'False'])
-# vBox = Box([Label(value = 'V'), vTbtns],layout = Layout(width = '50%', justify_content = 'space-between'))
-
-# outputBox = Box([etaBox, uBox, vBox], layout = Layout(flex_flow = 'column'))
-
-# fwInputAcd = Accordion(children = [timeBox,outputBox], layout= Layout(width = '100%'))
-# fwInputAcd.set_title(0,'Time')
-# fwInputAcd.set_title(1,'Output')
-
-# fwUpInputBtn = Button(description='Update Input File',button_style='primary', layout=Layout(width='100%'))
-
-# def convertTF(value):
-#     if (value == "True"):
-#         return "T"
-#     elif (value == "False"):
-#         return "F"
-#     else:
-#         return value
-
-# def fwupdate_btn_clicked(a):
-#     cmd("tar -zxvf input_funwave.tgz")
-#     cmd("mv input_funwave/input.txt input_funwave/input_template.txt")
-#     name_value_pairs = {
-#         "TOTAL_TIME": totalTimeText.value,
-#         "PLOT_INTV" : plotTimeText.value,
-#         "ETA"       : convertTF(etaTbtns.value),
-#         "U"          : convertTF(uTbtns.value),
-#         "V"          : convertTF(vTbtns.value)
-#     }
-#     with open("input_funwave/input_template.txt","r") as template:
-#         with open("input_funwave/input_tmp.txt","w+") as inputTmp:
-#             for line in template.readlines():
-#                 g = re.match("^(TOTAL_TIME|PLOT_INTV|ETA|U|V)\s*=\s*(\S+)",line)
-#                 if g:
-#                     name = g.group(1)
-#                     if name in name_value_pairs:
-#                         inputTmp.write(name+" = "+name_value_pairs[name]+"\n")
-#                 else:
-#                     inputTmp.write(line)
-#             inputTmp.close()
-#         template.close()
-#     fwInputArea.value = open("input_funwave/input_tmp.txt","r").read()
-#     surfaceFrame.max = int(float(totalTimeText.value))/int(float(plotTimeText.value))
-# fwUpInputBtn.on_click(fwupdate_btn_clicked)
-
-# fwInputArea = Textarea(layout= Layout(height = "300px",width = '100%'))
-
-# fwInputBox = Box([fwInputAcd, fwUpInputBtn, fwInputArea], 
-#                  layout = Layout(flex_flow = 'column', align_items = 'center'))
-
-
-############Create paras gui###############
-
-fwInputdd=Dropdown(options=['Choose Input Template','Basic template'])
+fwInputdd=Dropdown(options=['Choose Input Template','Basic Template'], value='Choose Input Template')
 
 
 parvals = {}
 inputBox = Box(layout = Layout(flex_flow = 'column'))
 
 def fw_on_change(change):
-    cmd("tar -xvf input_funwave.tgz")
     inputTmp = ''
     items = []
-    if(fwInputdd.value == 'Choose Input Template'):
-        return
-    if(fwInputdd.value == 'Basic template'):
-        inputTmp = 'input_funwave/basic_template.txt'
+    if change['type'] == 'change' and change['name'] == 'value':
+        if(change['new'] == 'Choose Input Template'):
+            items=[]
+            inputBox.children = items
+            return
+        if(change['new'] == 'Basic Template'):
+            cmd("tar -zxvf input_funwave.tgz")
+            inputTmp = 'input_funwave/basic_template.txt'
     
-    with open(inputTmp,"r") as fd:
-        for line in fd.readlines():
-            g = re.search(r'(\w+)\s*=\s*\${(.*)}',line)
-            if g:
-                for match in re.findall(r'(\w+)=("[^"]*"|\'[^\']*|[^,\n]*)',g.group(2)):
-                    if match[0] == 'value':
-                        label = line.split()[0]+'Label'
-                        label = Label(value = line.split()[0].upper()+":")
-                        text = line.split()[0]
-                        text = Text()
-                        box = line.split()[0]+'Box'
-                        box = Box([label, text],layout = Layout(width = '100%', justify_content = 'space-between'))
-                        items.append(box)
-                    if match[0] == 'option':
-                        label = line.split()[0]+'Label'
-                        label = Label(value = line.split()[0].upper()+":")
-                        togBtns = line.split()[0]
-                        togBtns = ToggleButtons(options=['T', 'F'])
-                        box = line.split()[0]+'Box'
-                        box = Box([label, togBtns], layout = Layout(width = '100%', justify_content = 'space-between')) 
-                        items.append(box)
+        with open(inputTmp,"r") as fd:
+            for line in fd.readlines():
+                g = re.search(r'(\w+)\s*=\s*\${(.*)}',line)
+                if g:
+                    for match in re.findall(r'(\w+)=("[^"]*"|\'[^\']*|[^,\n]*)',g.group(2)):
+                        if match[0] == 'value':
+                            label = line.split()[0]+'Label'
+                            label = Label(value = line.split()[0].upper()+":")
+                            text = line.split()[0]
+                            text = Text(value=match[1])
+                            box = line.split()[0]+'Box'
+                            box = Box([label, text],layout = Layout(width = '100%', justify_content = 'space-between'))
+                            items.append(box)
+                        if match[0] == 'option':
+                            label = line.split()[0]+'Label'
+                            label = Label(value = line.split()[0].upper()+":")
+                            togBtns = line.split()[0]
+                            togBtns = ToggleButtons(options=['T', 'F'])
+                            box = line.split()[0]+'Box'
+                            box = Box([label, togBtns], layout = Layout(width = '100%', justify_content = 'space-between')) 
+                            items.append(box)
                         
-    inputBox.children = items
+        inputBox.children = items
     
 fwInputdd.observe(fw_on_change)
     
 def fwUpInput_btn_clicked(a):
     inputTmp = ''
-    if(fwInputdd.value == 'Basic template'):
+    if(fwInputdd.value == 'Basic Template'):
         inputTmp = 'input_funwave/basic_template.txt'
         
     with open("input_funwave/input_tmp.txt", "w") as fw:
@@ -319,8 +253,8 @@ def fwUpInput_btn_clicked(a):
                     print(line, end='', file=fw)
      
     fwInputArea.value = open("input_funwave/input_tmp.txt","r").read()
-    surfaceFrame.max = int(float(inputBox.children[0].children[1].value))/int(float(inputBox.children[1].children[1].value))
-            
+    surfaceFrame.max = int(float(inputBox.children[0].children[1].value)/float(inputBox.children[1].children[1].value))
+              
 fwUpInputBtn = Button(description='Update Input File',button_style='primary', layout=Layout(width='100%'))
 fwUpInputBtn.on_click(fwUpInput_btn_clicked)
 
@@ -385,6 +319,7 @@ def runfun_btn_clicked(a):
         cmd("rm -fr input")
         cmd("mkdir input")
         cmd("cp input_funwave/input.txt input")
+        cmd("cp input_funwave/depth.txt input")
         cmd("tar cvzf input.tgz input")
         setvar("INPUT_DIR=${AGAVE_USERNAME}_$(date +%Y-%m-%d_%H-%M-%S)")
         cmd("files-mkdir -S ${STORAGE_MACHINE} -N ${DEPLOYMENT_PATH}/${INPUT_DIR}")
@@ -530,7 +465,7 @@ def basic_Btn_clicked(a):
     frames = []
     for i in range(1,surfaceFrame.max):
 #         frames += [np.genfromtxt("output/output/eta_%05d" % i)]
-        frames += [np.genfromtxt("output-tmp/f1/eta_%05d" % i)]
+        frames += [np.genfromtxt("output/output/eta_%05d" % i)]
     anim = basicAnimation(frames)
     with basicOutput:
         display(HTML(anim.to_html5_video()))
@@ -611,7 +546,7 @@ def rotating_Btn_clicked(a):
     frames = []
     for i in range(1,surfaceFrame.max):
 #         frames += [np.genfromtxt("output/output/eta_%05d" % i)]
-        frames += [np.genfromtxt("output-tmp/f1/eta_%05d" % i)]
+        frames += [np.genfromtxt("output/output/eta_%05d" % i)]
     anim = rotatingAnimation(frames)
     with rotatingOutput:
         display(HTML(anim.to_html5_video()))
@@ -643,21 +578,22 @@ cmd("auth-tokens-refresh")
 clear_output()
 
 def on_change(change):
-    if(modelTitle.value == "SWAN"):
-        out.clear_output()
-        with out:
-            tab_nest.children = [SwanInputBox, runBox, outputBox, swanVisuAcd]
-            display(tab_nest)
-    if(modelTitle.value == "Funwave-tvd"):
-        out.clear_output()
-        with out:
-            tab_nest.children = [fwInputBox, runBox, outputBox, fwVisuAcd]
-            display(tab_nest)
-    if(modelTitle.value == "Delft3D"):
-        out.clear_output()
-        with out:
-            tab_nest.children = [delft3dBox, runBox, outputBox, swanVisuAcd]
-            display(tab_nest)
+    if change['type'] == 'change' and change['name'] == 'value':
+        if(change['new'] == "SWAN"):
+            out.clear_output()
+            with out:
+                tab_nest.children = [SwanInputBox, runBox, outputBox, swanVisuAcd]
+                display(tab_nest)
+        if(change['new'] == "Funwave-tvd"):
+            out.clear_output()
+            with out:
+                tab_nest.children = [fwInputBox, runBox, outputBox, fwVisuAcd]
+                display(tab_nest)
+        if(change['new'] == "Delft3D"):
+            out.clear_output()
+            with out:
+                tab_nest.children = [delft3dBox, runBox, outputBox, swanVisuAcd]
+                display(tab_nest)
            
     
 modelTitle.observe(on_change)

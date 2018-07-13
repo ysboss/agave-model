@@ -6,7 +6,7 @@ import numpy as np
 from matplotlib import animation, rc
 from IPython.display import HTML
     
-opdir = "output-tmp/"
+opdir = "output/output/"
     
 ############################################### 1D #############################################
 
@@ -29,15 +29,7 @@ def fwOneD(Y_axis):
 
     
     for frame in range(31):
-#         if (frame<9):
-#             y = np.loadtxt(opdir+'f1/'+Y_axis+'_0000'+str(frame+1))
-#         if (9<=frame<99):
-#             y = np.loadtxt(opdir+'f1/'+Y_axis+'_000'+str(frame+1))
-#         if (99<=frame<999):
-#             y = np.loadtxt(opdir+'f1/'+Y_axis+'_00'+str(frame+1))
-#         if (999<=frame):
-#             y = np.loadtxt(opdir+'f1/'+Y_axis+'_0'+str(frame+1))
-        y = np.loadtxt(opdir+'f1/'+Y_axis+'_%05d' % (frame+1))
+        y = np.loadtxt(opdir+Y_axis+'_%05d' % (frame+1))
         y1.append(y[0][0])
         y2.append(y[20][100])
         y3.append(y[50][250])
@@ -94,7 +86,7 @@ def waterDepth():
     # 1 2 3 4 ...... 600
     # 1 2 3 4 ...... 600
     # 1 2 3 4 ...... 600
-    fileX = open(opdir+'f2/X_file','w')
+    fileX = open(opdir+'X_file','w')
     for i in range(200):
         for j in range(600):
             fileX.write(str(j+1)+' ')
@@ -106,7 +98,7 @@ def waterDepth():
     # 2 2 2 2 ...... 2
     #  ...... 
     # 200 200 ...... 200
-    fileY = open(opdir+'f2/Y_file','w')    
+    fileY = open(opdir+'Y_file','w')    
     for i in range(200):
         for j in range(600):
             fileY.write(str(i+1)+' ')
@@ -119,13 +111,13 @@ def waterDepth():
 #     plt.rcParams["figure.figsize"] = fig_size
     
     # Load X_file and Y_file and get real dimension
-    X = np.loadtxt(opdir+'f2/X_file')
+    X = np.loadtxt(opdir+'X_file')
     X_value = X*0.05
-    Y = np.loadtxt(opdir+'f2/Y_file')
+    Y = np.loadtxt(opdir+'Y_file')
     Y_value = Y*0.10
     
     # Load depth file
-    Depth = np.loadtxt(opdir+'f2/dep.out')
+    Depth = np.loadtxt(opdir+'dep.out')
     depplot = plt.contourf(X_value, Y_value, Depth, 100)
     plt.title("Water depth (m)")
     plt.colorbar()
@@ -139,7 +131,7 @@ def waterDepth():
 def depProfile(N):
     if (N==0):
         return
-    depthfile = open(opdir+'f2/dep.out','r')
+    depthfile = open(opdir+'dep.out','r')
     depthdata = depthfile.readlines()[N-1]
     p = depthdata.split()
 
@@ -166,7 +158,7 @@ def depProfile(N):
     
 def depProfileWithEta(start, end):
     # open depth file 
-    depthfile = open(opdir+'f2/dep.out','r')
+    depthfile = open(opdir+'dep.out','r')
     depthdata = depthfile.readlines()[100]
     p = depthdata.split()
 
@@ -186,7 +178,7 @@ def depProfileWithEta(start, end):
 # create etas that contains all of needing eta data
     etas = []
     for i in range(1501):
-        etafile = open(opdir+'f2/eta_%04d' % (i+1))
+        etafile = open(opdir+'eta_%04d' % (i+1))
         etadata = etafile.readlines()[10]
         etap = etadata.split()
         eta_value = []
@@ -217,9 +209,9 @@ def depProfileWithEta(start, end):
 def twoDsnapAnim(start, end):
     fig = plt.figure()
     fig,ax = plt.subplots()
-    X = np.loadtxt(opdir+'f2/X_file')
+    X = np.loadtxt(opdir+'X_file')
     X_value = X*0.05
-    Y = np.loadtxt(opdir+'f2/Y_file')
+    Y = np.loadtxt(opdir+'Y_file')
     Y_value = Y*0.10
     
     fig_size = []
@@ -229,7 +221,7 @@ def twoDsnapAnim(start, end):
     
     def animate(i):
         ax.clear()
-        Eta = np.loadtxt(opdir+'f2/eta_%04d' % (i+1))
+        Eta = np.loadtxt(opdir+'eta_%04d' % (i+1))
         img = ax.contourf(X_value, Y_value, Eta, 100)
         plt.colorbar(img)
         plt.close()
@@ -246,12 +238,12 @@ def twoDsnapAnim(start, end):
 def twoDsnapPlot(frame):    
     if (frame == 0):
         return
-    X = np.loadtxt(opdir+'f2/X_file')
+    X = np.loadtxt(opdir+'X_file')
     X_value = X*0.05
-    Y = np.loadtxt(opdir+'f2/Y_file')
+    Y = np.loadtxt(opdir+'Y_file')
     Y_value = Y*0.10
     
-    Eta = np.loadtxt(opdir+'f2/eta_%04d' % (i+1))
+    Eta = np.loadtxt(opdir+'eta_%04d' % (i+1))
     etaplot = plt.contourf(X_value, Y_value, Eta, 100)
     time = (frame-1)*0.02
     plt.title("Surface elevation (m) at t = "+str(time))
@@ -269,7 +261,7 @@ def surfacePlot(frame):
     if (frame == 0):
         return
 #     f = np.genfromtxt("output/output/eta_%05d" % frame)
-    f = np.genfromtxt(opdir+'f1/eta_%05d' % frame)
+    f = np.genfromtxt(opdir+'eta_%05d' % frame)
     xv = np.linspace(0,f.shape[1],f.shape[1])
     yv = np.linspace(0,f.shape[0],f.shape[0])
     x2,y2 = np.meshgrid(xv,yv)
@@ -291,7 +283,7 @@ def rotatingAnimation(frames):
     if (size == 0):
         return
 #     f = np.genfromtxt("output/output/eta_%05d" % 1)
-    f = np.genfromtxt(opdir+'f1/eta_%05d' % 1)
+    f = np.genfromtxt(opdir+'eta_%05d' % 1)
     xv = np.linspace(0,f.shape[1],f.shape[1])
     yv = np.linspace(0,f.shape[0],f.shape[0])
     x2,y2 = np.meshgrid(xv,yv)
