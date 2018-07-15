@@ -407,11 +407,12 @@ def submitJob(nodes,procs,model):
     
 def configure2(agave_username, exec_machine, storage_name, project_name):
     
-    
     setvar("""
     AGAVE_USERNAME="""+agave_username+"""
     APP_NAME="""+project_name+"""
     AGAVE_JSON_PARSER=jq
+    AGAVE_CACHE_DIR=$HOME/.sandbox
+    AGAVE_TENANTS_API_BASEURL=https://sandbox.agaveplatform.org/tenants
     PATH=$HOME/agave-model/cli/bin:$PATH
     STORAGE_MACHINE="""+storage_name+"""
     DEPLOYMENT_PATH=agave-deployment
@@ -424,8 +425,8 @@ def configure2(agave_username, exec_machine, storage_name, project_name):
     readpass("AGAVE_PASSWD")
     readpass("PBTOK")
     
-    
-    cmd("tenants-init -t agave.prod")
+    cmd("auth-switch -b https://sandbox.agaveplatform.org -t sandbox -S")
+    cmd("tenants-init -t sandbox")
     
     cmd("clients-delete -u $AGAVE_USERNAME -p $AGAVE_PASSWD $APP_NAME",show=False)
     cmd("clients-create -p $AGAVE_PASSWD -S -N $APP_NAME -u $AGAVE_USERNAME",show=False)
@@ -434,6 +435,33 @@ def configure2(agave_username, exec_machine, storage_name, project_name):
     
     setvar("EMAIL=ms.ysboss@gmail.com")
     print ("Successfully configured Agave")
+    
+#     setvar("""
+#     AGAVE_USERNAME="""+agave_username+"""
+#     APP_NAME="""+project_name+"""
+#     AGAVE_JSON_PARSER=jq
+#     PATH=$HOME/agave-model/cli/bin:$PATH
+#     STORAGE_MACHINE="""+storage_name+"""
+#     DEPLOYMENT_PATH=agave-deployment
+#     EXEC_MACHINE="""+exec_machine+"""
+#     HOME_DIR=/home/sbrandt
+#     QUEUE=checkpt
+#     """)
+   
+    
+#     readpass("AGAVE_PASSWD")
+#     readpass("PBTOK")
+    
+    
+#     cmd("tenants-init -t agave.prod")
+    
+#     cmd("clients-delete -u $AGAVE_USERNAME -p $AGAVE_PASSWD $APP_NAME",show=False)
+#     cmd("clients-create -p $AGAVE_PASSWD -S -N $APP_NAME -u $AGAVE_USERNAME",show=False)
+    
+#     cmd("auth-tokens-create -u $AGAVE_USERNAME -p $AGAVE_PASSWD",show=False)
+    
+#     setvar("EMAIL=ms.ysboss@gmail.com")
+#     print ("Successfully configured Agave")
 
 
     
