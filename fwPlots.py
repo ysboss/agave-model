@@ -81,14 +81,14 @@ def basicAnimation(frames):
 
     
     
-def waterDepth():
+def waterDepth(Mglob, Nglob):
     # Generate X_file 
     # 1 2 3 4 ...... 600
     # 1 2 3 4 ...... 600
     # 1 2 3 4 ...... 600
     fileX = open(opdir+'X_file','w')
-    for i in range(200):
-        for j in range(600):
+    for i in range(int(Nglob)):
+        for j in range(int(Mglob)):
             fileX.write(str(j+1)+' ')
         fileX.write('\n')
     fileX.close()
@@ -99,8 +99,8 @@ def waterDepth():
     #  ...... 
     # 200 200 ...... 200
     fileY = open(opdir+'Y_file','w')    
-    for i in range(200):
-        for j in range(600):
+    for i in range(int(Nglob)):
+        for j in range(int(Mglob)):
             fileY.write(str(i+1)+' ')
         fileY.write('\n')
     fileY.close()
@@ -156,7 +156,7 @@ def depProfile(N):
 
     
     
-def depProfileWithEta(start, end):
+def depProfileWithEta(start, end, total_time, plot_intv, Mglob):
     # open depth file 
     depthfile = open(opdir+'dep.out','r')
     depthdata = depthfile.readlines()[100]
@@ -164,12 +164,12 @@ def depProfileWithEta(start, end):
 
     # load depth data to dep_value
     dep_value = []
-    for i in range(600):
+    for i in range(int(Mglob)):
         dep_value.append(-abs(float(p[i])))
 
     # create x_value
     x_value = []
-    for i in range(600):
+    for i in range(int(Mglob)):
         x_value.append((i+1)*0.05)
     
     fig = plt.figure()
@@ -177,12 +177,13 @@ def depProfileWithEta(start, end):
 
 # create etas that contains all of needing eta data
     etas = []
-    for i in range(1501):
-        etafile = open(opdir+'eta_%04d' % (i+1))
+    length = int(float(total_time)/float(plot_intv))
+    for i in range(length):
+        etafile = open(opdir+'eta_%05d' % (i+1))
         etadata = etafile.readlines()[10]
         etap = etadata.split()
         eta_value = []
-        for m in range(600):
+        for m in range(int(Mglob)):
             eta_value.append(float(etap[m]))
         etas.append(eta_value)
         etafile.close()
@@ -194,7 +195,7 @@ def depProfileWithEta(start, end):
         ax.plot(x_value, dep_value, color='#FFFF00')
         ax.fill_between(x_value,-1, etas[i], facecolor='#33FFFF')
         ax.fill_between(x_value,-1, dep_value, facecolor='#FFFF00')
-        time = '%.2f' % ((i+1)*0.02)
+        time = '%.2f' % ((i+1)*float(plot_intv))
         ax.set_title('Time = '+ time +' sec')
         plt.ylim(-0.45,0.1)
         plt.xlabel("X (m)")
@@ -202,11 +203,12 @@ def depProfileWithEta(start, end):
         return ax
 
     # make animate 
-    anim = animation.FuncAnimation(fig, animate, np.arange(int(start/0.02), int(end/0.02)), interval=30, blit=False)
+    anim = animation.FuncAnimation(fig, animate, np.arange(int(start/float(plot_intv)), int(end/float(plot_intv))),
+                                   interval=30, blit=False)
     return anim
     
     
-def twoDsnapAnim(start, end):
+def twoDsnapAnim(start, end, plot_intv):
     fig = plt.figure()
     fig,ax = plt.subplots()
     X = np.loadtxt(opdir+'X_file')
@@ -221,18 +223,19 @@ def twoDsnapAnim(start, end):
     
     def animate(i):
         ax.clear()
-        Eta = np.loadtxt(opdir+'eta_%04d' % (i+1))
+        Eta = np.loadtxt(opdir+'eta_%05d' % (i+1))
         img = ax.contourf(X_value, Y_value, Eta, 100)
         plt.colorbar(img)
         plt.close()
-        time = '%.2f' % ((i+1)*0.02)
+        time = '%.2f' % ((i+1)*float(plot_intv))
         ax.set_title('Time = '+ time +' sec')
         ax.set_xlabel("X (m)")
         ax.set_ylabel("Y (m)")
         return ax
 
     # make animate 
-    anim = animation.FuncAnimation(fig,animate,np.arange(int(start/0.02), int(end/0.02)), interval=10,blit=False)
+    anim = animation.FuncAnimation(fig,animate,np.arange(int(start/float(plot_intv)), int(end/float(plot_intv))), 
+                                   interval=10,blit=False)
     return anim
     
 def twoDsnapPlot(frame):    
@@ -243,9 +246,9 @@ def twoDsnapPlot(frame):
     Y = np.loadtxt(opdir+'Y_file')
     Y_value = Y*0.10
     
-    Eta = np.loadtxt(opdir+'eta_%04d' % (i+1))
+    Eta = np.loadtxt(opdir+'eta_%05d' % (frame+1))
     etaplot = plt.contourf(X_value, Y_value, Eta, 100)
-    time = (frame-1)*0.02
+    time = (frame-1)*0.2
     plt.title("Surface elevation (m) at t = "+str(time))
     plt.colorbar()
     plt.xlabel("X (m)")

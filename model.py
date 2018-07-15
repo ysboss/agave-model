@@ -54,6 +54,13 @@ delft3dBox = Box(delft3d_items, layout= Layout(
     disabled=False
 ))
 
+fw_para_pairs ={
+    "TOTAL_TIME":"",
+    "PLOT_INTV":"",
+    "Mglob":"",
+    "Nglob":""
+}  
+
 ######################## SWAN Input tab ############################################################
 
 modeTbtns = ToggleButtons(options=['NONSTAT', 'STAT'])
@@ -235,7 +242,7 @@ def fw_on_change(change):
         inputBox.children = items
     
 fwInputdd.observe(fw_on_change)
-    
+  
 def fwUpInput_btn_clicked(a):
     inputTmp = ''
     if(fwInputdd.value == 'Basic Template'):
@@ -254,7 +261,16 @@ def fwUpInput_btn_clicked(a):
      
     fwInputArea.value = open("input_funwave/input_tmp.txt","r").read()
     surfaceFrame.max = int(float(inputBox.children[0].children[1].value)/float(inputBox.children[1].children[1].value))
-              
+    with open("input_funwave/input_tmp.txt", "r") as fw:
+            for line in fw.readlines():
+                g = re.search(r'(\w+)\s*=\s*(\S+)',line)
+                if g:
+                    para = g.group(1)
+                    value = g.group(2)
+                    if para in fw_para_pairs:
+                        fw_para_pairs[para] = value  
+    
+     
 fwUpInputBtn = Button(description='Update Input File',button_style='primary', layout=Layout(width='100%'))
 fwUpInputBtn.on_click(fwUpInput_btn_clicked)
 
@@ -302,7 +318,9 @@ def modifyFWinput():
                     inputfile.write(line)
             inputfile.close()
         tmp.close()
-    
+
+
+        
 def runfun_btn_clicked(a):
     if (modelTitle.value == "SWAN"): 
         cmd("rm -fr input")
@@ -325,6 +343,8 @@ def runfun_btn_clicked(a):
         cmd("files-mkdir -S ${STORAGE_MACHINE} -N ${DEPLOYMENT_PATH}/${INPUT_DIR}")
         cmd("files-upload -F input.tgz -S ${STORAGE_MACHINE} ${DEPLOYMENT_PATH}/${INPUT_DIR}/")
         submitJob(numnodeSlider.value,numprocSlider.value,"funwave") 
+        
+        
     
 runBtn.on_click(runfun_btn_clicked)
 
@@ -454,7 +474,7 @@ swanVisuAcd.set_title(1,'2D ')
 
 
 fwYoption = Dropdown(options=['Choose one','eta','u','v'])
-fwplotsInter = widgets.interactive(fwOneD, Y_axis = fwYoption )
+fwplotsInter = widgets.interactive(fwOneD, Y_axis = fwYoption)
 fwoneDBox = Box([fwplotsInter])
 
 
@@ -480,9 +500,8 @@ depthOutput = widgets.Output()
 
 
 def depth_Btn_clicked(a):
-    #plt = waterDepth()
     with depthOutput:
-        display(waterDepth())
+        display(waterDepth(fw_para_pairs['Mglob'],fw_para_pairs['Nglob']))
 
 depthBtn.on_click(depth_Btn_clicked)
 depthBox = Box([Label(value='Water Depth'),depthBtn],layout = Layout(width = '80%'))
@@ -494,12 +513,13 @@ depProfileBox = Box([Label(value='Depth Profile Snapshot'), depProfileInter])
 
 
 
-depProfileAnimaRange = FloatRangeSlider(value=[5,7], min=0.0, max=30, step=0.02,
+depProfileAnimaRange = FloatRangeSlider(value=[5,7], min=0.0, max=30, step=0.2,
                                  description='Time period (s):',readout=True,readout_format='.2f', layout = Layout(width ="60%"))
 depProfileAnimBtn = Button(description='display',button_style='primary', layout=Layout(width='auto'))
 depProfileAnimOutput = widgets.Output()
 def depProfileAnim_Btn_clicked(a):
-    anim = depProfileWithEta(depProfileAnimaRange.value[0], depProfileAnimaRange.value[1])
+    anim = depProfileWithEta(depProfileAnimaRange.value[0], depProfileAnimaRange.value[1], 
+                             fw_para_pairs['TOTAL_TIME'], fw_para_pairs['PLOT_INTV'], fw_para_pairs['Mglob'])
     depProfileAnimOutput.clear_output()
     with depProfileAnimOutput:
         display(HTML(anim.to_html5_video()))
@@ -509,17 +529,17 @@ depProfileAnimBox = Box([Label(value='Cross-shore profile animation'), depProfil
 
 
 
-twoDsnapFrame = IntSlider(value=0, min=0, max=1501)
+twoDsnapFrame = IntSlider(value=0, min=0, max=151)
 twoDsnapInter = widgets.interactive(twoDsnapPlot, frame = twoDsnapFrame)
 twoDsnapBox = Box([Label(value='Surface Elevation snapshot'),twoDsnapInter])
 
 
-twoDanimRange = FloatRangeSlider(value=[5,7], min=0.0, max=30, step=0.02,
+twoDanimRange = FloatRangeSlider(value=[5,7], min=0.0, max=30, step=0.2,
                                  description='Time period (s):',readout=True,readout_format='.2f', layout = Layout(width ="60%"))
 twoDanimBtn = Button(description='display',button_style='primary', layout=Layout(width='auto'))
 twoDanimOutput = widgets.Output()
 def twoDanim_Btn_clicked(a):
-    anim = twoDsnapAnim(twoDanimRange.value[0],twoDanimRange.value[1])
+    anim = twoDsnapAnim(twoDanimRange.value[0],twoDanimRange.value[1], fw_para_pairs['PLOT_INTV'])
     twoDanimOutput.clear_output()
     with twoDanimOutput:
         display(HTML(anim.to_html5_video()))
