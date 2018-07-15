@@ -346,52 +346,122 @@ def submitJob(nodes,procs,model):
         {
             "url":"${EMAIL}",
             "event":"FINISHED",
-            "persistent":false
+            "persistent":"true",
+            "policy": {
+                "retryStrategy": "DELAYED",
+                "retryLimit": 3,
+                "retryRate": 5,
+                "retryDelay": 5,
+                "saveOnFailure": true
+                }
         },
         {
             "url":"${EMAIL}",
             "event":"FAILED",
-            "persistent":false
+            "persistent":"true",
+            "policy": {
+                "retryStrategy": "DELAYED",
+                "retryLimit": 3,
+                "retryRate": 5,
+                "retryDelay": 5,
+                "saveOnFailure": true
+                }
         },
         {
             "url":"https://www.cct.lsu.edu/~sbrandt/pushbullet.php?key=${PBTOK}&status=\${JOB_STATUS}:\${JOB_ID}",
             "event":"RUNNING",
-            "persistent":"false"
+            "persistent":"true",
+            "policy": {
+                "retryStrategy": "DELAYED",
+                "retryLimit": 3,
+                "retryRate": 5,
+                "retryDelay": 5,
+                "saveOnFailure": true
+                }
         },
         {
             "url":"https://www.cct.lsu.edu/~sbrandt/pushbullet.php?key=${PBTOK}&status=\${JOB_STATUS}:\${JOB_ID}",
             "event":"KILLED",
-            "persistent":"false"
+            "persistent":"true",
+            "policy": {
+                "retryStrategy": "DELAYED",
+                "retryLimit": 3,
+                "retryRate": 5,
+                "retryDelay": 5,
+                "saveOnFailure": true
+                }
         },
         {
             "url":"https://www.cct.lsu.edu/~sbrandt/pushbullet.php?key=${PBTOK}&status=\${JOB_STATUS}:\${JOB_ID}",
             "event":"STOPPED",
-            "persistent":"false"
+            "persistent":"true",
+            "policy": {
+                "retryStrategy": "DELAYED",
+                "retryLimit": 3,
+                "retryRate": 5,
+                "retryDelay": 5,
+                "saveOnFailure": true
+                }
         },
         {
             "url":"https://www.cct.lsu.edu/~sbrandt/pushbullet.php?key=${PBTOK}&status=\${JOB_STATUS}:\${JOB_ID}",
             "event":"PAUSED",
-            "persistent":"false"
+            "persistent":"true",
+            "policy": {
+                "retryStrategy": "DELAYED",
+                "retryLimit": 3,
+                "retryRate": 5,
+                "retryDelay": 5,
+                "saveOnFailure": true
+                }
         },
         {
             "url":"https://www.cct.lsu.edu/~sbrandt/pushbullet.php?key=${PBTOK}&status=\${JOB_STATUS}:\${JOB_ID}",
             "event":"SUBMITTING",
-            "persistent":"false"
+            "persistent":"true",
+            "policy": {
+                "retryStrategy": "DELAYED",
+                "retryLimit": 3,
+                "retryRate": 5,
+                "retryDelay": 5,
+                "saveOnFailure": true
+                }
         },
         {
             "url":"https://www.cct.lsu.edu/~sbrandt/pushbullet.php?key=${PBTOK}&status=\${JOB_STATUS}:\${JOB_ID}",
             "event":"QUEUED",
-            "persistent":"false"
+            "persistent":"true",
+            "policy": {
+                "retryStrategy": "DELAYED",
+                "retryLimit": 3,
+                "retryRate": 5,
+                "retryDelay": 5,
+                "saveOnFailure": true
+                }
         },
         {
             "url":"https://www.cct.lsu.edu/~sbrandt/pushbullet.php?key=${PBTOK}&status=\${JOB_STATUS}:\${JOB_ID}",
             "event":"FINISHED",
-            "persistent":"false"
+            "persistent":"true",
+            "policy": {
+                "retryStrategy": "DELAYED",
+                "retryLimit": 3,
+                "retryRate": 5,
+                "retryDelay": 5,
+                "saveOnFailure": true
+                }
         },
         {
             "url":"https://www.cct.lsu.edu/~sbrandt/pushbullet.php?key=${PBTOK}&status=\${JOB_STATUS}:\${JOB_ID}",
             "event":"FAILED",
-            "persistent":"false"
+            "persistent":"true",
+            "policy": {
+                "retryStrategy": "DELAYED",
+                "retryLimit": 3,
+                "retryRate": 5,
+                "retryDelay": 5,
+                "saveOnFailure": true
+                }
         }
       ]
     }
