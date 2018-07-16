@@ -478,28 +478,14 @@ fwplotsInter = widgets.interactive(fwOneD, Y_axis = fwYoption)
 fwoneDBox = Box([fwplotsInter])
 
 
-basicBtn = Button(description='display',button_style='primary', layout=Layout(width='auto'))
-basicOutput = widgets.Output()
-
-def basic_Btn_clicked(a):
-    frames = []
-    for i in range(1,surfaceFrame.max):
-#         frames += [np.genfromtxt("output/output/eta_%05d" % i)]
-        frames += [np.genfromtxt("output/output/eta_%05d" % i)]
-    anim = basicAnimation(frames)
-    with basicOutput:
-        display(HTML(anim.to_html5_video()))
-
-basicBtn.on_click(basic_Btn_clicked)
-basicBox = Box([Label(value='Surface Elevation animation 2'),basicBtn], layout = Layout(width = '80%'))
-
-
 depthBtn = Button(description='display',button_style='primary', layout=Layout(width='auto'))
 depthOutput = widgets.Output()
 
 
 
 def depth_Btn_clicked(a):
+    print (fw_para_pairs['Mglob'])
+    print (fw_para_pairs['Nglob'])
     with depthOutput:
         display(waterDepth(fw_para_pairs['Mglob'],fw_para_pairs['Nglob']))
 
@@ -547,11 +533,27 @@ twoDanimBtn.on_click(twoDanim_Btn_clicked)
 twoDanimBox = Box([Label(value='Surface Elevation animation'), twoDanimRange, twoDanimBtn], 
                   layout = Layout(width = '80%', justify_content = 'space-between'))
 
+basicBtn = Button(description='display',button_style='primary', layout=Layout(width='auto'))
+basicOutput = widgets.Output()
+
+def basic_Btn_clicked(a):
+    frames = []
+    for i in range(1,surfaceFrame.max):
+#         frames += [np.genfromtxt("output/output/eta_%05d" % i)]
+        frames += [np.genfromtxt("output/output/eta_%05d" % i)]
+    anim = basicAnimation(frames)
+    with basicOutput:
+        display(HTML(anim.to_html5_video()))
+
+basicBtn.on_click(basic_Btn_clicked)
+basicBox = Box([Label(value='Surface Elevation animation 2'),basicBtn], layout = Layout(width = '80%'))
+
+
+
 
 basicAnimBox = Box([depthBox, depthOutput,depProfileBox, depProfileAnimBox, depProfileAnimOutput, 
                     twoDsnapBox, twoDanimBox, twoDanimOutput, basicBox, basicOutput],
                    layout = Layout(flex_flow = 'column', align_items='stretch',))
-
 
 
 

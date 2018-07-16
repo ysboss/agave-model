@@ -331,7 +331,7 @@ def submitJob(nodes,procs,model):
         "appId": "${APP_NAME}",
         "executionSystem": "${EXEC_MACHINE}",
         "batchQueue": "${QUEUE}",
-        "maxRunTime": "01:00:00",
+        "maxRunTime": "10:00:00",
         "nodeCount": """+str(nodes)+""",
         "processorsPerNode": """+str(procs)+""",
         "archive": false,

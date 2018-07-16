@@ -28,14 +28,14 @@ def fwOneD(Y_axis):
     y4 = []
 
     
-    for frame in range(31):
+    for frame in range(151):
         y = np.loadtxt(opdir+Y_axis+'_%05d' % (frame+1))
         y1.append(y[0][0])
         y2.append(y[20][100])
         y3.append(y[50][250])
         y4.append(y[80][450])
         
-    for i in range(31):
+    for i in range(151):
         time = '%.2f' % ((i)*1)
         X.append(time)
 
@@ -65,21 +65,7 @@ def fwOneD(Y_axis):
     plt.show()
 
 
-############################################### 2D #############################################
-
-def basicAnimation(frames):
-    size = len(frames)
-    
-    fig2, ax = plt.subplots(figsize=(12,12))
-    def animate1(i):
-        ax.clear()
-        pltres = plt.imshow(frames[i])
-        return pltres,
-    
-    anim = animation.FuncAnimation(fig2, animate1, frames=size, interval=200, repeat=True)
-    return anim
-
-    
+############################################### 2D #############################################    
     
 def waterDepth(Mglob, Nglob):
     # Generate X_file 
@@ -204,7 +190,7 @@ def depProfileWithEta(start, end, total_time, plot_intv, Mglob):
 
     # make animate 
     anim = animation.FuncAnimation(fig, animate, np.arange(int(start/float(plot_intv)), int(end/float(plot_intv))),
-                                   interval=30, blit=False)
+                                   interval=200, blit=False)
     return anim
     
     
@@ -235,7 +221,7 @@ def twoDsnapAnim(start, end, plot_intv):
 
     # make animate 
     anim = animation.FuncAnimation(fig,animate,np.arange(int(start/float(plot_intv)), int(end/float(plot_intv))), 
-                                   interval=10,blit=False)
+                                   interval=200,blit=False)
     return anim
     
 def twoDsnapPlot(frame):    
@@ -256,6 +242,19 @@ def twoDsnapPlot(frame):
     plt.tight_layout()
     plt.show()
     
+    
+def basicAnimation(frames):
+    size = len(frames)
+    
+    fig2, ax = plt.subplots(figsize=(12,12))
+    def animate1(i):
+        ax.clear()
+        pltres = plt.imshow(frames[i])
+        return pltres,
+    
+    anim = animation.FuncAnimation(fig2, animate1, frames=size, interval=200, repeat=True)
+    return anim
+
     
 ############################################### 3D #############################################    
     
