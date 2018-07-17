@@ -36,7 +36,7 @@ def fwOneD(Y_axis):
         y4.append(y[80][450])
         
     for i in range(151):
-        time = '%.2f' % ((i)*1)
+        time = '%.2f' % ((i)*0.2)
         X.append(time)
 
 
