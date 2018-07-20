@@ -339,8 +339,8 @@ def runfun_btn_clicked(a):
         cmd("cp -r input_swan/* input")
         cmd("tar cvzf input.tgz input")
         setvar("INPUT_DIR=${AGAVE_USERNAME}_$(date +%Y-%m-%d_%H-%M-%S)")
-        cmd("files-mkdir -V -S ${STORAGE_MACHINE} -N ${DEPLOYMENT_PATH}/${INPUT_DIR}")
-        cmd("files-upload -V -F input.tgz -S ${STORAGE_MACHINE} ${DEPLOYMENT_PATH}/${INPUT_DIR}/")
+        cmd("files-mkdir -S ${STORAGE_MACHINE} -N ${DEPLOYMENT_PATH}/${INPUT_DIR}")
+        cmd("files-upload -F input.tgz -S ${STORAGE_MACHINE} ${DEPLOYMENT_PATH}/${INPUT_DIR}/")
         submitJob(numnodeSlider.value,numprocSlider.value,"swan") 
         
         
@@ -393,7 +393,7 @@ def jobOutput_btn_clicked(a):
     g = re.match(r'^\S+',jobSelect.value)
     if g:
         jobid = g.group(0)
-        rcmd = "jobs-output-list -V "+jobid
+        rcmd = "jobs-output-list "+jobid
         cout = cmd(rcmd)
         out1 = cout["stdout"]
         outputSelect.options = out1
@@ -405,9 +405,9 @@ def download_btn_clicked(a):
         g = re.match(r'^\S+',jobSelect.value)
         jobid = g.group(0)
         if(outputSelect.value.find('.')==-1):
-            rcmd = "jobs-output-get -V -r "+ jobid +" "+ outputSelect.value
+            rcmd = "jobs-output-get -r "+ jobid +" "+ outputSelect.value
         else:
-            rcmd = "jobs-output-get -V "+ jobid +" "+ outputSelect.value
+            rcmd = "jobs-output-get "+ jobid +" "+ outputSelect.value
         cmd(rcmd)
         
         if(outputSelect.value == 'output.tar.gz'):
