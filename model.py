@@ -260,7 +260,7 @@ def fwUpInput_btn_clicked(a):
                     print(line, end='', file=fw)
      
     fwInputArea.value = open("input_funwave/input_tmp.txt","r").read()
-    surfaceFrame.max = int(float(inputBox.children[0].children[1].value)/float(inputBox.children[1].children[1].value))
+    surfaceFrame.max = int(float(inputBox.children[2].children[1].value)/float(inputBox.children[3].children[1].value))
     with open("input_funwave/input_tmp.txt", "r") as fw:
             for line in fw.readlines():
                 g = re.search(r'(\w+)\s*=\s*(\S+)',line)
@@ -297,7 +297,8 @@ runBtn = Button(description='Run', button_style='primary', layout= Layout(width 
 
 run_items = [
     Box([Label(value='The number of nodes', layout = Layout(width = '350px')), numnodeSlider], layout = run_item_layout),
-    Box([Label(value='The number of Processors of each node', layout=Layout(width = '350px')), numprocSlider], layout= run_item_layout),
+    Box([Label(value='The number of Processors of each node', layout=Layout(width = '350px')), numprocSlider], 
+        layout= run_item_layout),
     Box([runBtn]),
 ]
 
@@ -319,20 +320,8 @@ def modifyFWinput():
             inputfile.close()
         tmp.close()
 
-
-        
 def runfun_btn_clicked(a):
-    if (modelTitle.value == "SWAN"): 
-        cmd("rm -fr input")
-        cmd("mkdir input")
-        cmd("cp -r input_swan/* input")
-        cmd("tar cvzf input.tgz input")
-        setvar("INPUT_DIR=${AGAVE_USERNAME}_$(date +%Y-%m-%d_%H-%M-%S)")
-        cmd("files-mkdir -V -S ${STORAGE_MACHINE} -N ${DEPLOYMENT_PATH}/${INPUT_DIR}")
-        cmd("files-upload -V -F input.tgz -S ${STORAGE_MACHINE} ${DEPLOYMENT_PATH}/${INPUT_DIR}/")
-        submitJob(numnodeSlider.value,numprocSlider.value,"swan") 
-        
-    elif (modelTitle.value == "Funwave-tvd"): 
+    if (modelTitle.value == "Funwave-tvd"): 
         modifyFWinput()
         cmd("rm -fr input")
         cmd("mkdir input")
@@ -342,7 +331,17 @@ def runfun_btn_clicked(a):
         setvar("INPUT_DIR=${AGAVE_USERNAME}_$(date +%Y-%m-%d_%H-%M-%S)")
         cmd("files-mkdir -V -S ${STORAGE_MACHINE} -N ${DEPLOYMENT_PATH}/${INPUT_DIR}")
         cmd("files-upload -V -F input.tgz -S ${STORAGE_MACHINE} ${DEPLOYMENT_PATH}/${INPUT_DIR}/")
-        submitJob(numnodeSlider.value,numprocSlider.value,"funwave") 
+        submitJob(numnodeSlider.value,numprocSlider.value,"funwave")
+        
+    elif (modelTitle.value == "Swan"): 
+        cmd("rm -fr input")
+        cmd("mkdir input")
+        cmd("cp -r input_swan/* input")
+        cmd("tar cvzf input.tgz input")
+        setvar("INPUT_DIR=${AGAVE_USERNAME}_$(date +%Y-%m-%d_%H-%M-%S)")
+        cmd("files-mkdir -V -S ${STORAGE_MACHINE} -N ${DEPLOYMENT_PATH}/${INPUT_DIR}")
+        cmd("files-upload -V -F input.tgz -S ${STORAGE_MACHINE} ${DEPLOYMENT_PATH}/${INPUT_DIR}/")
+        submitJob(numnodeSlider.value,numprocSlider.value,"swan") 
         
         
     
@@ -474,7 +473,7 @@ swanVisuAcd.set_title(1,'2D ')
 
 
 fwYoption = Dropdown(options=['Choose one','eta','u','v'])
-fwplotsInter = widgets.interactive(fwOneD, Y_axis = fwYoption)
+fwplotsInter = widgets.interactive(fwOneD, Y_in_plots = fwYoption)
 fwoneDBox = Box([fwplotsInter])
 
 

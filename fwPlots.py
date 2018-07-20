@@ -10,8 +10,8 @@ opdir = "output/output/"
     
 ############################################### 1D #############################################
 
-def fwOneD(Y_axis):
-    if(Y_axis =='Choose one'):
+def fwOneD(Y_in_plots):
+    if(Y_in_plots =='Choose one'):
         return
     plt.clf()
     plt.cla()
@@ -29,7 +29,7 @@ def fwOneD(Y_axis):
 
     
     for frame in range(151):
-        y = np.loadtxt(opdir+Y_axis+'_%05d' % (frame+1))
+        y = np.loadtxt(opdir+Y_in_plots+'_%05d' % (frame+1))
         y1.append(y[0][0])
         y2.append(y[20][100])
         y3.append(y[50][250])
@@ -39,10 +39,15 @@ def fwOneD(Y_axis):
         time = '%.2f' % ((i)*0.2)
         X.append(time)
 
-
+    unit =''
+    if (Y_in_plots == 'eta'):
+        unit = '(m)'
+    else:
+        unit = '(m/s)'
+        
     ax1.plot(X, y1)
     ax1.set_title("Location 1")
-    ax1.set_ylabel(Y_axis+" (m)")
+    ax1.set_ylabel(Y_in_plots+" "+unit)
 
     ax2.plot(X, y2)
     ax2.set_title("Location 2")
@@ -50,7 +55,7 @@ def fwOneD(Y_axis):
 
     ax3.plot(X, y3)
     ax3.set_title("Location 3")
-    ax3.set_ylabel(Y_axis+" (m)")
+    ax3.set_ylabel(Y_in_plots+" "+unit)
     ax3.set_xlabel("Time (s)")
 
     ax4.plot(X, y4)
