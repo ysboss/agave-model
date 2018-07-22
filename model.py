@@ -30,9 +30,18 @@ from fwPlots import *
 from swanPlots import *
 
 from command import cmd
+from Naked.toolshed.shell import execute_js, muterun_js
+
 
 
 ######################## Previous ############################################################
+
+response = muterun_js('scroll.js')
+if response.exitcode == 0:
+      print(response.stdout)
+else:
+      sys.stderr.write(response.stderr)
+
 
 input_item_layout = Layout(
     display = 'flex',
@@ -483,8 +492,6 @@ depthOutput = widgets.Output()
 
 
 def depth_Btn_clicked(a):
-    print (fw_para_pairs['Mglob'])
-    print (fw_para_pairs['Nglob'])
     with depthOutput:
         display(waterDepth(fw_para_pairs['Mglob'],fw_para_pairs['Nglob']))
 
