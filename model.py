@@ -329,8 +329,8 @@ def runfun_btn_clicked(a):
         cmd("cp input_funwave/depth.txt input")
         cmd("tar cvzf input.tgz input")
         setvar("INPUT_DIR=${AGAVE_USERNAME}_$(date +%Y-%m-%d_%H-%M-%S)")
-        cmd("files-mkdir -V -S ${STORAGE_MACHINE} -N ${DEPLOYMENT_PATH}/${INPUT_DIR}")
-        cmd("files-upload -V -F input.tgz -S ${STORAGE_MACHINE} ${DEPLOYMENT_PATH}/${INPUT_DIR}/")
+        cmd("files-mkdir -S ${STORAGE_MACHINE} -N ${DEPLOYMENT_PATH}/${INPUT_DIR}")
+        cmd("files-upload -F input.tgz -S ${STORAGE_MACHINE} ${DEPLOYMENT_PATH}/${INPUT_DIR}/")
         submitJob(numnodeSlider.value,numprocSlider.value,"funwave")
         
     elif (modelTitle.value == "Swan"): 
