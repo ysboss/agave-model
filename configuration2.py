@@ -16,7 +16,7 @@ execMachineText = Text(value="shelob-exec-stevenrbrandt2")
 machineNameText = Text(value="shelob-storage-stevenrbrandt23")
 appText = Text(value="crcollaboratory-shelob-stevenrbrandt2-2.0")
 pbtokText = Text()
-confBtn = Button(description='Configure', layout= Layout(
+confBtn = Button(description='Configure', button_style='primary', layout= Layout(
     display = 'flex',
     flex_flow = 'row',
     justify_content = 'center',
