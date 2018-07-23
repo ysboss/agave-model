@@ -30,17 +30,14 @@ from fwPlots import *
 from swanPlots import *
 
 from command import cmd
-from Naked.toolshed.shell import execute_js, muterun_js
+#from Naked.toolshed.shell import execute_js, muterun_js
 
 
 
 ######################## Previous ############################################################
 
-response = muterun_js('scroll.js')
-if response.exitcode == 0:
-      print(response.stdout)
-else:
-      sys.stderr.write(response.stderr)
+#muterun_js('scroll.js')
+
 
 
 input_item_layout = Layout(
