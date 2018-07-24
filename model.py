@@ -414,7 +414,11 @@ def download_btn_clicked(a):
             rcmd = "jobs-output-get -r "+ jobid +" "+ outputSelect.value
         else:
             rcmd = "jobs-output-get "+ jobid +" "+ outputSelect.value
-        cmd(rcmd)
+        #cmd(rcmd)
+        
+        print (rcmd)
+        os.system(rcmd)
+        
         
         if(outputSelect.value == 'output.tar.gz'):
             cmd("rm -fr output")
