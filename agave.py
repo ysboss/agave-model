@@ -18,7 +18,7 @@ def configure(agave_username, machine_username, machine_name, project_name):
     MACHINE_USERNAME="""+machine_username+"""
     BASE_APP_NAME=crcollaboratory
     PORT=22
-    ALLOCATION=hpc_tutorials
+    ALLOCATION=hpc_startup_funwave
     WORK_DIR=/work/${MACHINE_USERNAME}
     HOME_DIR=/home/${MACHINE_USERNAME}
     SCRATCH_DIR=/work/${MACHINE_USERNAME}
@@ -337,7 +337,7 @@ def submitJob(nodes,procs,model):
         "archive": false,
         "archiveSystem": "${STORAGE_MACHINE}",
         "inputs": {
-            "input tarball": "agave://${STORAGE_MACHINE}/${HOME_DIR}/${DEPLOYMENT_PATH}/${INPUT_DIR}/input.tgz"
+            "input tarball": "agave://${STORAGE_MACHINE}/${DEPLOYMENT_PATH}/${INPUT_DIR}/input.tgz"
         },
         "parameters": {
             "simagename":"${MODEL}"
@@ -481,13 +481,11 @@ def configure2(agave_username, exec_machine, storage_name, project_name):
     AGAVE_USERNAME="""+agave_username+"""
     APP_NAME="""+project_name+"""
     AGAVE_JSON_PARSER=jq
-    AGAVE_CACHE_DIR=$HOME/.sandbox
-    AGAVE_TENANTS_API_BASEURL=https://sandbox.agaveplatform.org/tenants
+    AGAVE_CACHE_DIR=$HOME/.agave
     PATH=$HOME/agave-model/cli/bin:$PATH
     STORAGE_MACHINE="""+storage_name+"""
     DEPLOYMENT_PATH=agave-deployment
     EXEC_MACHINE="""+exec_machine+"""
-    HOME_DIR=/home/sbrandt
     QUEUE=checkpt
     """)
    
@@ -495,8 +493,7 @@ def configure2(agave_username, exec_machine, storage_name, project_name):
     readpass("AGAVE_PASSWD")
     readpass("PBTOK")
     
-    cmd("auth-switch -b https://sandbox.agaveplatform.org -t sandbox -S")
-    cmd("tenants-init -t sandbox")
+    cmd("tenants-init -t agave.prod")
     
     cmd("clients-delete -u $AGAVE_USERNAME -p $AGAVE_PASSWD $APP_NAME",show=False)
     cmd("clients-create -p $AGAVE_PASSWD -S -N $APP_NAME -u $AGAVE_USERNAME",show=False)
