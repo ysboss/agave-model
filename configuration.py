@@ -13,7 +13,7 @@ item_layout = Layout(
 )
 
 agaveText = Text(value="stevenrbrandt2")
-machineText = Text(value="sbrandt")
+machineText = Text(value="funwave")
 baseappText = Text(value="collaboratory")
 machineNameText = Text(value="shelob.hpc.lsu.edu")
 confBtn = Button(description='Configure', layout= Layout(

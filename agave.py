@@ -210,8 +210,9 @@ def configure(agave_username, machine_username, machine_name, project_name):
 
     export NP=\$(wc -l < nodes.txt)
 
-    tar xzvf input.tgz
-    
+    tar xzvf \${HOME}/inputs/\${inputdir}/input.tgz
+
+    mkdir -p output
 
     /project/singularity/bin/singularity exec \$SING_OPTS /project/sbrandt/chemora/images/\${simagename}.simg bash /usr/local/bin/runapp.sh
     mv input output
@@ -220,6 +221,7 @@ def configure(agave_username, machine_username, machine_name, project_name):
     """)
     
     cmd("files-mkdir -S ${STORAGE_MACHINE} -N ${DEPLOYMENT_PATH}")
+    cmd("files-mkdir -S ${STORAGE_MACHINE} -N inputs")
     cmd("files-upload -F ${APP_NAME}-wrapper.txt -S ${STORAGE_MACHINE} ${DEPLOYMENT_PATH}/")
     
     
@@ -337,10 +339,11 @@ def submitJob(nodes,procs,model):
         "archive": false,
         "archiveSystem": "${STORAGE_MACHINE}",
         "inputs": {
-            "input tarball": "agave://${STORAGE_MACHINE}/${DEPLOYMENT_PATH}/${INPUT_DIR}/input.tgz"
+            "input tarball": "agave://${STORAGE_MACHINE}/inputs/${INPUT_DIR}/input.tgz"
         },
         "parameters": {
-            "simagename":"${MODEL}"
+            "simagename":"${MODEL}",
+            "inputdir":"${INPUT_DIR}"
         },
         "notifications": [
         {
