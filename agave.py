@@ -154,13 +154,22 @@ def configure(agave_username, machine_username, machine_name, project_name):
     
     writefile("${APP_NAME}-wrapper.txt","""
     #!/bin/bash
-    trap '\${AGAVE_JOB_CALLBACK_FAILURE}' ERR
+    handle_trap() {
+      rc=\$?
+      if [ "\$rc" != 0 ]
+      then
+        \$(\${AGAVE_JOB_CALLBACK_FAILURE})
+      fi
+    }
+
+    trap 'handle_trap' ERR EXIT
     echo 'running \${simagename} model'
     # Setting the x flag will echo every
     # command onto stderr. This is
     # for debugging, so we can see what's
     # going on.
     set -x
+    set -e
     echo ==PWD=============
     # We also print out the execution
     # directory. Again, for debugging purposes.
@@ -193,7 +202,7 @@ def configure(agave_username, machine_username, machine_name, project_name):
     fi
 
     # Prepare the nodes to run the image
-    export SING_OPTS="--bind \$PWD:/workdir --bind /var/spool --bind /etc/ssh/ssh_known_hosts --bind /work --bind /var/spool"
+    export SING_OPTS="--bind \$PWD:/workdir \$SING_OPTS"
     for host in \$(cat nodefile.txt)
     do
         hostfile="\$HOME/.bash.\${host}.sh"
@@ -210,7 +219,7 @@ def configure(agave_username, machine_username, machine_name, project_name):
 
     export NP=\$(wc -l < nodes.txt)
 
-    tar xzvf \${HOME}/inputs/\${inputdir}/input.tgz
+    tar xzvf input.tgz
 
     mkdir -p output
 
