@@ -147,10 +147,10 @@ def depProfile(N):
 
     
     
-def depProfileWithEta(start, end, total_time, plot_intv, Mglob):
+def depProfileWithEta(depth, start, end, total_time, plot_intv, Mglob):
     # open depth file 
     depthfile = open(opdir+'dep.out','r')
-    depthdata = depthfile.readlines()[100]
+    depthdata = depthfile.readlines()[int(depth)-1]
     p = depthdata.split()
 
     # load depth data to dep_value
@@ -163,7 +163,7 @@ def depProfileWithEta(start, end, total_time, plot_intv, Mglob):
     for i in range(int(Mglob)):
         x_value.append((i+1)*0.05)
     
-    fig = plt.figure()
+    #fig = plt.figure()
     fig, ax = plt.subplots()
 
 # create etas that contains all of needing eta data
@@ -188,9 +188,14 @@ def depProfileWithEta(start, end, total_time, plot_intv, Mglob):
         ax.fill_between(x_value,-1, dep_value, facecolor='#FFFF00')
         time = '%.2f' % ((i+1)*float(plot_intv))
         ax.set_title('Time = '+ time +' sec')
-        plt.ylim(-0.45,0.1)
-        plt.xlabel("X (m)")
-        plt.ylabel("Elevation (m)")
+        #plt.ylim(-0.45,0.1)
+        #plt.xlabel("X (m)")
+        #plt.ylabel("Elevation (m)")
+        plt.close()
+        ax.set_xlabel("X (m)")
+        ax.set_ylabel("Elevation (m)")
+        ax.set_ylim(-0.45,0.1)
+        
         return ax
 
     # make animate 
