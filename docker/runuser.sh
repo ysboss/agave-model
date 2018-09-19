@@ -9,13 +9,23 @@ export HOME=/home/jupuser
 #  exit 2
 #fi
 
+if [ ! -r .bashrc ]
+then
+    echo 'source /etc/bashrc' > .bashrc
+fi
+
+if [ ! -r .bash_profile ]
+then
+    echo 'source ~/.bashrc' > .bash_profile
+fi
+
 if [ ! -d agave-model ]
 then
   git clone https://github.com/ysboss/agave-model.git
 
   cd agave-model
 
-  git clone https://bitbucket.org/agaveapi/cli.git
+  #git clone https://bitbucket.org/agaveapi/cli.git
 
   git config --global user.email "syuan@lsu.edu"
   git config --global user.name "Shuai Yuan"
