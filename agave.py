@@ -336,148 +336,196 @@ def submitJob(nodes,procs,model):
     setvar("MODEL="+model)
     setvar("JOB_NAME=job-${MODEL}")
     
-    writefile("job.txt","""
-    {
-        "name":"${JOB_NAME}",
-        "appId": "${APP_NAME}",
-        "executionSystem": "${EXEC_MACHINE}",
-        "batchQueue": "${QUEUE}",
-        "maxRunTime": "10:00:00",
-        "nodeCount": """+str(nodes)+""",
-        "processorsPerNode": """+str(procs)+""",
-        "archive": false,
-        "archiveSystem": "${STORAGE_MACHINE}",
-        "inputs": {
-            "input tarball": "agave://${STORAGE_MACHINE}/inputs/${INPUT_DIR}/input.tgz"
-        },
-        "parameters": {
-            "simagename":"${MODEL}",
-            "inputdir":"${INPUT_DIR}"
-        },
-        "notifications": [
+    if "PBTOK" in os.environ:
+        writefile("job.txt","""
         {
-            "url":"${EMAIL}",
-            "event":"FINISHED",
-            "persistent":"true",
-            "policy": {
-                "retryStrategy": "DELAYED",
-                "retryLimit": 3,
-                "retryRate": 5,
-                "retryDelay": 5,
-                "saveOnFailure": true
-                }
-        },
-        {
-            "url":"${EMAIL}",
-            "event":"FAILED",
-            "persistent":"true",
-            "policy": {
-                "retryStrategy": "DELAYED",
-                "retryLimit": 3,
-                "retryRate": 5,
-                "retryDelay": 5,
-                "saveOnFailure": true
-                }
-        },
-        {
-            "url":"https://www.cct.lsu.edu/~sbrandt/pushbullet.php?key=${PBTOK}&status=\${JOB_STATUS}:\${JOB_ID}",
-            "event":"RUNNING",
-            "persistent":"true",
-            "policy": {
-                "retryStrategy": "DELAYED",
-                "retryLimit": 3,
-                "retryRate": 5,
-                "retryDelay": 5,
-                "saveOnFailure": true
-                }
-        },
-        {
-            "url":"https://www.cct.lsu.edu/~sbrandt/pushbullet.php?key=${PBTOK}&status=\${JOB_STATUS}:\${JOB_ID}",
-            "event":"KILLED",
-            "persistent":"true",
-            "policy": {
-                "retryStrategy": "DELAYED",
-                "retryLimit": 3,
-                "retryRate": 5,
-                "retryDelay": 5,
-                "saveOnFailure": true
-                }
-        },
-        {
-            "url":"https://www.cct.lsu.edu/~sbrandt/pushbullet.php?key=${PBTOK}&status=\${JOB_STATUS}:\${JOB_ID}",
-            "event":"STOPPED",
-            "persistent":"true",
-            "policy": {
-                "retryStrategy": "DELAYED",
-                "retryLimit": 3,
-                "retryRate": 5,
-                "retryDelay": 5,
-                "saveOnFailure": true
-                }
-        },
-        {
-            "url":"https://www.cct.lsu.edu/~sbrandt/pushbullet.php?key=${PBTOK}&status=\${JOB_STATUS}:\${JOB_ID}",
-            "event":"PAUSED",
-            "persistent":"true",
-            "policy": {
-                "retryStrategy": "DELAYED",
-                "retryLimit": 3,
-                "retryRate": 5,
-                "retryDelay": 5,
-                "saveOnFailure": true
-                }
-        },
-        {
-            "url":"https://www.cct.lsu.edu/~sbrandt/pushbullet.php?key=${PBTOK}&status=\${JOB_STATUS}:\${JOB_ID}",
-            "event":"SUBMITTING",
-            "persistent":"true",
-            "policy": {
-                "retryStrategy": "DELAYED",
-                "retryLimit": 3,
-                "retryRate": 5,
-                "retryDelay": 5,
-                "saveOnFailure": true
-                }
-        },
-        {
-            "url":"https://www.cct.lsu.edu/~sbrandt/pushbullet.php?key=${PBTOK}&status=\${JOB_STATUS}:\${JOB_ID}",
-            "event":"QUEUED",
-            "persistent":"true",
-            "policy": {
-                "retryStrategy": "DELAYED",
-                "retryLimit": 3,
-                "retryRate": 5,
-                "retryDelay": 5,
-                "saveOnFailure": true
-                }
-        },
-        {
-            "url":"https://www.cct.lsu.edu/~sbrandt/pushbullet.php?key=${PBTOK}&status=\${JOB_STATUS}:\${JOB_ID}",
-            "event":"FINISHED",
-            "persistent":"true",
-            "policy": {
-                "retryStrategy": "DELAYED",
-                "retryLimit": 3,
-                "retryRate": 5,
-                "retryDelay": 5,
-                "saveOnFailure": true
-                }
-        },
-        {
-            "url":"https://www.cct.lsu.edu/~sbrandt/pushbullet.php?key=${PBTOK}&status=\${JOB_STATUS}:\${JOB_ID}",
-            "event":"FAILED",
-            "persistent":"true",
-            "policy": {
-                "retryStrategy": "DELAYED",
-                "retryLimit": 3,
-                "retryRate": 5,
-                "retryDelay": 5,
-                "saveOnFailure": true
-                }
+            "name":"${JOB_NAME}",
+            "appId": "${APP_NAME}",
+            "executionSystem": "${EXEC_MACHINE}",
+            "batchQueue": "${QUEUE}",
+            "maxRunTime": "10:00:00",
+            "nodeCount": """+str(nodes)+""",
+            "processorsPerNode": """+str(procs)+""",
+            "archive": false,
+            "archiveSystem": "${STORAGE_MACHINE}",
+            "inputs": {
+                "input tarball": "agave://${STORAGE_MACHINE}/inputs/${INPUT_DIR}/input.tgz"
+            },
+            "parameters": {
+                "simagename":"${MODEL}",
+                "inputdir":"${INPUT_DIR}"
+            },
+            "notifications": [
+            {
+                "url":"${EMAIL}",
+                "event":"FINISHED",
+                "persistent":"true",
+                "policy": {
+                    "retryStrategy": "DELAYED",
+                    "retryLimit": 3,
+                    "retryRate": 5,
+                    "retryDelay": 5,
+                    "saveOnFailure": true
+                    }
+            },
+            {
+                "url":"${EMAIL}",
+                "event":"FAILED",
+                "persistent":"true",
+                "policy": {
+                    "retryStrategy": "DELAYED",
+                    "retryLimit": 3,
+                    "retryRate": 5,
+                    "retryDelay": 5,
+                    "saveOnFailure": true
+                    }
+            },
+            {
+                "url":"https://www.cct.lsu.edu/~sbrandt/pushbullet.php?key=${PBTOK}&status=\${JOB_STATUS}:\${JOB_ID}",
+                "event":"RUNNING",
+                "persistent":"true",
+                "policy": {
+                    "retryStrategy": "DELAYED",
+                    "retryLimit": 3,
+                    "retryRate": 5,
+                    "retryDelay": 5,
+                    "saveOnFailure": true
+                    }
+            },
+            {
+                "url":"https://www.cct.lsu.edu/~sbrandt/pushbullet.php?key=${PBTOK}&status=\${JOB_STATUS}:\${JOB_ID}",
+                "event":"KILLED",
+                "persistent":"true",
+                "policy": {
+                    "retryStrategy": "DELAYED",
+                    "retryLimit": 3,
+                    "retryRate": 5,
+                    "retryDelay": 5,
+                    "saveOnFailure": true
+                    }
+            },
+            {
+                "url":"https://www.cct.lsu.edu/~sbrandt/pushbullet.php?key=${PBTOK}&status=\${JOB_STATUS}:\${JOB_ID}",
+                "event":"STOPPED",
+                "persistent":"true",
+                "policy": {
+                    "retryStrategy": "DELAYED",
+                    "retryLimit": 3,
+                    "retryRate": 5,
+                    "retryDelay": 5,
+                    "saveOnFailure": true
+                    }
+            },
+            {
+                "url":"https://www.cct.lsu.edu/~sbrandt/pushbullet.php?key=${PBTOK}&status=\${JOB_STATUS}:\${JOB_ID}",
+                "event":"PAUSED",
+                "persistent":"true",
+                "policy": {
+                    "retryStrategy": "DELAYED",
+                    "retryLimit": 3,
+                    "retryRate": 5,
+                    "retryDelay": 5,
+                    "saveOnFailure": true
+                    }
+            },
+            {
+                "url":"https://www.cct.lsu.edu/~sbrandt/pushbullet.php?key=${PBTOK}&status=\${JOB_STATUS}:\${JOB_ID}",
+                "event":"SUBMITTING",
+                "persistent":"true",
+                "policy": {
+                    "retryStrategy": "DELAYED",
+                    "retryLimit": 3,
+                    "retryRate": 5,
+                    "retryDelay": 5,
+                    "saveOnFailure": true
+                    }
+            },
+            {
+                "url":"https://www.cct.lsu.edu/~sbrandt/pushbullet.php?key=${PBTOK}&status=\${JOB_STATUS}:\${JOB_ID}",
+                "event":"QUEUED",
+                "persistent":"true",
+                "policy": {
+                    "retryStrategy": "DELAYED",
+                    "retryLimit": 3,
+                    "retryRate": 5,
+                    "retryDelay": 5,
+                    "saveOnFailure": true
+                    }
+            },
+            {
+                "url":"https://www.cct.lsu.edu/~sbrandt/pushbullet.php?key=${PBTOK}&status=\${JOB_STATUS}:\${JOB_ID}",
+                "event":"FINISHED",
+                "persistent":"true",
+                "policy": {
+                    "retryStrategy": "DELAYED",
+                    "retryLimit": 3,
+                    "retryRate": 5,
+                    "retryDelay": 5,
+                    "saveOnFailure": true
+                    }
+            },
+            {
+                "url":"https://www.cct.lsu.edu/~sbrandt/pushbullet.php?key=${PBTOK}&status=\${JOB_STATUS}:\${JOB_ID}",
+                "event":"FAILED",
+                "persistent":"true",
+                "policy": {
+                    "retryStrategy": "DELAYED",
+                    "retryLimit": 3,
+                    "retryRate": 5,
+                    "retryDelay": 5,
+                    "saveOnFailure": true
+                    }
+            }
+          ]
         }
-      ]
-    }
-    """)
+        """)
+    else:
+        writefile("job.txt","""
+        {
+            "name":"${JOB_NAME}",
+            "appId": "${APP_NAME}",
+            "executionSystem": "${EXEC_MACHINE}",
+            "batchQueue": "${QUEUE}",
+            "maxRunTime": "10:00:00",
+            "nodeCount": """+str(nodes)+""",
+            "processorsPerNode": """+str(procs)+""",
+            "archive": false,
+            "archiveSystem": "${STORAGE_MACHINE}",
+            "inputs": {
+                "input tarball": "agave://${STORAGE_MACHINE}/inputs/${INPUT_DIR}/input.tgz"
+            },
+            "parameters": {
+                "simagename":"${MODEL}",
+                "inputdir":"${INPUT_DIR}"
+            },
+            "notifications": [
+            {
+                "url":"${EMAIL}",
+                "event":"FINISHED",
+                "persistent":"true",
+                "policy": {
+                    "retryStrategy": "DELAYED",
+                    "retryLimit": 3,
+                    "retryRate": 5,
+                    "retryDelay": 5,
+                    "saveOnFailure": true
+                    }
+            },
+            {
+                "url":"${EMAIL}",
+                "event":"FAILED",
+                "persistent":"true",
+                "policy": {
+                    "retryStrategy": "DELAYED",
+                    "retryLimit": 3,
+                    "retryRate": 5,
+                    "retryDelay": 5,
+                    "saveOnFailure": true
+                    }
+            }
+          ]
+        }
+        """)
 
     setvar("""
     # Capture the output of the job submit command

@@ -328,7 +328,9 @@ def modifyFWinput():
 
 def runfun_btn_clicked(a):
     if (modelTitle.value == "Funwave-tvd"): 
-        modifyFWinput()
+        #modifyFWinput()
+        from modInput import modInput
+        modInput(numnodeSlider.value*numprocSlider.value,"input_funwave/input.txt")
         cmd("rm -fr input")
         cmd("mkdir input")
         cmd("cp input_funwave/input.txt input")
