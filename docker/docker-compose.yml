@@ -1,0 +1,12 @@
+version: '2'
+
+services:
+
+  agave-model:
+    image: lsucrc/agave-model
+    ports:
+      - '8003:8003'
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - $HOME/agave-model-home:/home/jupuser:rw
+
