@@ -136,7 +136,7 @@ SwanUpInputBtn = Button(description='Update Input File',button_style='primary', 
 
 def swanupdate_btn_clicked(a):
     cmd("tar -zxvf input_swan.tgz")
-    cmd("mv input_swan/INPUT input_SWAN/INPUT_template")
+    cmd("mv input_swan/INPUT input_swan/INPUT_template")
     table_vars = ""
     for i in range (len(table_items)):
         if table_items[i].value == True:
@@ -158,8 +158,8 @@ def swanupdate_btn_clicked(a):
         "DIR"       : dirTbtn.value,
         "PER"       : perTbtn.value
     }
-    with open("input_SWAN/INPUT_template","r") as template:
-        with open("input_SWAN/INPUT","w+") as ipt:
+    with open("input_swan/INPUT_template","r") as template:
+        with open("input_swan/INPUT","w+") as ipt:
             for line in template.readlines():
                 g = re.match("^(MODE|COORD|SET|FRICTION|PROP|GEN3)\s*",line)
                 h = re.match("^(TABLE)(\s*\S*\s\S*\s*\S*)[\w\s]*(OUT\s\S*)(\s*\d\s*\w*)",line)
@@ -185,7 +185,7 @@ def swanupdate_btn_clicked(a):
             ipt.close()
         template.close()
    
-    SwanInputArea.value = open("input_SWAN/INPUT","r").read()
+    SwanInputArea.value = open("input_swan/INPUT","r").read()
     
 SwanUpInputBtn.on_click(swanupdate_btn_clicked)
 
@@ -342,14 +342,17 @@ def runfun_btn_clicked(a):
         cmd("files-upload -F input.tgz -S ${STORAGE_MACHINE} inputs/${INPUT_DIR}/")
         submitJob(numnodeSlider.value,numprocSlider.value,"funwave")
         
-    elif (modelTitle.value == "Swan"): 
+    elif (modelTitle.value == "SWAN"): 
+#         cmd("rm -fr input")
+#         cmd("mkdir input")
+#         cmd("cp -r input_swan/* input")
+#         cmd("tar cvzf input.tgz input")
         cmd("rm -fr input")
-        cmd("mkdir input")
-        cmd("cp -r input_swan/* input")
+        cmd("mv input_swan input")
         cmd("tar cvzf input.tgz input")
         setvar("INPUT_DIR=${AGAVE_USERNAME}_$(date +%Y-%m-%d_%H-%M-%S)")
-        cmd("files-mkdir -S ${STORAGE_MACHINE} -N ${DEPLOYMENT_PATH}/${INPUT_DIR}")
-        cmd("files-upload -F input.tgz -S ${STORAGE_MACHINE} ${DEPLOYMENT_PATH}/${INPUT_DIR}/")
+        cmd("files-mkdir -S ${STORAGE_MACHINE} -N inputs/${INPUT_DIR}")
+        cmd("files-upload -F input.tgz -S ${STORAGE_MACHINE} inputs/${INPUT_DIR}/")
         submitJob(numnodeSlider.value,numprocSlider.value,"swan") 
         
         
