@@ -1,0 +1,37 @@
+FROM science-base
+USER root
+RUN mkdir /model
+RUN chown jovyan /model
+RUN touch /etc/ssh/ssh_known_hosts
+RUN mkdir /work
+USER jovyan
+
+# download swan source code and extract it 
+WORKDIR /model
+#COPY swan4120.tar.gz swan4120.tar.gz
+COPY get-swan-latest.py get-swan-latest.py
+COPY command.py command.py
+RUN python3 ./get-swan-latest.py
+
+# compile swan 
+#WORKDIR swan4120
+#RUN make config && make mpi
+
+# set up enviroment variable of swan
+ENV PATH $PATH:/model/swan4120
+RUN chmod +rx /model/swan4120/swanrun 
+
+# download test data and extract it 
+#WORKDIR /model
+#COPY refrac.tar.gz refrac.tar.gz
+#RUN tar -zxvf refrac.tar.gz
+
+USER root
+WORKDIR /usr/local/bin
+RUN echo echo RUNNING SWAN > runapp.sh
+RUN echo cd /workdir/input >> runapp.sh
+RUN echo mpirun -np \$NP -machinefile /workdir/nodes.txt /usr/local/bin/swan.exe >> runapp.sh
+RUN chmod +x runapp.sh
+USER jovyan
+
+WORKDIR /workdir

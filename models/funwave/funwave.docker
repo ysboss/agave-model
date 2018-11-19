@@ -1,0 +1,21 @@
+FROM stevenrbrandt/science-base
+USER root
+RUN mkdir /model
+RUN mkdir /workdir
+RUN chown jovyan /model
+RUN touch /etc/ssh/ssh_known_hosts
+RUN mkdir /work
+
+WORKDIR /usr/local/bin
+RUN echo echo RUNNING FUNWAVE > runapp.sh
+RUN echo cd /workdir/input >> runapp.sh
+RUN echo mpirun -np \$NP -machinefile /workdir/nodes.txt /model/FUNWAVE-TVD/src/funwave_vessel >> runapp.sh
+RUN chmod +x runapp.sh
+
+USER jovyan
+
+WORKDIR /model
+RUN git clone https://github.com/fengyanshi/FUNWAVE-TVD
+WORKDIR /model/FUNWAVE-TVD/src
+RUN perl -p -i -e 's/FLAG_8 = -DCOUPLING/#$&/' Makefile 
+RUN make 
