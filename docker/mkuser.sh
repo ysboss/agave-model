@@ -11,5 +11,6 @@ then
     bash /runuser.sh
 else
     useradd -M -u $UserID jupuser -s /bin/bash
+    chsh jupuser --shell /bin/bash
     sudo -u jupuser /runuser.sh
 fi

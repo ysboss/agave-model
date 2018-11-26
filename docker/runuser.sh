@@ -9,16 +9,6 @@ export HOME=/home/jupuser
 #  exit 2
 #fi
 
-if [ ! -r .bashrc ]
-then
-    echo 'source /etc/bashrc' > .bashrc
-fi
-
-if [ ! -r .bash_profile ]
-then
-    echo 'source ~/.bashrc' > .bash_profile
-fi
-
 if [ ! -d agave-model ]
 then
   git clone https://github.com/ysboss/agave-model.git
@@ -40,4 +30,4 @@ else
   git pull origin $(git rev-parse --abbrev-ref HEAD)
 fi
 
-jupyter notebook --ip=0.0.0.0 --port=8003 --no-browser --allow-root
+PATH=/usr/local/cli/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/usr/local/sbin:/sbin jupyter notebook --ip=0.0.0.0 --port=8003 --no-browser --allow-root

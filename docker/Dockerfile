@@ -12,7 +12,7 @@ RUN pip3 install setvar
 WORKDIR /usr/local
 RUN git clone http://github.com/agaveplatform/agave-cli cli
 
-RUN echo 'export PATH=/usr/local/cli/bin:/usr/bin:/bin:/usr/sbin:/usr/local/sbin:/sbin' > /etc/bashrc
+ENV PATH /usr/local/cli/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/usr/local/sbin:/sbin
 
 WORKDIR /
 
