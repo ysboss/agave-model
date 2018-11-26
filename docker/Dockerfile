@@ -13,6 +13,7 @@ WORKDIR /usr/local
 RUN git clone http://github.com/agaveplatform/agave-cli cli
 
 ENV PATH /usr/local/cli/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/usr/local/sbin:/sbin
+RUN touch /etc/bashrc
 
 WORKDIR /
 
