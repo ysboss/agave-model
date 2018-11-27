@@ -347,8 +347,10 @@ def runfun_btn_clicked(a):
 #         cmd("mkdir input")
 #         cmd("cp -r input_swan/* input")
 #         cmd("tar cvzf input.tgz input")
+        if not os.path.exists("input_swan"):
+            cmd("tar -zxvf input_swan.tgz")
         cmd("rm -fr input")
-        cmd("mv input_swan input")
+        cmd("cp -r input_swan input")
         cmd("tar cvzf input.tgz input")
         setvar("INPUT_DIR=${AGAVE_USERNAME}_$(date +%Y-%m-%d_%H-%M-%S)")
         cmd("files-mkdir -S ${STORAGE_MACHINE} -N inputs/${INPUT_DIR}")
