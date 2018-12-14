@@ -1,44 +1,17 @@
 from __future__ import print_function
-from ipywidgets import interact, interactive, fixed, interact_manual, Layout, Button, Box,VBox, HBox, FloatText, Text, Dropdown, Label, IntSlider, Textarea, Accordion, ToggleButton, ToggleButtons, Select, RadioButtons, HTMLMath, FloatRangeSlider
-import ipywidgets as widgets
-from IPython.display import display, clear_output, HTML
-from matplotlib import animation, rc
-from mpl_toolkits.mplot3d import Axes3D
-
-#from pylab import *
-import matplotlib.pyplot as plt2
-import sys
+import os, re
 import numpy as np
-import os
-import re
-#from upload import upload_widget, set_input
-
-import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
-from matplotlib.dates import date2num
-import time
-from datetime import datetime
-import datetime
-
+from ipywidgets import interactive, Layout, Button, Box, VBox, Text, Dropdown, Label, IntSlider, Textarea, Accordion, ToggleButton, ToggleButtons, Select, HTMLMath, FloatRangeSlider, Output, Tab
+from IPython.display import display, clear_output, HTML
 
 from agave import *
 from setvar import *
-
-from shutil import copyfile
-
 from fwPlots import *
 from swanPlots import *
-
 from command import cmd
-#from Naked.toolshed.shell import execute_js, muterun_js
-
-
+from modInput import modInput
 
 ######################## Previous ############################################################
-
-#muterun_js('scroll.js')
-
-
 
 input_item_layout = Layout(
     display = 'flex',
@@ -47,18 +20,11 @@ input_item_layout = Layout(
     width = '50%'
 )
   
-
 modelTitle = Dropdown(options=['SWAN', 'Funwave-tvd','Delft3D'])
 modelBox = Box([Label(value='Model', layout = Layout(width = '100px')), modelTitle], layout = input_item_layout)
 
-
 delft3d_items=[Label(value='Coming soon', layout = Layout(width = '200px'))]   
-delft3dBox = Box(delft3d_items, layout= Layout(
- #   display = 'flex',
-    flex_flow = 'column',
-    align_items='stretch',
-    disabled=False
-))
+delft3dBox = Box(delft3d_items, layout= Layout(flex_flow = 'column', align_items='stretch', disabled=False))
 
 fw_para_pairs ={
     "TOTAL_TIME":"",
@@ -66,6 +32,9 @@ fw_para_pairs ={
     "Mglob":"",
     "Nglob":""
 }  
+
+######################## Previous end ############################################################
+
 
 ######################## SWAN Input tab ############################################################
 
@@ -191,14 +160,10 @@ SwanUpInputBtn.on_click(swanupdate_btn_clicked)
 
 SwanInputArea = Textarea(layout= Layout(height = "300px",width = '100%'))
 
-
 SwanInputBox = Box([swanInputAcd, SwanUpInputBtn, SwanInputArea], 
                  layout = Layout(flex_flow = 'column', align_items = 'center'))
 
- 
-
-
-
+######################## SWAN Input tab end############################################################
 
 
 
@@ -284,11 +249,12 @@ fwInputArea = Textarea(layout= Layout(height = "300px",width = '100%'))
 fwInputBox = Box([fwInputdd, inputBox, fwUpInputBtn, fwInputArea], 
                   layout = Layout(flex_flow = 'column', align_items = 'center'))
 
+##################################### Funwave-tvd Input tab end ################################
 
 
 
 
-##################################### Run tab ################################
+##################################### Run tab #################################################
 run_item_layout = Layout(
     display = 'flex',
     flex_flow = 'row',
@@ -308,29 +274,9 @@ run_items = [
     Box([runBtn]),
 ]
 
-def modifyFWinput():
-    name_value_pairs = {
-        "PX" : str(numnodeSlider.value),
-        "PY" : str(numprocSlider.value)
-    }
-    with open("input_funwave/input_tmp.txt","r") as tmp:
-        with open("input_funwave/input.txt","w") as inputfile:
-            for line in tmp.readlines():
-                g = re.match("^(PX|PY)\s*=\s*(\S+)",line)
-                if g:
-                    name = g.group(1)
-                    if name in name_value_pairs:
-                        inputfile.write(name+" = "+name_value_pairs[name]+"\n")
-                else:
-                    inputfile.write(line)
-            inputfile.close()
-        tmp.close()
-
 def runfun_btn_clicked(a):
     if (modelTitle.value == "Funwave-tvd"): 
         cmd("mv input_funwave/input_tmp.txt input_funwave/input.txt")
-        #modifyFWinput()
-        from modInput import modInput
         modInput(numnodeSlider.value*numprocSlider.value,"input_funwave/input.txt")
         cmd("rm -fr input")
         cmd("mkdir input")
@@ -343,10 +289,6 @@ def runfun_btn_clicked(a):
         submitJob(numnodeSlider.value,numprocSlider.value,"funwave")
         
     elif (modelTitle.value == "SWAN"): 
-#         cmd("rm -fr input")
-#         cmd("mkdir input")
-#         cmd("cp -r input_swan/* input")
-#         cmd("tar cvzf input.tgz input")
         if not os.path.exists("input_swan"):
             cmd("tar -zxvf input_swan.tgz")
         cmd("rm -fr input")
@@ -356,19 +298,12 @@ def runfun_btn_clicked(a):
         cmd("files-mkdir -S ${STORAGE_MACHINE} -N inputs/${INPUT_DIR}")
         cmd("files-upload -F input.tgz -S ${STORAGE_MACHINE} inputs/${INPUT_DIR}/")
         submitJob(numnodeSlider.value,numprocSlider.value,"swan") 
-        
-        
     
 runBtn.on_click(runfun_btn_clicked)
 
-
 runBox = VBox(run_items)
 
-
-
-
-
-
+##################################### Run tab end #################################################
 
 
 
@@ -422,11 +357,9 @@ def download_btn_clicked(a):
             rcmd = "jobs-output-get -r "+ jobid +" "+ outputSelect.value
         else:
             rcmd = "jobs-output-get "+ jobid +" "+ outputSelect.value
-        #cmd(rcmd)
         
         print (rcmd)
         os.system(rcmd)
-        
         
         if(outputSelect.value == 'output.tar.gz'):
             cmd("rm -fr output")
@@ -453,37 +386,29 @@ output_items = [
 
 outputBox = VBox(output_items)
 
+################################# Output tab end ###################################
 
 
 
-
-
-
-
-
-##################################### SWAN Visualization tab ########################################
+################################## SWAN Visualization tab #####################################
 
 Yoption = Dropdown(options=['Choose one','Hsig','RTpeak','PkDir','X_Windv','Y_Windv'])
-plotsInter = widgets.interactive(oneDPlots, Y_axis = Yoption )
+plotsInter = interactive(oneDPlots, Y_axis = Yoption )
 oneDBox = Box([plotsInter])
-
 
 hsPreprocessBtn = Button(description='HS preprocess',button_style='primary', layout=Layout(width='auto'))
 hsPreprocessBtn.on_click(hsPreprocess_btn_clicked)
 
-
 hsIndex = IntSlider(value=0, min=0, max=120)
-hsInter = widgets.interactive(twoDAnimate, Time_Step = hsIndex)
+hsInter = interactive(twoDAnimate, Time_Step = hsIndex)
 
 twoDBox = Box([hsPreprocessBtn, hsInter], layout = Layout(flex_flow = 'column', align_items='stretch'))
-
 
 swanVisuAcd =Accordion(children = [oneDBox,twoDBox])
 swanVisuAcd.set_title(0,'1D ')
 swanVisuAcd.set_title(1,'2D ')
 
-
-
+################################## SWAN Visualization tab end #####################################
 
 
 
@@ -491,14 +416,11 @@ swanVisuAcd.set_title(1,'2D ')
 
 
 fwYoption = Dropdown(options=['Choose one','eta','u','v'])
-fwplotsInter = widgets.interactive(fwOneD, Y_in_plots = fwYoption)
+fwplotsInter = interactive(fwOneD, Y_in_plots = fwYoption)
 fwoneDBox = Box([fwplotsInter])
 
-
 depthBtn = Button(description='display',button_style='primary', layout=Layout(width='auto'))
-depthOutput = widgets.Output()
-
-
+depthOutput = Output()
 
 def depth_Btn_clicked(a):
     with depthOutput:
@@ -507,17 +429,15 @@ def depth_Btn_clicked(a):
 depthBtn.on_click(depth_Btn_clicked)
 depthBox = Box([Label(value='Water Depth'),depthBtn],layout = Layout(width = '80%'))
 
-
 depProfileN = IntSlider(value=0, min=0, max=200)
-depProfileInter = widgets.interactive(depProfile, N = depProfileN)
+depProfileInter = interactive(depProfile, N = depProfileN)
 depProfileBox = Box([Label(value='Depth Profile Snapshot'), depProfileInter])
-
-
 
 depProfileAnimaRange = FloatRangeSlider(value=[5,7], min=0.0, max=30, step=0.2,
                                  description='Time period (s):',readout=True,readout_format='.2f', layout = Layout(width ="60%"))
 depProfileAnimBtn = Button(description='display',button_style='primary', layout=Layout(width='auto'))
-depProfileAnimOutput = widgets.Output()
+depProfileAnimOutput = Output()
+
 def depProfileAnim_Btn_clicked(a):
     anim = depProfileWithEta(depProfileAnimaRange.value[0], depProfileAnimaRange.value[1], 
                              fw_para_pairs['TOTAL_TIME'], fw_para_pairs['PLOT_INTV'], fw_para_pairs['Mglob'])
@@ -529,16 +449,14 @@ depProfileAnimBox = Box([Label(value='Cross-shore profile animation'), depProfil
                   layout = Layout(width = '80%', justify_content = 'space-between'))
 
 
-
 twoDsnapFrame = IntSlider(value=0, min=0, max=151)
-twoDsnapInter = widgets.interactive(twoDsnapPlot, frame = twoDsnapFrame)
+twoDsnapInter = interactive(twoDsnapPlot, frame = twoDsnapFrame)
 twoDsnapBox = Box([Label(value='Surface Elevation snapshot'),twoDsnapInter])
-
 
 twoDanimRange = FloatRangeSlider(value=[5,7], min=0.0, max=30, step=0.2,
                                  description='Time period (s):',readout=True,readout_format='.2f', layout = Layout(width ="60%"))
 twoDanimBtn = Button(description='display',button_style='primary', layout=Layout(width='auto'))
-twoDanimOutput = widgets.Output()
+twoDanimOutput = Output()
 def twoDanim_Btn_clicked(a):
     anim = twoDsnapAnim(twoDanimRange.value[0],twoDanimRange.value[1], fw_para_pairs['PLOT_INTV'])
     twoDanimOutput.clear_output()
@@ -549,12 +467,11 @@ twoDanimBox = Box([Label(value='Surface Elevation animation'), twoDanimRange, tw
                   layout = Layout(width = '80%', justify_content = 'space-between'))
 
 basicBtn = Button(description='display',button_style='primary', layout=Layout(width='auto'))
-basicOutput = widgets.Output()
+basicOutput = Output()
 
 def basic_Btn_clicked(a):
     frames = []
     for i in range(1,surfaceFrame.max):
-#         frames += [np.genfromtxt("output/output/eta_%05d" % i)]
         frames += [np.genfromtxt("output/output/eta_%05d" % i)]
     anim = basicAnimation(frames)
     with basicOutput:
@@ -564,25 +481,20 @@ basicBtn.on_click(basic_Btn_clicked)
 basicBox = Box([Label(value='Surface Elevation animation 2'),basicBtn], layout = Layout(width = '80%'))
 
 
-
-
 basicAnimBox = Box([depthBox, depthOutput,depProfileBox, depProfileAnimBox, depProfileAnimOutput, 
                     twoDsnapBox, twoDanimBox, twoDanimOutput],
                    layout = Layout(flex_flow = 'column', align_items='stretch',))
 
-
-
 surfaceFrame = IntSlider(value=0, min=0, max=31)
-surfaceInter = widgets.interactive(surfacePlot, frame = surfaceFrame)
+surfaceInter = interactive(surfacePlot, frame = surfaceFrame)
 surfaceBox = Box([Label(value='Surface Elevation snapshot'),surfaceInter])
 
 rotatingBtn = Button(description='display',button_style='primary', layout=Layout(width='auto'))
-rotatingOutput = widgets.Output()
+rotatingOutput = Output()
 
 def rotating_Btn_clicked(a):
     frames = []
     for i in range(1,surfaceFrame.max):
-#         frames += [np.genfromtxt("output/output/eta_%05d" % i)]
         frames += [np.genfromtxt("output/output/eta_%05d" % i)]
     anim = rotatingAnimation(frames)
     with rotatingOutput:
@@ -592,18 +504,17 @@ rotatingBtn.on_click(rotating_Btn_clicked)
 rotatingBox = Box([Label(value='Surface Elevation animation'),rotatingBtn], layout = Layout(width = '80%'))
 rotatingAnimBox = Box([surfaceBox, rotatingBox, rotatingOutput], layout = Layout(flex_flow = 'column', align_items='stretch'))
 
-
-
 fwVisuAcd = Accordion([fwoneDBox, basicAnimBox,rotatingAnimBox])
 fwVisuAcd.set_title(0,'1D')
 fwVisuAcd.set_title(1,'2D')
 fwVisuAcd.set_title(2,'3D')
 
+############################### Funwave Visualization tab end ##########################################
 
 
 ################################ Finally ##########################################################
         
-tab_nest = widgets.Tab()
+tab_nest = Tab()
 tab_nest.children = [SwanInputBox, runBox, outputBox, swanVisuAcd]
 tab_nest.set_title(0, 'Input')
 tab_nest.set_title(1, 'Run')
@@ -632,15 +543,14 @@ def on_change(change):
                 tab_nest.children = [delft3dBox, runBox, outputBox, swanVisuAcd]
                 display(tab_nest)
            
-    
 modelTitle.observe(on_change)
-
 
 display(modelTitle)
 
-out = widgets.Output()
+out = Output()
 
 with out:
     display(tab_nest)
 display(out)
 
+################################ Finally end ##########################################################
