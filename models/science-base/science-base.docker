@@ -1,4 +1,4 @@
-FROM ubuntu:16.04
+FROM ubuntu
 
 MAINTAINER Steven R. Brandt <sbrandt@cct.lsu.edu>
 
@@ -14,6 +14,7 @@ WORKDIR /home
 COPY get-openmpi-verison.py get-openmpi-verison.py
 RUN python3 get-openmpi-verison.py
 
+#RUN echo PubkeyAcceptedKeyTypes +ssh-dss >> /etc/ssh/ssh_config
 RUN useradd -m jovyan 
 USER jovyan
 WORKDIR /home/jovyan
