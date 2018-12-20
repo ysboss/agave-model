@@ -43,12 +43,12 @@ dimTbtns = ToggleButtons(options=['TWOD', 'ONED'])
 modeBox = Box([Label(value = 'MODE: '), modeTbtns, dimTbtns],layout = Layout(width = '80%', justify_content = 'space-between'))
 
 coordTbtns = ToggleButtons(options=['SPHE', 'CART'])
-spheTbtns = ToggleButtons(options=['CCM', 'QC'])
+spheTbtns = ToggleButtons(options=['None', 'CCM', 'QC'])
 coordBox = Box([Label(value = 'COOR:'), coordTbtns, spheTbtns],
-               layout = Layout(width = '80%', justify_content = 'space-between'))
+               layout = Layout(width = '96.8%', justify_content = 'space-between'))
 
 setTbtns = ToggleButtons(options=['NAUT', 'CART'])
-setBox = Box([Label(value = 'SET:'), setTbtns],layout = Layout(width = '42.4%', justify_content = 'space-between'))
+setBox = Box([Label(value = 'SET:'), setTbtns],layout = Layout(width = '42.5%', justify_content = 'space-between'))
 
 fricTbtns = ToggleButtons(options=['JONSWAP', 'COLL', 'MADS'])
 fricText = Text(value = '0.067', layout = Layout(width='60px'))
@@ -106,6 +106,15 @@ SwanUpInputBtn = Button(description='Update Input File',button_style='primary', 
 def swanupdate_btn_clicked(a):
     cmd("tar -zxvf input_swan.tgz")
     cmd("mv input_swan/INPUT input_swan/INPUT_template")
+    
+    # set sphe method
+    # for CART, there is no method needed. 
+    # for SPHE, there are CCM and QC option. 
+    if spheTbtns.value == "None":
+        spheMethod = ""
+    else:
+        spheMethod = spheTbtns.value
+        
     table_vars = ""
     for i in range (len(table_items)):
         if table_items[i].value == True:
@@ -113,7 +122,7 @@ def swanupdate_btn_clicked(a):
         
     name_value_pairs = {
         "MODE"      : modeTbtns.value+' '+dimTbtns.value,
-        "COORD"     : coordTbtns.value+' '+spheTbtns.value,
+        "COORD"     : coordTbtns.value+' '+spheMethod,
         "SET"       : setTbtns.value,
         "FRICTION"  : fricTbtns.value+' '+fricText.value,
         "PROP"      : propTbtns.value,
