@@ -1,7 +1,7 @@
 from __future__ import print_function
 import os, re
 import numpy as np
-from ipywidgets import interactive, Layout, Button, Box, VBox, Text, Dropdown, Label, IntSlider, Textarea, Accordion, ToggleButton, ToggleButtons, Select, HTMLMath, FloatRangeSlider, Output, Tab
+from ipywidgets import interactive, Layout, Button, Box, HBox, VBox, Text, Dropdown, Label, IntSlider, Textarea, Accordion, ToggleButton, ToggleButtons, Select, HTMLMath, FloatRangeSlider, Output, Tab
 from IPython.display import display, clear_output, HTML
 
 from agave import *
@@ -318,7 +318,7 @@ runBox = VBox(run_items)
 
 ################################# Output tab ###################################
 
-jobListBtn = Button(description='List jobs history', button_style='primary', layout= Layout(width = '115px'))
+jobListBtn = Button(description='List all jobs', button_style='primary', layout= Layout(width = '115px'))
 
 jobSelect = Select(layout = Layout(height = '150px', width='100%'))
 
@@ -329,6 +329,10 @@ abortBtn = Button(description='Abort', button_style='danger', layout= Layout(wid
 outputSelect = Select(layout = Layout(height = '150px', width='100%'))
 
 downloadOpBtn = Button(description='Download', button_style='primary', layout= Layout(width = '115px'))
+
+jobHisBtn = Button(description='Job history', button_style='primary', layout= Layout(width = '115px'))
+
+jobHisOp = Textarea(layout = Layout(height = '336px', width='100%'))
 
 def jobList_btn_clicked(a):
     cout = cmd("jobs-list -l 10")
@@ -351,7 +355,7 @@ def jobOutput_btn_clicked(a):
     g = re.match(r'^\S+',jobSelect.value)
     if g:
         jobid = g.group(0)
-        rcmd = "jobs-output-list "+jobid
+        rcmd = "jobs-output-list "+ jobid
         cout = cmd(rcmd)
         out1 = cout["stdout"]
         outputSelect.options = out1
@@ -385,15 +389,35 @@ def download_btn_clicked(a):
 
 downloadOpBtn.on_click(download_btn_clicked)
 
-output_items = [
+def jobHis_btn_clicked(a):
+    g = re.match(r'^\S+', jobSelect.value)
+    if g:
+        jobid = g.group(0)
+        rcmd = "jobs-history -V " + jobid
+        cout = cmd(rcmd)
+        out1 = cout["stdout"]
+        jobHisOp.value = str(out1)
+
+jobHisBtn.on_click(jobHis_btn_clicked)
+
+
+output_items_left = [
     Box([jobListBtn]),
-    Box([jobSelect], layout = Layout(width='50%')),
-    Box([jobOutputBtn,abortBtn], layout = Layout(display = 'flex', justify_content = 'space-between', width='50%')),
-    Box([outputSelect], layout = Layout(width='50%')),
+    Box([jobSelect], layout = Layout(width='100%')),
+    Box([jobOutputBtn,abortBtn], layout = Layout(display = 'flex', justify_content = 'space-between', width='100%')),
+    Box([outputSelect], layout = Layout(width='100%')),
     Box([downloadOpBtn])
 ]
 
-outputBox = VBox(output_items)
+output_items_right = [
+    Box([jobHisBtn]),
+    Box([jobHisOp],layout = Layout(width='100%'))
+]
+
+outputBox = HBox([VBox(output_items_left, layout = Layout(width='50%')), VBox(output_items_right, layout = Layout(width='50%'))],
+                layout = Layout(width='100%'))
+
+#outputBox = HBox(output_items_right)
 
 ################################# Output tab end ###################################
 
