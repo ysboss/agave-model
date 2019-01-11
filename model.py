@@ -13,15 +13,19 @@ from modInput import modInput
 
 ######################## Previous ############################################################
 
-input_item_layout = Layout(
-    display = 'flex',
-    flex_flow = 'row',
-    justify_content = 'flex-start',
-    width = '50%'
-)
-  
+
+logOp = Output()
+clearLogBtn = Button(description='Clear log', button_style='primary', layout = Layout(width = '115px'))
+
 modelTitle = Dropdown(options=['SWAN', 'Funwave-tvd','Delft3D'])
-modelBox = Box([Label(value='Model', layout = Layout(width = '100px')), modelTitle], layout = input_item_layout)
+modelBox = Box([modelTitle, clearLogBtn], 
+               layout = Layout(display = 'flex', flex_flow = 'row', justify_content = 'space-between', width = '100%'))
+
+def clearLog_btn_clicked(a):
+    logOp.clear_output()
+
+clearLogBtn.on_click(clearLog_btn_clicked)
+
 
 delft3d_items=[Label(value='Coming soon', layout = Layout(width = '200px'))]   
 delft3dBox = Box(delft3d_items, layout= Layout(flex_flow = 'column', align_items='stretch', disabled=False))
@@ -104,8 +108,9 @@ swanInputAcd.set_title(2,'Output Requests')
 SwanUpInputBtn = Button(description='Update Input File',button_style='primary', layout=Layout(width='100%'))
 
 def swanupdate_btn_clicked(a):
-    cmd("tar -zxvf input_swan.tgz")
-    cmd("mv input_swan/INPUT input_swan/INPUT_template")
+    with logOp:
+        cmd("tar -zxvf input_swan.tgz")
+        cmd("mv input_swan/INPUT input_swan/INPUT_template")
     
     # set sphe method
     # for CART, there is no method needed. 
@@ -194,7 +199,8 @@ def fw_on_change(change):
             inputBox.children = items
             return
         if(change['new'] == 'Basic Template'):
-            cmd("tar -zxvf input_funwave.tgz")
+            with logOp:
+                cmd("tar -zxvf input_funwave.tgz")
             inputTmp = 'input_funwave/basic_template.txt'
     
         with open(inputTmp,"r") as fd:
@@ -285,28 +291,30 @@ run_items = [
 
 def runfun_btn_clicked(a):
     if (modelTitle.value == "Funwave-tvd"): 
-        cmd("mv input_funwave/input_tmp.txt input_funwave/input.txt")
-        modInput(numnodeSlider.value*numprocSlider.value,"input_funwave/input.txt")
-        cmd("rm -fr input")
-        cmd("mkdir input")
-        cmd("cp input_funwave/input.txt input")
-        cmd("cp input_funwave/depth.txt input")
-        cmd("tar cvzf input.tgz input")
-        setvar("INPUT_DIR=${AGAVE_USERNAME}_$(date +%Y-%m-%d_%H-%M-%S)")
-        cmd("files-mkdir -S ${STORAGE_MACHINE} -N inputs/${INPUT_DIR}")
-        cmd("files-upload -F input.tgz -S ${STORAGE_MACHINE} inputs/${INPUT_DIR}/")
-        submitJob(numnodeSlider.value,numprocSlider.value,"funwave")
+        with logOp:
+            cmd("mv input_funwave/input_tmp.txt input_funwave/input.txt")
+            modInput(numnodeSlider.value*numprocSlider.value,"input_funwave/input.txt")
+            cmd("rm -fr input")
+            cmd("mkdir input")
+            cmd("cp input_funwave/input.txt input")
+            cmd("cp input_funwave/depth.txt input")
+            cmd("tar cvzf input.tgz input")
+            setvar("INPUT_DIR=${AGAVE_USERNAME}_$(date +%Y-%m-%d_%H-%M-%S)")
+            cmd("files-mkdir -S ${STORAGE_MACHINE} -N inputs/${INPUT_DIR}")
+            cmd("files-upload -F input.tgz -S ${STORAGE_MACHINE} inputs/${INPUT_DIR}/")
+            submitJob(numnodeSlider.value,numprocSlider.value,"funwave")
         
     elif (modelTitle.value == "SWAN"): 
-        if not os.path.exists("input_swan"):
-            cmd("tar -zxvf input_swan.tgz")
-        cmd("rm -fr input")
-        cmd("cp -r input_swan input")
-        cmd("tar cvzf input.tgz input")
-        setvar("INPUT_DIR=${AGAVE_USERNAME}_$(date +%Y-%m-%d_%H-%M-%S)")
-        cmd("files-mkdir -S ${STORAGE_MACHINE} -N inputs/${INPUT_DIR}")
-        cmd("files-upload -F input.tgz -S ${STORAGE_MACHINE} inputs/${INPUT_DIR}/")
-        submitJob(numnodeSlider.value,numprocSlider.value,"swan") 
+        with logOp:
+            if not os.path.exists("input_swan"):
+                cmd("tar -zxvf input_swan.tgz")
+            cmd("rm -fr input")
+            cmd("cp -r input_swan input")
+            cmd("tar cvzf input.tgz input")
+            setvar("INPUT_DIR=${AGAVE_USERNAME}_$(date +%Y-%m-%d_%H-%M-%S)")
+            cmd("files-mkdir -S ${STORAGE_MACHINE} -N inputs/${INPUT_DIR}")
+            cmd("files-upload -F input.tgz -S ${STORAGE_MACHINE} inputs/${INPUT_DIR}/")
+            submitJob(numnodeSlider.value,numprocSlider.value,"swan") 
     
 runBtn.on_click(runfun_btn_clicked)
 
@@ -335,69 +343,74 @@ jobHisBtn = Button(description='Job history', button_style='primary', layout= La
 jobHisOp = Textarea(layout = Layout(height = '336px', width='100%'))
 
 def jobList_btn_clicked(a):
-    cout = cmd("jobs-list -l 10")
-    out1 = cout["stdout"]
-    jobSelect.options = out1
+    with logOp:
+        cout = cmd("jobs-list -l 10")
+        out1 = cout["stdout"]
+        jobSelect.options = out1
     
 jobListBtn.on_click(jobList_btn_clicked)
 
 def abort_btn_clicked(a):
     g = re.match(r'^\S+',jobSelect.value)
-    if g:
-        jobid = g.group(0)
-        rcmd = "jobs-stop "+jobid
-        cmd(rcmd)
+    with logOp:
+        if g:
+            jobid = g.group(0)
+            rcmd = "jobs-stop "+jobid
+            cmd(rcmd)
 
 abortBtn.on_click(abort_btn_clicked)
 
 
 def jobOutput_btn_clicked(a):
     g = re.match(r'^\S+',jobSelect.value)
-    if g:
-        jobid = g.group(0)
-        rcmd = "jobs-output-list "+ jobid
-        cout = cmd(rcmd)
-        out1 = cout["stdout"]
-        outputSelect.options = out1
+    with logOp:
+        if g:
+            jobid = g.group(0)
+            rcmd = "jobs-output-list "+ jobid
+            cout = cmd(rcmd)
+            out1 = cout["stdout"]
+            outputSelect.options = out1
     
 jobOutputBtn.on_click(jobOutput_btn_clicked)
 
 def download_btn_clicked(a):
-    try:
-        g = re.match(r'^\S+',jobSelect.value)
-        jobid = g.group(0)
-        if(outputSelect.value.find('.')==-1):
-            rcmd = "jobs-output-get -r "+ jobid +" "+ outputSelect.value
-        else:
-            rcmd = "jobs-output-get "+ jobid +" "+ outputSelect.value
+    with logOp:
+        try:
+            g = re.match(r'^\S+',jobSelect.value)
+            jobid = g.group(0)
+            if(outputSelect.value.find('.')==-1):
+                rcmd = "jobs-output-get -r "+ jobid +" "+ outputSelect.value
+            else:
+                rcmd = "jobs-output-get "+ jobid +" "+ outputSelect.value
         
-        print (rcmd)
-        os.system(rcmd)
+            print (rcmd)
+            os.system(rcmd)
         
-        if(outputSelect.value == 'output.tar.gz'):
-            cmd("rm -fr output")
-            rcmd = 'tar -zxvf output.tar.gz'
-            cmd(rcmd)
-        elif(re.match(r'.*\.(txt|out|err|ipcexe)',outputSelect.value)):
-            with open(outputSelect.value,'r') as fd:
-                for line in fd.readlines():
-                    print(line,end='')
-        else:
-            print('value=(',outputSelect.value,')',sep='')
-    except Exception as ex:
-        print("DIED!",ex)
+            if(outputSelect.value == 'output.tar.gz'):
+                cmd("rm -fr output")
+                rcmd = 'tar -zxvf output.tar.gz'
+                cmd(rcmd)
+            elif(re.match(r'.*\.(txt|out|err|ipcexe)',outputSelect.value)):
+                with open(outputSelect.value,'r') as fd:
+                    for line in fd.readlines():
+                        print(line,end='')
+            else:
+                print('value=(',outputSelect.value,')',sep='')
+        except Exception as ex:
+            print("DIED!",ex)
 
 downloadOpBtn.on_click(download_btn_clicked)
 
 def jobHis_btn_clicked(a):
     g = re.match(r'^\S+', jobSelect.value)
-    if g:
-        jobid = g.group(0)
-        rcmd = "jobs-history -V " + jobid
-        cout = cmd(rcmd)
-        out1 = cout["stdout"]
-        jobHisOp.value = str(out1)
-
+    with logOp:
+        if g:
+            jobid = g.group(0)
+            rcmd = "jobs-history -V " + jobid
+            cout = cmd(rcmd)
+            out1 = cout["stdout"]
+            jobHisOp.value = str(out1)
+    
 jobHisBtn.on_click(jobHis_btn_clicked)
 
 
@@ -578,12 +591,15 @@ def on_change(change):
            
 modelTitle.observe(on_change)
 
-display(modelTitle)
+display(modelBox)
 
 out = Output()
 
 with out:
     display(tab_nest)
+    
 display(out)
+
+display(logOp)
 
 ################################ Finally end ##########################################################
