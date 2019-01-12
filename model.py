@@ -277,14 +277,17 @@ run_item_layout = Layout(
     width = '50%'
 )
 
+jobNameText = Text()
+
 numnodeSlider = IntSlider(value=0, min=1, max=8, step=1)
 numprocSlider = IntSlider(value=0, min=1, max=16, step=1)
 
 runBtn = Button(description='Run', button_style='primary', layout= Layout(width = '50px'))
 
 run_items = [
-    Box([Label(value='The number of nodes', layout = Layout(width = '350px')), numnodeSlider], layout = run_item_layout),
-    Box([Label(value='The number of Processors of each node', layout=Layout(width = '350px')), numprocSlider], 
+    Box([Label(value="Job Name", layout = Layout(width = '350px')), jobNameText], layout = run_item_layout),
+    Box([Label(value="The number of nodes", layout = Layout(width = '350px')), numnodeSlider], layout = run_item_layout),
+    Box([Label(value="The number of Processors of each node", layout=Layout(width = '350px')), numprocSlider], 
         layout= run_item_layout),
     Box([runBtn]),
 ]
@@ -293,7 +296,7 @@ def runfun_btn_clicked(a):
     if (modelTitle.value == "Funwave-tvd"): 
         with logOp:
             cmd("mv input_funwave/input_tmp.txt input_funwave/input.txt")
-            modInput(numnodeSlider.value*numprocSlider.value,"input_funwave/input.txt")
+            modInput(numnodeSlider.value*numprocSlider.value, "input_funwave/input.txt")
             cmd("rm -fr input")
             cmd("mkdir input")
             cmd("cp input_funwave/input.txt input")
@@ -302,7 +305,7 @@ def runfun_btn_clicked(a):
             setvar("INPUT_DIR=${AGAVE_USERNAME}_$(date +%Y-%m-%d_%H-%M-%S)")
             cmd("files-mkdir -S ${STORAGE_MACHINE} -N inputs/${INPUT_DIR}")
             cmd("files-upload -F input.tgz -S ${STORAGE_MACHINE} inputs/${INPUT_DIR}/")
-            submitJob(numnodeSlider.value,numprocSlider.value,"funwave")
+            submitJob(numnodeSlider.value, numprocSlider.value, "funwave", jobNameText.value)
         
     elif (modelTitle.value == "SWAN"): 
         with logOp:
@@ -314,7 +317,7 @@ def runfun_btn_clicked(a):
             setvar("INPUT_DIR=${AGAVE_USERNAME}_$(date +%Y-%m-%d_%H-%M-%S)")
             cmd("files-mkdir -S ${STORAGE_MACHINE} -N inputs/${INPUT_DIR}")
             cmd("files-upload -F input.tgz -S ${STORAGE_MACHINE} inputs/${INPUT_DIR}/")
-            submitJob(numnodeSlider.value,numprocSlider.value,"swan") 
+            submitJob(numnodeSlider.value, numprocSlider.value, "swan", jobNameText.value) 
     
 runBtn.on_click(runfun_btn_clicked)
 
@@ -410,7 +413,8 @@ def jobHis_btn_clicked(a):
             cout = cmd(rcmd)
             out1 = cout["stdout"]
             jobHisOp.value = str(out1)
-    
+            #jdata=json.loads("".join(cout["stdout"]))
+            #jobHisOp.value = str(cout) 
 jobHisBtn.on_click(jobHis_btn_clicked)
 
 

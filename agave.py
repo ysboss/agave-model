@@ -331,10 +331,10 @@ def configure(agave_username, machine_username, machine_name, project_name):
     
     print ("Successfully configured Agave")
 
-def submitJob(nodes,procs,model):
+def submitJob(nodes, procs, model, jobName):
     
-    setvar("MODEL="+model)
-    setvar("JOB_NAME=job-${MODEL}")
+    setvar("MODEL="+ model)
+    setvar("JOB_NAME="+ jobName)
     
     if "PBTOK" in os.environ:
         writefile("job.txt","""
