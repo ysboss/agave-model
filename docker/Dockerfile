@@ -15,10 +15,11 @@ RUN git clone http://github.com/agaveplatform/agave-cli cli
 ENV PATH /usr/local/cli/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/usr/local/sbin:/sbin
 RUN touch /etc/bashrc
 
-WORKDIR /
+COPY runuser.sh /usr/local/bin/runuser.sh
+RUN chmod +x /usr/local/bin/runuser.sh
+RUN useradd -m jovyan -u 1200
+ENV HOME /home/jovyan
+WORKDIR /home/jovyan
 
-COPY mkuser.sh mkuser.sh
-COPY runuser.sh runuser.sh
-RUN chmod +x runuser.sh
-
-CMD bash mkuser.sh
+ENV PATH /usr/local/cli/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/usr/local/sbin:/sbin
+CMD /usr/local/bin/runuser.sh

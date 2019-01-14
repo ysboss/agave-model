@@ -1,33 +1,20 @@
 #!/bin/bash
-set -x
-cd /home/jupuser
-export HOME=/home/jupuser
-#U=$(id -u)
-#if [ $U = 0 ]
-#then
-#  echo Error: running as root >&2
-#  exit 2
-#fi
 
 if [ ! -d agave-model ]
 then
   git clone https://github.com/ysboss/agave-model.git
-
-  cd agave-model
-
-  #git clone https://bitbucket.org/agaveapi/cli.git
-
   git config --global user.email "syuan@lsu.edu"
   git config --global user.name "Shuai Yuan"
-else
-
-  cd agave-model
-
-  # Clean the working repo
-  git checkout -- .
-
-  # Pull the newest changes
-  git pull origin $(git rev-parse --abbrev-ref HEAD)
 fi
+cd agave-model
 
-PATH=/usr/local/cli/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/usr/local/sbin:/sbin jupyter notebook --ip=0.0.0.0 --port=8003 --no-browser --allow-root
+SECRET_TOKEN=$(< /dev/urandom tr -dc _A-Z-a-z-0-9 | head -c${1:-32};echo;)
+echo
+echo "To access the notebook, open this file in a browser copy and paste this URL:"
+echo
+echo " http://localhost:8003/?token=${SECRET_TOKEN}"
+echo
+jupyter notebook --ip=0.0.0.0 --port=8003 --no-browser --NotebookApp.token="${SECRET_TOKEN}"
+
+# One can also create a custom URL
+# jupyter notebook --ip=0.0.0.0 --port=8003 --no-browser --NotebookApp.custom_display_url="http://localhost:8003"
