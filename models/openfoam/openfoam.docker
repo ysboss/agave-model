@@ -1,0 +1,6 @@
+FROM openfoamplus/of_v1812_centos73
+RUN useradd -m jovyan
+USER jovyan
+ENV HOME /home/jovyan
+WORKDIR $HOME
+# Need to have /usr/local/bin/runapp.sh
