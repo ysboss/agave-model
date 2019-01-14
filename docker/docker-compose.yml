@@ -5,7 +5,7 @@ volumes:
 
 services:
   agave-model:
-    image: agave-model
+    image: lsucrc/agave-model
     container_name: cmr
     user: jovyan
     ports:
