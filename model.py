@@ -3,6 +3,7 @@ import os, re
 import numpy as np
 from ipywidgets import interactive, Layout, Button, Box, HBox, VBox, Text, Dropdown, Label, IntSlider, Textarea, Accordion, ToggleButton, ToggleButtons, Select, HTMLMath, FloatRangeSlider, Output, Tab
 from IPython.display import display, clear_output, HTML
+import json
 
 from agave import *
 from setvar import *
@@ -279,6 +280,14 @@ run_item_layout = Layout(
 
 jobNameText = Text()
 
+machines = Dropdown()
+queues = Dropdown()
+
+with open("exec.txt","r") as fd:
+    fi = json.load(fd)
+    queues.options = [fi["queues"][0]["name"]]
+    machines.options = [fi["id"]]
+
 numnodeSlider = IntSlider(value=0, min=1, max=8, step=1)
 numprocSlider = IntSlider(value=0, min=1, max=16, step=1)
 
@@ -286,6 +295,8 @@ runBtn = Button(description='Run', button_style='primary', layout= Layout(width 
 
 run_items = [
     Box([Label(value="Job Name", layout = Layout(width = '350px')), jobNameText], layout = run_item_layout),
+    Box([Label(value="Machine", layout = Layout(width = '350px')), machines], layout = run_item_layout),
+    Box([Label(value="Queue", layout = Layout(width = '350px')), queues], layout = run_item_layout),
     Box([Label(value="The number of nodes", layout = Layout(width = '350px')), numnodeSlider], layout = run_item_layout),
     Box([Label(value="The number of Processors of each node", layout=Layout(width = '350px')), numprocSlider], 
         layout= run_item_layout),
@@ -305,7 +316,7 @@ def runfun_btn_clicked(a):
             setvar("INPUT_DIR=${AGAVE_USERNAME}_$(date +%Y-%m-%d_%H-%M-%S)")
             cmd("files-mkdir -S ${STORAGE_MACHINE} -N inputs/${INPUT_DIR}")
             cmd("files-upload -F input.tgz -S ${STORAGE_MACHINE} inputs/${INPUT_DIR}/")
-            submitJob(numnodeSlider.value, numprocSlider.value, "funwave", jobNameText.value)
+            submitJob(numnodeSlider.value, numprocSlider.value, "funwave", jobNameText.value, machines.value, queues.value)
         
     elif (modelTitle.value == "SWAN"): 
         with logOp:
@@ -317,7 +328,7 @@ def runfun_btn_clicked(a):
             setvar("INPUT_DIR=${AGAVE_USERNAME}_$(date +%Y-%m-%d_%H-%M-%S)")
             cmd("files-mkdir -S ${STORAGE_MACHINE} -N inputs/${INPUT_DIR}")
             cmd("files-upload -F input.tgz -S ${STORAGE_MACHINE} inputs/${INPUT_DIR}/")
-            submitJob(numnodeSlider.value, numprocSlider.value, "swan", jobNameText.value) 
+            submitJob(numnodeSlider.value, numprocSlider.value, "swan", jobNameText.value, machines.value, queues.value) 
     
 runBtn.on_click(runfun_btn_clicked)
 
