@@ -381,7 +381,7 @@ downloadOpBtn = Button(description='Download', button_style='primary', layout= L
 
 jobHisBtn = Button(description='Job history', button_style='primary', layout= Layout(width = '115px'))
 
-jobHisOp = Textarea(layout = Layout(height = '336px', width='100%'))
+jobHisSelect = Select(layout = Layout(height = '336px', width='100%'))
 
 def jobList_btn_clicked(a):
     with logOp:
@@ -450,9 +450,8 @@ def jobHis_btn_clicked(a):
             rcmd = "jobs-history -V " + jobid
             cout = cmd(rcmd)
             out1 = cout["stdout"]
-            jobHisOp.value = str(out1)
-            #jdata=json.loads("".join(cout["stdout"]))
-            #jobHisOp.value = str(cout) 
+            jobHisSelect.options = out1
+    
 jobHisBtn.on_click(jobHis_btn_clicked)
 
 
@@ -466,7 +465,7 @@ output_items_left = [
 
 output_items_right = [
     Box([jobHisBtn]),
-    Box([jobHisOp],layout = Layout(width='100%'))
+    Box([jobHisSelect],layout = Layout(width='100%'))
 ]
 
 outputBox = HBox([VBox(output_items_left, layout = Layout(width='50%')), VBox(output_items_right, layout = Layout(width='50%'))],
