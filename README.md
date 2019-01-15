@@ -12,6 +12,16 @@ cd agave-model/docker
 docker-compose up
 ```
 
+When the container starts up, you will be shown an URL which you can copy into your local browser to access the notebook.
+
+Because the container names the image `cmr` you can use docker commands like the following to move data
+into and out of the image:
+
+```
+docker cp input.tgz cmr:/home/jovyan/agave-model/
+docker cp cmr:/home/jovyan/agave-model/output.tgz .
+```
+
 ## Using the Collaboratory
 
 The first time you use the Collaboratory, you will need to configure it. To do this, click on the `configuration2.ipynb` notebook and execute the first cell. You will then be prompted to provide your Agave password and username. You can get this credential from here: http://togo.agaveplatform.org/auth/#/login
