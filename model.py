@@ -305,7 +305,7 @@ run_item_layout = Layout(
     width = '50%'
 )
 
-jobNameText = Text()
+jobNameText = Text(value = 'myjob')
 
 machines = Dropdown()
 queues = Dropdown()
