@@ -8,6 +8,8 @@ then
 fi
 cd agave-model
 
+sudo tzupdate
+
 SECRET_TOKEN=$(< /dev/urandom tr -dc _A-Z-a-z-0-9 | head -c${1:-32};echo;)
 echo
 echo "To access the notebook, open this file in a browser copy and paste this URL:"

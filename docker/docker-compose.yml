@@ -5,11 +5,13 @@ volumes:
 
 services:
   agave-model:
+    build:
+        context: .
+        dockerfile: Dockerfile
     image: lsucrc/agave-model
     container_name: cmr
     user: jovyan
     ports:
       - '8003:8003'
     volumes:
-      - /etc/localtime:/etc/localtime:ro
       - homefs-agave-model:/home/jovyan
