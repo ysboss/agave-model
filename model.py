@@ -18,7 +18,7 @@ from modInput import modInput
 logOp = Output()
 clearLogBtn = Button(description='Clear log', button_style='primary', layout = Layout(width = '115px'))
 
-modelTitle = Dropdown(options=['SWAN', 'Funwave-tvd','Delft3D'])
+modelTitle = Dropdown(options=['SWAN', 'Funwave-tvd','Delft3D', 'OpenFoam'])
 modelBox = Box([modelTitle, clearLogBtn], 
                layout = Layout(display = 'flex', flex_flow = 'row', justify_content = 'space-between', width = '100%'))
 
@@ -26,10 +26,6 @@ def clearLog_btn_clicked(a):
     logOp.clear_output()
 
 clearLogBtn.on_click(clearLog_btn_clicked)
-
-
-delft3d_items=[Label(value='Coming soon', layout = Layout(width = '200px'))]   
-delft3dBox = Box(delft3d_items, layout= Layout(flex_flow = 'column', align_items='stretch', disabled=False))
 
 fw_para_pairs ={
     "TOTAL_TIME":"",
@@ -265,7 +261,38 @@ fwInputArea = Textarea(layout= Layout(height = "300px",width = '100%'))
 fwInputBox = Box([fwInputdd, inputBox, fwUpInputBtn, fwInputArea], 
                   layout = Layout(flex_flow = 'column', align_items = 'center'))
 
-##################################### Funwave-tvd Input tab end ################################
+##################################### Funwave-tvd Input tab end ###############################
+
+
+
+
+
+
+##################################### Delft3D Input tab ######################################
+
+delft3d_items=[Label(value='Coming soon', layout = Layout(width = '200px'))]   
+delft3dBox = Box(delft3d_items, layout= Layout(flex_flow = 'column', align_items='stretch', disabled=False))
+
+##################################### Delft3D Input tab end ###############################
+
+
+
+
+
+
+##################################### OpenFoam Input tab ######################################
+
+openfoamDd = Dropdown()
+
+ofInputBox = Box([openfoamDd], 
+                 layout = Layout(flex_flow = 'column', align_items = 'center'))
+
+##################################### OpenFoam Input tab end ###############################
+
+
+
+
+
 
 
 
@@ -573,6 +600,40 @@ fwVisuAcd.set_title(2,'3D')
 ############################### Funwave Visualization tab end ##########################################
 
 
+
+
+
+
+############################### Delft3D Visualization tab    ##########################################
+
+delft3d_visu=[Label(value='Coming soon', layout = Layout(width = '200px'))]   
+delft3dVisuBox = Box(delft3d_items, layout= Layout(flex_flow = 'column', align_items='stretch', disabled=False))
+
+
+
+############################### Delft3D Visualization tab end ##########################################
+
+
+
+
+
+
+
+############################### OpenFoam Visualization tab    ##########################################
+
+openfoam_visu=[Label(value='Coming soon', layout = Layout(width = '200px'))]   
+openfoamVisuBox = Box(delft3d_items, layout= Layout(flex_flow = 'column', align_items='stretch', disabled=False))
+
+
+############################### OpenFoam Visualization tab end ##########################################
+
+
+
+
+
+
+
+
 ################################ Finally ##########################################################
         
 tab_nest = Tab()
@@ -588,20 +649,25 @@ clear_output()
 
 def on_change(change):
     if change['type'] == 'change' and change['name'] == 'value':
-        if(change['new'] == "SWAN"):
+        if(change['new'] == 'SWAN'):
             out.clear_output()
             with out:
                 tab_nest.children = [SwanInputBox, runBox, outputBox, swanVisuAcd]
                 display(tab_nest)
-        if(change['new'] == "Funwave-tvd"):
+        if(change['new'] == 'Funwave-tvd'):
             out.clear_output()
             with out:
                 tab_nest.children = [fwInputBox, runBox, outputBox, fwVisuAcd]
                 display(tab_nest)
-        if(change['new'] == "Delft3D"):
+        if(change['new'] == 'Delft3D'):
             out.clear_output()
             with out:
-                tab_nest.children = [delft3dBox, runBox, outputBox, swanVisuAcd]
+                tab_nest.children = [delft3dBox, runBox, outputBox, delft3dVisuBox]
+                display(tab_nest)
+        if(change['new'] == 'OpenFoam'):
+            out.clear_output()
+            with out:
+                tab_nest.children = [ofInputBox, runBox, outputBox, openfoamVisuBox]
                 display(tab_nest)
            
 modelTitle.observe(on_change)
