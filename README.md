@@ -24,10 +24,19 @@ docker cp cmr:/home/jovyan/agave-model/output.tgz .
 
 ## Using the Collaboratory
 
-The first time you use the Collaboratory, you will need to configure it. To do this, click on the `configuration2.ipynb` notebook and execute the first cell. You will then be prompted to provide your Agave password and username. You can get this credential from here: http://togo.agaveplatform.org/auth/#/login
+The first time you use the Collaboratory, you will need to configure it.
 
-Once you fill in this information, your screen should look similar to this:
+Please use the notebook page:
+```
+http://localhost:8003/notebooks/UserConfigurator.ipynb
+```
 
-<img src='images/Config.png'>
+You only need to run this web page once. After it is complete, you can run the models by going to the notebook page:
+```
+http://localhost:8003/notebooks/UserConfigurator.ipynb
+http://localhost:8003/notebooks/model.ipynb
+```
 
-The other parameters for running jobs through the collaboratory have been prepopulated with those needed to run on LSU resources. If you wish to use those resources, please email sbrandt@cct.lsu.edu and ask for authorization.
+If you wish to run your code lsu resources, please email sbrandt@cct.lsu.edu and ask for authorization.
+
+If you have questions, please email sbrandt@cct.lsu.edu. Thanks!
