@@ -5,9 +5,10 @@ volumes:
 
 services:
   agave-model:
-    build:
-        context: .
-        dockerfile: Dockerfile
+    # Uncomment the next lines if you want to build
+    #build:
+    #    context: .
+    #    dockerfile: Dockerfile
     image: lsucrc/agave-model
     container_name: cmr
     user: jovyan
