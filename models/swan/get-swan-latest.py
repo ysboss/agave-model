@@ -2,24 +2,18 @@ from bs4 import BeautifulSoup
 import requests, re, os
 from command import cmd
 
-mainurl = "http://swanmodel.sourceforge.net/download/download.htm"
-g = re.match(r'(.*)/',mainurl)
-baseurl = g.group(1)
+import json
+jsonurl = "https://sourceforge.net/projects/swanmodel/best_release.json"
+r = requests.get(jsonurl)
+jd = json.loads(r.text)
+url = jd["platform_releases"]["linux"]["url"]
+filename = jd["platform_releases"]["linux"]["filename"]
+ftar = re.sub(r'.*/','',filename)
+fbase = re.sub(r'.tar.gz$','',ftar)
 
-r = requests.get(mainurl)
-bs = BeautifulSoup(r.text,features='html5lib')
-
-for a in bs.find_all('a', href=True):
-    if a.get_text().strip() == 'here':
-      url = baseurl+"/"+a["href"]
-      print(url)
-      g = re.search(r'swan(\d+)\.',a["href"])
-      ver = int(g.group(1))
-      print("Version:",ver)
-      cmd("curl -kLO %s" % url)
-      cmd("tar xzvf swan%d.tar.gz" % ver)
-      os.chdir("swan%d" % ver)
-      cmd("make config")
-      cmd("make mpi")
-      cmd("cp swan.exe /usr/local/bin")
-      break
+cmd("curl -kL %s -o %s" % (url,fbase))
+cmd("tar xzvf %s" % fbase)
+os.chdir(fbase)
+cmd("make config")
+cmd("make mpi")
+cmd("cp swan.exe /usr/local/bin")
