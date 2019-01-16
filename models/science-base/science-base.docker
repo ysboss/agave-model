@@ -1,29 +1,37 @@
-FROM ubuntu:16.04
+FROM ubuntu:xenial
 
 MAINTAINER Steven R. Brandt <sbrandt@cct.lsu.edu>
 
 # add build tools and python to the sandbox
+# Note: Agave requires openssh-server to be present
 RUN apt-get update && \
     apt-get install -y --allow-unauthenticated make build-essential \
                        wget gcc g++ git gfortran git patch flex vim \
                        curl openssh-server python3 python3-pip && \
     apt-get purge
 
-RUN pip3 install beautifulsoup4 html5lib
-WORKDIR /home
-COPY get-mpich-version.py get-mpich-version.py
-RUN python3 get-mpich-version.py
+ENV MPICH_VER 3.1.4
+RUN curl -kLO http://www.mpich.org/static/downloads/$MPICH_VER/mpich-$MPICH_VER.tar.gz
+RUN tar xzf mpich-$MPICH_VER.tar.gz
+WORKDIR /mpich-$MPICH_VER
+RUN ./configure --prefix=/usr/local/mpich
+RUN make install -j 20
+ENV PATH /usr/local/mpich/bin:$PATH
+ENV LD_LIBRARY_PATH /usr/local/mpich/lib:$LD_LIBRARY_PATH
 
-#COPY get-cmake-version.py get-cmake-version.py
-#RUN python3 get-cmake-version.py
+WORKDIR /
+ENV H5_MIN_VER 1.8
+ENV H5_MAJ_VER 1.8.21
+RUN curl -kLO https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-$H5_MIN_VER/hdf5-$H5_MAJ_VER/src/hdf5-$H5_MAJ_VER.tar.gz
+RUN tar xzf hdf5-$H5_MAJ_VER.tar.gz
+WORKDIR hdf5-$H5_MAJ_VER
+ENV CC /usr/local/mpich/bin/mpicc
+RUN ./configure --enable-fortran --enable-shared --enable-parallel
+RUN make install -j 2
 
-#RUN apt-get install -y unzip
-COPY get-hdf5-version.py get-hdf5-version.py
-RUN python3 get-hdf5-version.py
-RUN mkdir -p /lib/mpichabhi
-
+# Some older LSU machines need to accept dsa
 RUN echo PubkeyAcceptedKeyTypes +ssh-dss >> /etc/ssh/ssh_config
+
 RUN useradd -m jovyan 
 USER jovyan
 WORKDIR /home/jovyan
-ENV LD_LIBRARY_PATH /lib/mpichabi:/usr/local/lib
