@@ -4,7 +4,7 @@ RUN mkdir /model
 RUN chown jovyan /model
 RUN touch /etc/ssh/ssh_known_hosts
 RUN mkdir /work
-USER jovyan
+#USER jovyan
 
 # download swan source code and extract it 
 WORKDIR /model
@@ -26,7 +26,7 @@ RUN chmod +rx /model/swan4120/swanrun
 #COPY refrac.tar.gz refrac.tar.gz
 #RUN tar -zxvf refrac.tar.gz
 
-USER root
+#USER root
 WORKDIR /usr/local/bin
 RUN echo echo RUNNING SWAN > runapp.sh
 RUN echo cd /workdir/input >> runapp.sh

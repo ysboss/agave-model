@@ -1,0 +1,19 @@
+FROM stevenrbrandt/science-base
+
+USER root
+RUN apt-get install -y libjpeg-turbo?-dev libgsl-dev libpapi-dev libhwloc-dev liblapack-dev pkg-config python libopenmpi-dev libhdf5-openmpi-dev libhdf5-dev libfftw3-dev numactl libssl-dev subversion
+
+USER jovyan
+ENV USER jovyan
+ENV HOME /home/jovyan
+WORKDIR $HOME
+COPY subversion.tgz subversion.tgz
+RUN tar xzvf subversion.tgz
+
+RUN curl -kLO https://raw.githubusercontent.com/gridaphobe/CRL/ET_2018_09/GetComponents
+RUN curl -kLO https://cct.lsu.edu/~sbrandt/funwave_carpet3.th
+RUN perl GetComponents funwave_carpet3.th
+RUN echo docker-machine > $HOME/.hostname
+WORKDIR $HOME/CactusFW2
+RUN ./simfactory/bin/sim setup-silent
+RUN ./simfactory/bin/sim build --thornlist ../funwave_carpet3.th --mdbkey make 'make -j 20'

@@ -2,27 +2,41 @@
 
 ## Installation and startup
 
-To simplify installation, etc., this collaboratory is distributed as a docker container. Please make sure you have docker installed on the laptop or workstation from which you wish to use it.
+To simplify installation, etc., this collaboratory is distributed as a docker container. Please make sure you have docker and docker-compose installed on the laptop or workstation from which you wish to use it.
+
+To start up the CMR, issue the following commands:
 
 ```
- docker run -it --rm -p 8003:8003 --name model -v /somedirectory:/home/jupuser lsucrc/agave-model
+git clone https://github.com/ysboss/agave-model.git
+cd agave-model/docker
+docker-compose up
 ```
 
-Why these arguments?
+When the container starts up, you will be shown an URL which you can copy into your local browser to access the notebook.
 
-* -it - That makes the docker session interactive
-* --rm - This option will cause docker to clean up after itself when you exit
-* -p 8003:8003 - This option tells docker to open port 8003 so you can connect to the notebook
-* --name model - It is often helpful to give your docker session a name
-* -v /somedirectory:/home/jupuser - This will mount the directory /somedirectory (which should be a real directory that you create somewhere on your machine) as the home directory of jupuser inside the container. This docker image will ensure that jupuser has the same userid as you do on the host machine, which means that you can upload files to the container simply by copying them into the /somedirectory directory (or one of its subdirectories). Configuration and credentials will also be managed in /somedirectory.
-* stevenrbrandt/collaboratory - This is the name of the docker image. You can get updates for this image by typing `docker pull lsucrc/agave-model`
+Because the container names the image `cmr` you can use docker commands like the following to move data
+into and out of the image:
+
+```
+docker cp input.tgz cmr:/home/jovyan/agave-model/
+docker cp cmr:/home/jovyan/agave-model/output.tgz .
+```
 
 ## Using the Collaboratory
 
-The first time you use the Collaboratory, you will need to configure it. To do this, click on the `configuration2.ipynb` notebook and execute the first cell. You will then be prompted to provide your Agave password and username. You can get this credential from here: http://togo.agaveplatform.org/auth/#/login
+The first time you use the Collaboratory, you will need to configure it.
 
-Once you fill in this information, your screen should look similar to this:
+Please use the notebook page:
+```
+http://localhost:8003/notebooks/UserConfigurator.ipynb
+```
 
-<img src='images/Config.png'>
+You only need to run this web page once. After it is complete, you can run the models by going to the notebook page:
+```
+http://localhost:8003/notebooks/UserConfigurator.ipynb
+http://localhost:8003/notebooks/model.ipynb
+```
 
-The other parameters for running jobs through the collaboratory have been prepopulated with those needed to run on LSU resources. If you wish to use those resources, please email sbrandt@cct.lsu.edu and ask for authorization.
+If you wish to run your code lsu resources, please email sbrandt@cct.lsu.edu and ask for authorization.
+
+If you have questions, please email sbrandt@cct.lsu.edu. Thanks!

@@ -3,6 +3,7 @@ import os, re
 import numpy as np
 from ipywidgets import interactive, Layout, Button, Box, HBox, VBox, Text, Dropdown, Label, IntSlider, Textarea, Accordion, ToggleButton, ToggleButtons, Select, HTMLMath, FloatRangeSlider, Output, Tab
 from IPython.display import display, clear_output, HTML
+import json
 
 from agave import *
 from setvar import *
@@ -17,7 +18,7 @@ from modInput import modInput
 logOp = Output()
 clearLogBtn = Button(description='Clear log', button_style='primary', layout = Layout(width = '115px'))
 
-modelTitle = Dropdown(options=['SWAN', 'Funwave-tvd','Delft3D'])
+modelTitle = Dropdown(options=['SWAN', 'Funwave-tvd','Delft3D', 'OpenFoam'])
 modelBox = Box([modelTitle, clearLogBtn], 
                layout = Layout(display = 'flex', flex_flow = 'row', justify_content = 'space-between', width = '100%'))
 
@@ -25,10 +26,6 @@ def clearLog_btn_clicked(a):
     logOp.clear_output()
 
 clearLogBtn.on_click(clearLog_btn_clicked)
-
-
-delft3d_items=[Label(value='Coming soon', layout = Layout(width = '200px'))]   
-delft3dBox = Box(delft3d_items, layout= Layout(flex_flow = 'column', align_items='stretch', disabled=False))
 
 fw_para_pairs ={
     "TOTAL_TIME":"",
@@ -264,7 +261,38 @@ fwInputArea = Textarea(layout= Layout(height = "300px",width = '100%'))
 fwInputBox = Box([fwInputdd, inputBox, fwUpInputBtn, fwInputArea], 
                   layout = Layout(flex_flow = 'column', align_items = 'center'))
 
-##################################### Funwave-tvd Input tab end ################################
+##################################### Funwave-tvd Input tab end ###############################
+
+
+
+
+
+
+##################################### Delft3D Input tab ######################################
+
+delft3d_items=[Label(value='Coming soon', layout = Layout(width = '200px'))]   
+delft3dBox = Box(delft3d_items, layout= Layout(flex_flow = 'column', align_items='stretch', disabled=False))
+
+##################################### Delft3D Input tab end ###############################
+
+
+
+
+
+
+##################################### OpenFoam Input tab ######################################
+
+openfoamDd = Dropdown()
+
+ofInputBox = Box([openfoamDd], 
+                 layout = Layout(flex_flow = 'column', align_items = 'center'))
+
+##################################### OpenFoam Input tab end ###############################
+
+
+
+
+
 
 
 
@@ -277,7 +305,15 @@ run_item_layout = Layout(
     width = '50%'
 )
 
-jobNameText = Text()
+jobNameText = Text(value = 'myjob')
+
+machines = Dropdown()
+queues = Dropdown()
+
+with open("exec.txt","r") as fd:
+    fi = json.load(fd)
+    queues.options = [fi["queues"][0]["name"]]
+    machines.options = [fi["id"]]
 
 numnodeSlider = IntSlider(value=0, min=1, max=8, step=1)
 numprocSlider = IntSlider(value=0, min=1, max=16, step=1)
@@ -286,6 +322,8 @@ runBtn = Button(description='Run', button_style='primary', layout= Layout(width 
 
 run_items = [
     Box([Label(value="Job Name", layout = Layout(width = '350px')), jobNameText], layout = run_item_layout),
+    Box([Label(value="Machine", layout = Layout(width = '350px')), machines], layout = run_item_layout),
+    Box([Label(value="Queue", layout = Layout(width = '350px')), queues], layout = run_item_layout),
     Box([Label(value="The number of nodes", layout = Layout(width = '350px')), numnodeSlider], layout = run_item_layout),
     Box([Label(value="The number of Processors of each node", layout=Layout(width = '350px')), numprocSlider], 
         layout= run_item_layout),
@@ -305,7 +343,7 @@ def runfun_btn_clicked(a):
             setvar("INPUT_DIR=${AGAVE_USERNAME}_$(date +%Y-%m-%d_%H-%M-%S)")
             cmd("files-mkdir -S ${STORAGE_MACHINE} -N inputs/${INPUT_DIR}")
             cmd("files-upload -F input.tgz -S ${STORAGE_MACHINE} inputs/${INPUT_DIR}/")
-            submitJob(numnodeSlider.value, numprocSlider.value, "funwave", jobNameText.value)
+            submitJob(numnodeSlider.value, numprocSlider.value, "funwave", jobNameText.value, machines.value, queues.value)
         
     elif (modelTitle.value == "SWAN"): 
         with logOp:
@@ -317,7 +355,7 @@ def runfun_btn_clicked(a):
             setvar("INPUT_DIR=${AGAVE_USERNAME}_$(date +%Y-%m-%d_%H-%M-%S)")
             cmd("files-mkdir -S ${STORAGE_MACHINE} -N inputs/${INPUT_DIR}")
             cmd("files-upload -F input.tgz -S ${STORAGE_MACHINE} inputs/${INPUT_DIR}/")
-            submitJob(numnodeSlider.value, numprocSlider.value, "swan", jobNameText.value) 
+            submitJob(numnodeSlider.value, numprocSlider.value, "swan", jobNameText.value, machines.value, queues.value) 
     
 runBtn.on_click(runfun_btn_clicked)
 
@@ -343,7 +381,7 @@ downloadOpBtn = Button(description='Download', button_style='primary', layout= L
 
 jobHisBtn = Button(description='Job history', button_style='primary', layout= Layout(width = '115px'))
 
-jobHisOp = Textarea(layout = Layout(height = '336px', width='100%'))
+jobHisSelect = Select(layout = Layout(height = '336px', width='100%'))
 
 def jobList_btn_clicked(a):
     with logOp:
@@ -412,9 +450,8 @@ def jobHis_btn_clicked(a):
             rcmd = "jobs-history -V " + jobid
             cout = cmd(rcmd)
             out1 = cout["stdout"]
-            jobHisOp.value = str(out1)
-            #jdata=json.loads("".join(cout["stdout"]))
-            #jobHisOp.value = str(cout) 
+            jobHisSelect.options = out1
+    
 jobHisBtn.on_click(jobHis_btn_clicked)
 
 
@@ -428,7 +465,7 @@ output_items_left = [
 
 output_items_right = [
     Box([jobHisBtn]),
-    Box([jobHisOp],layout = Layout(width='100%'))
+    Box([jobHisSelect],layout = Layout(width='100%'))
 ]
 
 outputBox = HBox([VBox(output_items_left, layout = Layout(width='50%')), VBox(output_items_right, layout = Layout(width='50%'))],
@@ -562,6 +599,40 @@ fwVisuAcd.set_title(2,'3D')
 ############################### Funwave Visualization tab end ##########################################
 
 
+
+
+
+
+############################### Delft3D Visualization tab    ##########################################
+
+delft3d_visu=[Label(value='Coming soon', layout = Layout(width = '200px'))]   
+delft3dVisuBox = Box(delft3d_items, layout= Layout(flex_flow = 'column', align_items='stretch', disabled=False))
+
+
+
+############################### Delft3D Visualization tab end ##########################################
+
+
+
+
+
+
+
+############################### OpenFoam Visualization tab    ##########################################
+
+openfoam_visu=[Label(value='Coming soon', layout = Layout(width = '200px'))]   
+openfoamVisuBox = Box(delft3d_items, layout= Layout(flex_flow = 'column', align_items='stretch', disabled=False))
+
+
+############################### OpenFoam Visualization tab end ##########################################
+
+
+
+
+
+
+
+
 ################################ Finally ##########################################################
         
 tab_nest = Tab()
@@ -577,20 +648,25 @@ clear_output()
 
 def on_change(change):
     if change['type'] == 'change' and change['name'] == 'value':
-        if(change['new'] == "SWAN"):
+        if(change['new'] == 'SWAN'):
             out.clear_output()
             with out:
                 tab_nest.children = [SwanInputBox, runBox, outputBox, swanVisuAcd]
                 display(tab_nest)
-        if(change['new'] == "Funwave-tvd"):
+        if(change['new'] == 'Funwave-tvd'):
             out.clear_output()
             with out:
                 tab_nest.children = [fwInputBox, runBox, outputBox, fwVisuAcd]
                 display(tab_nest)
-        if(change['new'] == "Delft3D"):
+        if(change['new'] == 'Delft3D'):
             out.clear_output()
             with out:
-                tab_nest.children = [delft3dBox, runBox, outputBox, swanVisuAcd]
+                tab_nest.children = [delft3dBox, runBox, outputBox, delft3dVisuBox]
+                display(tab_nest)
+        if(change['new'] == 'OpenFoam'):
+            out.clear_output()
+            with out:
+                tab_nest.children = [ofInputBox, runBox, outputBox, openfoamVisuBox]
                 display(tab_nest)
            
 modelTitle.observe(on_change)
