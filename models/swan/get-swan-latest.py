@@ -1,4 +1,3 @@
-from bs4 import BeautifulSoup
 import requests, re, os
 from command import cmd
 

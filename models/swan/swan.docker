@@ -1,4 +1,4 @@
-FROM science-base
+FROM stevenrbrandt/science-base
 USER root
 RUN mkdir /model
 RUN chown jovyan /model
