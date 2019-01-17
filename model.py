@@ -19,7 +19,7 @@ from modInput import modInput
 logOp = Output()
 clearLogBtn = Button(description='Clear log', button_style='primary', layout = Layout(width = '115px'))
 
-modelTitle = Dropdown(options=['SWAN', 'Funwave-tvd','Delft3D', 'OpenFoam'])
+modelTitle = Dropdown(options=['SWAN', 'Funwave-tvd','Delft3D', 'OpenFoam', 'Cactus'])
 modelBox = Box([modelTitle, clearLogBtn], 
                layout = Layout(display = 'flex', flex_flow = 'row', justify_content = 'space-between', width = '100%'))
 
@@ -683,6 +683,7 @@ cmd("auth-tokens-refresh")
 clear_output()
 
 def on_change(change):
+    setvar("MODEL_TITLE="+modelTitle.value)
     if change['type'] == 'change' and change['name'] == 'value':
         if(change['new'] == 'SWAN'):
             out.clear_output()
@@ -717,5 +718,8 @@ with out:
 display(out)
 
 display(logOp)
+
+if "MODEL_TITLE" in os.environ:
+    modelTitle.value = os.environ["MODEL_TITLE"]
 
 ################################ Finally end ##########################################################
