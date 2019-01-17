@@ -23,8 +23,6 @@ def load(reload=False,trace=False):
     out = cmd('apps-list',show=False,trace=trace)
     for line in out["stdout"]:
         app = line
-        if re.match(r'.*-2.0-2.0',app):
-            continue
         if not re.match(r'crcollab',app):
             continue
 
