@@ -312,6 +312,7 @@ machines = Dropdown()
 queues = Dropdown()
 
 all_apps = systemdata.load()
+exec_to_app = {}
 
 machines_options = []
 app0 = None
@@ -320,7 +321,9 @@ for app in all_apps:
     # app is one we have permission to use
     if app0 is None and all_apps[app]["perm"] == "RWX":
         app0 = app
-    machines_options += [app]
+    exec_sys = all_apps[app]["exec_sys"]
+    exec_to_app[exec_sys] = app
+    machines_options += [exec_sys]
 
 machines.options = machines_options
 
@@ -328,14 +331,15 @@ machines.options = machines_options
 
 def on_machine_value_set(_):
     queues_options = []
-    app0 = machines.value
+    exec_sys = machines.value
+    app0 = exec_to_app[exec_sys]
     for q in range(len(all_apps[app0]["queues"])):
         queues_options += [all_apps[app0]["queues"][q]["name"]]
     queues.options = queues_options
     queues.value = queues_options[0]
 
 machines.observe(on_machine_value_set)
-machines.value = app0
+machines.value = all_apps[app0]["exec_sys"]
 on_machine_value_set(None)
 
 numnodeSlider = IntSlider(value=0, min=1, max=8, step=1)
@@ -354,6 +358,15 @@ run_items = [
 ]
 
 def runfun_btn_clicked(a):
+    exec_sys = machines.value
+    app = exec_to_app[exec_sys]
+    app_data = all_apps[app]
+    queue = queues.value
+    setvar("APP_NAME=%s" % app)
+    setvar("STORAGE_MACHINE=%s" % app_data["storage_sys"])
+    setvar("EXEC_MACHINE=%s" % exec_sys)
+    setvar("QUEUE=%s" % queue)
+
     if (modelTitle.value == "Funwave-tvd"): 
         with logOp:
             cmd("mv input_funwave/input_tmp.txt input_funwave/input.txt")

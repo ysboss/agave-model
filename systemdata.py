@@ -63,3 +63,27 @@ def load(reload=False,trace=False):
         pickle.dump(all_apps,fd)
 
     return all_apps
+
+def display():
+    d = load(reload=True)
+    print("Applications you have access to:")
+    access = 0
+    for app in d:
+        if d[app]["perm"] == "RWX":
+            print("  -",app)
+            access += 1
+    if access == 0:
+        print("  None")
+    print()
+
+    print("Applications you don't have access to:")
+    noaccess = 0
+    for app in d:
+        if d[app]["perm"] != "RWX":
+            print("  -",app)
+            noaccess += 1
+    if noaccess == 0:
+        print("  None")
+    print()
+
+    print("Please contact sbrandt@cct.lsu.edu for questions")
