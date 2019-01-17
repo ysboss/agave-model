@@ -4,6 +4,7 @@ import numpy as np
 from ipywidgets import interactive, Layout, Button, Box, HBox, VBox, Text, Dropdown, Label, IntSlider, Textarea, Accordion, ToggleButton, ToggleButtons, Select, HTMLMath, FloatRangeSlider, Output, Tab
 from IPython.display import display, clear_output, HTML
 import json
+import systemdata
 
 from agave import *
 from setvar import *
@@ -310,10 +311,32 @@ jobNameText = Text(value = 'myjob')
 machines = Dropdown()
 queues = Dropdown()
 
-with open("exec.txt","r") as fd:
-    fi = json.load(fd)
-    queues.options = [fi["queues"][0]["name"]]
-    machines.options = [fi["id"]]
+all_apps = systemdata.load()
+
+machines_options = []
+app0 = None
+for app in all_apps:
+    # If app0 is not assigned and the current
+    # app is one we have permission to use
+    if app0 is None and all_apps[app]["perm"] == "RWX":
+        app0 = app
+    machines_options += [app]
+
+machines.options = machines_options
+
+#queues.options = queues_options
+
+def on_machine_value_set(_):
+    queues_options = []
+    app0 = machines.value
+    for q in range(len(all_apps[app0]["queues"])):
+        queues_options += [all_apps[app0]["queues"][q]["name"]]
+    queues.options = queues_options
+    queues.value = queues_options[0]
+
+machines.observe(on_machine_value_set)
+machines.value = app0
+on_machine_value_set(None)
 
 numnodeSlider = IntSlider(value=0, min=1, max=8, step=1)
 numprocSlider = IntSlider(value=0, min=1, max=16, step=1)

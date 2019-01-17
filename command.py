@@ -4,7 +4,7 @@ from subprocess import Popen, STDOUT, PIPE
 from shlex import split
 from setvar import repvar
 
-def cmd(arg,show=True,keep_endings=False,inputs=""):
+def cmd(arg,show=True,keep_endings=False,inputs="",trace=True):
     if type(arg) == str:
         pyargs = split(repvar(arg))
     else:
@@ -13,7 +13,7 @@ def cmd(arg,show=True,keep_endings=False,inputs=""):
     errs  = []
     if show:
         print("cmd:"," ".join(pyargs))
-    else:
+    elif trace:
         print("cmd:",pyargs[0],"...")
     with Popen(pyargs,stderr=PIPE,stdout=PIPE,stdin=PIPE,close_fds=True) as pipe:
         pipe.stdin.write(inputs.encode())
