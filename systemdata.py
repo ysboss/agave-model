@@ -70,7 +70,7 @@ def display():
     print("Applications you have access to:")
     access = 0
     for app in d:
-        if d[app]["perm"] == "RWX":
+        if d[app]["perm"] in ["RWX", "RX"]:
             print("  -",app)
             access += 1
     if access == 0:
@@ -80,7 +80,7 @@ def display():
     print("Applications you don't have access to:")
     noaccess = 0
     for app in d:
-        if d[app]["perm"] != "RWX":
+        if d[app]["perm"] not in ["RWX", "RX"]:
             print("  -",app)
             noaccess += 1
     if noaccess == 0:

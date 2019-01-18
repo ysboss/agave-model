@@ -34,6 +34,7 @@ fw_para_pairs ={
     "Mglob":"",
     "Nglob":""
 }  
+cac_para_pairs = {}
 
 ######################## Previous end ############################################################
 
@@ -329,15 +330,15 @@ def cacUpInput_btn_clicked(a):
                     print(line, end='', file=fw)
      
     cacInputArea.value = open("input_cactus/input_tmp.txt","r").read()
-    surfaceFrame.max = int(float(inputBox.children[2].children[1].value)/float(inputBox.children[3].children[1].value))
+    print("inputBox.children[3].children[1].value=",float(inputBox.children[3].children[1].value))
+    #surfaceFrame.max = int(float(inputBox.children[2].children[1].value)/float(inputBox.children[3].children[1].value))
     with open("input_cactus/input_tmp.txt", "r") as fw:
             for line in fw.readlines():
                 g = re.search(r'(\w+)\s*=\s*(\S+)',line)
                 if g:
                     para = g.group(1)
                     value = g.group(2)
-                    if para in cac_para_pairs:
-                        cac_para_pairs[para] = value  
+                    cac_para_pairs[para] = value  
     
      
 cacUpInputBtn = Button(description='Update Cactus Input File',button_style='primary', layout=Layout(width='100%'))
@@ -403,7 +404,7 @@ app0 = None
 for app in all_apps:
     # If app0 is not assigned and the current
     # app is one we have permission to use
-    if app0 is None and all_apps[app]["perm"] == "RWX":
+    if app0 is None and all_apps[app]["perm"] in ["RWX", "RX"]:
         app0 = app
     exec_sys = all_apps[app]["exec_sys"]
     exec_to_app[exec_sys] = app
@@ -442,6 +443,12 @@ run_items = [
     Box([runBtn]),
 ]
 
+def get_procs():
+    nx = numXSlider.value
+    ny = numYSlider.value
+    nz = numZSlider.value
+    return (nx*ny*nz,nx,ny,nz)
+
 def runfun_btn_clicked(a):
     exec_sys = machines.value
     app = exec_to_app[exec_sys]
@@ -451,11 +458,20 @@ def runfun_btn_clicked(a):
     setvar("STORAGE_MACHINE=%s" % app_data["storage_sys"])
     setvar("EXEC_MACHINE=%s" % exec_sys)
     setvar("QUEUE=%s" % queue)
+    ppn = 1
+    for i in range(len(app_data["queues"])):
+        if app_data["queues"][i]["name"] == queue:
+            ppn = int(app_data["queues"][i]["ppn"])
+    procs = get_procs()
+
+    nodes = procs[0]//ppn
+    if procs[0] % ppn != 0:
+        nodes += 1
 
     if (modelTitle.value == "Funwave-tvd"): 
         with logOp:
             cmd("mv input_funwave/input_tmp.txt input_funwave/input.txt")
-            modInput(numnodeSlider.value*numprocSlider.value, "input_funwave/input.txt")
+            modInput(procs[0], "input_funwave/input.txt")
             cmd("rm -fr input")
             cmd("mkdir input")
             cmd("cp input_funwave/input.txt input")
@@ -465,22 +481,22 @@ def runfun_btn_clicked(a):
             cmd("files-mkdir -S ${STORAGE_MACHINE} -N inputs/${INPUT_DIR}")
             cmd("files-upload -F input.tgz -S ${STORAGE_MACHINE} inputs/${INPUT_DIR}/")
 
-            submitJob(numXSlider.value, numYSlider.value, "funwave", jobNameText.value, machines.value, queues.value)
+            submitJob(nodes, procs[0], "funwave", jobNameText.value, machines.value, queues.value)
 
-            #submitJob(numnodeSlider.value, numprocSlider.value, "funwave", jobNameText.value, machines.value, queues.value)
     elif (modelTitle.value == "Cactus"): 
         with logOp:
             cmd("mv input_cactus/input_tmp.txt input_cactus/input.txt")
-            modInput(numnodeSlider.value*numprocSlider.value, "input_funwave/input.txt")
+            modInput(procs[0], "input_funwave/input.txt")
             cmd("rm -fr input")
             cmd("mkdir input")
-            cmd("cp input_funwave/input.txt input")
-            cmd("cp input_funwave/depth.txt input")
+            cmd("cp input_cactus/input.txt input")
+            cmd("cp input_cactus/depth.txt input")
             cmd("tar cvzf input.tgz input")
             setvar("INPUT_DIR=${AGAVE_USERNAME}_$(date +%Y-%m-%d_%H-%M-%S)")
             cmd("files-mkdir -S ${STORAGE_MACHINE} -N inputs/${INPUT_DIR}")
             cmd("files-upload -F input.tgz -S ${STORAGE_MACHINE} inputs/${INPUT_DIR}/")
-            submitJob(numXSlider.value, numYSlider.value, "funwave", jobNameText.value, machines.value, queues.value)
+
+            submitJob(nodes, procs[0], "cactus", jobNameText.value, machines.value, queues.value)
 
         
     elif (modelTitle.value == "SWAN"): 
