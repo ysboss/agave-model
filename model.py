@@ -509,7 +509,7 @@ def runfun_btn_clicked(a):
             setvar("INPUT_DIR=${AGAVE_USERNAME}_$(date +%Y-%m-%d_%H-%M-%S)")
             cmd("files-mkdir -S ${STORAGE_MACHINE} -N inputs/${INPUT_DIR}")
             cmd("files-upload -F input.tgz -S ${STORAGE_MACHINE} inputs/${INPUT_DIR}/")
-            submitJob(numXSlider.value, numYSlider.value, "swan", jobNameText.value, machines.value, queues.value) 
+            submitJob(nodes, procs[0], "swan", jobNameText.value, machines.value, queues.value) 
     
 runBtn.on_click(runfun_btn_clicked)
 
