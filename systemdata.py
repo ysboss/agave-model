@@ -38,8 +38,11 @@ def load(reload=False,trace=False):
         if perm["execute"]:
             perms += "X"
 
-        appdata = cmd('apps-list -v '+app,show=False,trace=trace)
-        jd = json.loads(" ".join(appdata["stdout"]))
+        appdata = cmd('apps-list -V '+app,show=False,trace=True)
+        jtxt = " ".join(appdata["stdout"])
+        jd = json.loads(jtxt)
+        jd = jd["result"]
+
         exec_sys=jd["executionSystem"]
         storage_sys=jd["deploymentSystem"]
         execdata = cmd('systems-list -v '+exec_sys,show=False,trace=trace)
