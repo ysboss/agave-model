@@ -289,7 +289,7 @@ def cac_on_change(change):
     
         with open(inputTmp,"r") as fd:
             for line in fd.readlines():
-                g = re.search(r'(\w+)\s*=\s*\${(.*)}',line)
+                g = re.search(r'([\w:]+)\s*=\s*\${(.*)}',line)
                 if g:
                     for match in re.findall(r'(\w+)=("[^"]*"|\'[^\']*|[^,\n]*)',g.group(2)):
                         if match[0] == 'value':
@@ -322,7 +322,7 @@ def cacUpInput_btn_clicked(a):
         with open(inputTmp, "r") as fd:
             k=0
             for line in fd.readlines():
-                g = re.search(r'(\w+)\s*=\s*\${(.*)}',line)
+                g = re.search(r'([\w:]+)\s*=\s*\${(.*)}',line)
                 if g:
                     print("%s = %s" % (g.group(1),inputBox.children[k].children[1].value),file=fw)
                     k+=1
@@ -334,7 +334,7 @@ def cacUpInput_btn_clicked(a):
     #surfaceFrame.max = int(float(inputBox.children[2].children[1].value)/float(inputBox.children[3].children[1].value))
     with open("input_cactus/input_tmp.txt", "r") as fw:
             for line in fw.readlines():
-                g = re.search(r'(\w+)\s*=\s*(\S+)',line)
+                g = re.search(r'([\w+:])\s*=\s*(\S+)',line)
                 if g:
                     para = g.group(1)
                     value = g.group(2)
