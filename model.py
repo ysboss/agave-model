@@ -282,10 +282,10 @@ delft3dBox = Box(delft3d_items, layout= Layout(flex_flow = 'column', align_items
 
 ##################################### OpenFoam Input tab ######################################
 
-openfoamDd = Dropdown()
+ofCaseName = Text()
 
-ofInputBox = Box([openfoamDd], 
-                 layout = Layout(flex_flow = 'column', align_items = 'center'))
+ofInputBox = Box([Label(value = 'Case Name') , ofCaseName], 
+                 layout = Layout(flex_flow = 'row', align_items = 'center'))
 
 ##################################### OpenFoam Input tab end ###############################
 
@@ -315,8 +315,9 @@ with open("exec.txt","r") as fd:
     queues.options = [fi["queues"][0]["name"]]
     machines.options = [fi["id"]]
 
-numnodeSlider = IntSlider(value=0, min=1, max=8, step=1)
-numprocSlider = IntSlider(value=0, min=1, max=16, step=1)
+numXSlider = IntSlider(value=0, min=1, max=16, step=1)
+numYSlider = IntSlider(value=0, min=1, max=16, step=1)
+numZSlider = IntSlider(value=0, min=1, max=16, step=1)
 
 runBtn = Button(description='Run', button_style='primary', layout= Layout(width = '50px'))
 
@@ -324,9 +325,9 @@ run_items = [
     Box([Label(value="Job Name", layout = Layout(width = '350px')), jobNameText], layout = run_item_layout),
     Box([Label(value="Machine", layout = Layout(width = '350px')), machines], layout = run_item_layout),
     Box([Label(value="Queue", layout = Layout(width = '350px')), queues], layout = run_item_layout),
-    Box([Label(value="The number of nodes", layout = Layout(width = '350px')), numnodeSlider], layout = run_item_layout),
-    Box([Label(value="The number of Processors of each node", layout=Layout(width = '350px')), numprocSlider], 
-        layout= run_item_layout),
+    Box([Label(value="NX", layout = Layout(width = '350px')), numXSlider], layout = run_item_layout),
+    Box([Label(value="NY", layout=Layout(width = '350px')), numYSlider], layout= run_item_layout),
+    Box([Label(value="NZ", layout=Layout(width = '350px')), numZSlider], layout= run_item_layout),
     Box([runBtn]),
 ]
 
@@ -343,7 +344,7 @@ def runfun_btn_clicked(a):
             setvar("INPUT_DIR=${AGAVE_USERNAME}_$(date +%Y-%m-%d_%H-%M-%S)")
             cmd("files-mkdir -S ${STORAGE_MACHINE} -N inputs/${INPUT_DIR}")
             cmd("files-upload -F input.tgz -S ${STORAGE_MACHINE} inputs/${INPUT_DIR}/")
-            submitJob(numnodeSlider.value, numprocSlider.value, "funwave", jobNameText.value, machines.value, queues.value)
+            submitJob(numXSlider.value, numYSlider.value, "funwave", jobNameText.value, machines.value, queues.value)
         
     elif (modelTitle.value == "SWAN"): 
         with logOp:
@@ -355,7 +356,7 @@ def runfun_btn_clicked(a):
             setvar("INPUT_DIR=${AGAVE_USERNAME}_$(date +%Y-%m-%d_%H-%M-%S)")
             cmd("files-mkdir -S ${STORAGE_MACHINE} -N inputs/${INPUT_DIR}")
             cmd("files-upload -F input.tgz -S ${STORAGE_MACHINE} inputs/${INPUT_DIR}/")
-            submitJob(numnodeSlider.value, numprocSlider.value, "swan", jobNameText.value, machines.value, queues.value) 
+            submitJob(numXSlider.value, numYSlider.value, "swan", jobNameText.value, machines.value, queues.value) 
     
 runBtn.on_click(runfun_btn_clicked)
 
