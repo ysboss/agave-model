@@ -26,7 +26,6 @@ def cmd(arg,show=True,keep_endings=False,inputs="",trace=True):
                 kld = ld
             if show:
                 print(ld,end='')
-                os.write(1,line)
             lines += [kld]
         for line in pipe.stderr.readlines():
             ld = line.decode()
@@ -36,7 +35,6 @@ def cmd(arg,show=True,keep_endings=False,inputs="",trace=True):
                 kld = ld
             if show:
                 print(ld,end='')
-                os.write(2,line)
             errs += [kld]
         rc = pipe.wait()
     return {'rc':rc,'stdout':lines,'stderr':errs}
