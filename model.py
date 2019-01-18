@@ -4,6 +4,7 @@ import numpy as np
 from ipywidgets import interactive, Layout, Button, Box, HBox, VBox, Text, Dropdown, Label, IntSlider, Textarea, Accordion, ToggleButton, ToggleButtons, Select, HTMLMath, FloatRangeSlider, Output, Tab
 from IPython.display import display, clear_output, HTML
 import json
+import systemdata
 
 from agave import *
 from setvar import *
@@ -18,7 +19,7 @@ from modInput import modInput
 logOp = Output()
 clearLogBtn = Button(description='Clear log', button_style='primary', layout = Layout(width = '115px'))
 
-modelTitle = Dropdown(options=['SWAN', 'Funwave-tvd','Delft3D', 'OpenFoam'])
+modelTitle = Dropdown(options=['SWAN', 'Funwave-tvd','Delft3D', 'OpenFoam', 'Cactus'])
 modelBox = Box([modelTitle, clearLogBtn], 
                layout = Layout(display = 'flex', flex_flow = 'row', justify_content = 'space-between', width = '100%'))
 
@@ -263,6 +264,90 @@ fwInputBox = Box([fwInputdd, inputBox, fwUpInputBtn, fwInputArea],
 
 ##################################### Funwave-tvd Input tab end ###############################
 
+##################################### Cactus Input tab ################################
+
+
+cacInputdd=Dropdown(options=['Choose Input Template','Basic Template'], value='Choose Input Template')
+
+
+parvals = {}
+inputBox = Box(layout = Layout(flex_flow = 'column'))
+
+def cac_on_change(change):
+    inputTmp = ''
+    items = []
+    if change['type'] == 'change' and change['name'] == 'value':
+        if(change['new'] == 'Choose Input Template'):
+            items=[]
+            inputBox.children = items
+            return
+        if(change['new'] == 'Basic Template'):
+            with logOp:
+                cmd("tar -zxvf input_cactus.tgz")
+            inputTmp = 'input_cactus/basic_template.txt'
+    
+        with open(inputTmp,"r") as fd:
+            for line in fd.readlines():
+                g = re.search(r'(\w+)\s*=\s*\${(.*)}',line)
+                if g:
+                    for match in re.findall(r'(\w+)=("[^"]*"|\'[^\']*|[^,\n]*)',g.group(2)):
+                        if match[0] == 'value':
+                            label = line.split()[0]+'Label'
+                            label = Label(value = line.split()[0].upper()+":")
+                            text = line.split()[0]
+                            text = Text(value=match[1])
+                            box = line.split()[0]+'Box'
+                            box = Box([label, text],layout = Layout(width = '100%', justify_content = 'space-between'))
+                            items.append(box)
+                        if match[0] == 'option':
+                            label = line.split()[0]+'Label'
+                            label = Label(value = line.split()[0].upper()+":")
+                            togBtns = line.split()[0]
+                            togBtns = ToggleButtons(options=['T', 'F'])
+                            box = line.split()[0]+'Box'
+                            box = Box([label, togBtns], layout = Layout(width = '100%', justify_content = 'space-between')) 
+                            items.append(box)
+                        
+        inputBox.children = items
+    
+cacInputdd.observe(cac_on_change)
+  
+def cacUpInput_btn_clicked(a):
+    inputTmp = ''
+    if(cacInputdd.value == 'Basic Template'):
+        inputTmp = 'input_cactus/basic_template.txt'
+        
+    with open("input_cactus/input_tmp.txt", "w") as fw:
+        with open(inputTmp, "r") as fd:
+            k=0
+            for line in fd.readlines():
+                g = re.search(r'(\w+)\s*=\s*\${(.*)}',line)
+                if g:
+                    print("%s = %s" % (g.group(1),inputBox.children[k].children[1].value),file=fw)
+                    k+=1
+                else:
+                    print(line, end='', file=fw)
+     
+    cacInputArea.value = open("input_cactus/input_tmp.txt","r").read()
+    surfaceFrame.max = int(float(inputBox.children[2].children[1].value)/float(inputBox.children[3].children[1].value))
+    with open("input_cactus/input_tmp.txt", "r") as fw:
+            for line in fw.readlines():
+                g = re.search(r'(\w+)\s*=\s*(\S+)',line)
+                if g:
+                    para = g.group(1)
+                    value = g.group(2)
+                    if para in cac_para_pairs:
+                        cac_para_pairs[para] = value  
+    
+     
+cacUpInputBtn = Button(description='Update Cactus Input File',button_style='primary', layout=Layout(width='100%'))
+cacUpInputBtn.on_click(cacUpInput_btn_clicked)
+
+cacInputArea = Textarea(layout= Layout(height = "300px",width = '100%'))
+cacInputBox = Box([cacInputdd, inputBox, cacUpInputBtn, cacInputArea], 
+                  layout = Layout(flex_flow = 'column', align_items = 'center'))
+
+##################################### Cactus Input tab end ###############################
 
 
 
@@ -310,10 +395,36 @@ jobNameText = Text(value = 'myjob')
 machines = Dropdown()
 queues = Dropdown()
 
-with open("exec.txt","r") as fd:
-    fi = json.load(fd)
-    queues.options = [fi["queues"][0]["name"]]
-    machines.options = [fi["id"]]
+all_apps = systemdata.load()
+exec_to_app = {}
+
+machines_options = []
+app0 = None
+for app in all_apps:
+    # If app0 is not assigned and the current
+    # app is one we have permission to use
+    if app0 is None and all_apps[app]["perm"] == "RWX":
+        app0 = app
+    exec_sys = all_apps[app]["exec_sys"]
+    exec_to_app[exec_sys] = app
+    machines_options += [exec_sys]
+
+machines.options = machines_options
+
+#queues.options = queues_options
+
+def on_machine_value_set(_):
+    queues_options = []
+    exec_sys = machines.value
+    app0 = exec_to_app[exec_sys]
+    for q in range(len(all_apps[app0]["queues"])):
+        queues_options += [all_apps[app0]["queues"][q]["name"]]
+    queues.options = queues_options
+    queues.value = queues_options[0]
+
+machines.observe(on_machine_value_set)
+machines.value = all_apps[app0]["exec_sys"]
+on_machine_value_set(None)
 
 numXSlider = IntSlider(value=0, min=1, max=16, step=1)
 numYSlider = IntSlider(value=0, min=1, max=16, step=1)
@@ -332,6 +443,15 @@ run_items = [
 ]
 
 def runfun_btn_clicked(a):
+    exec_sys = machines.value
+    app = exec_to_app[exec_sys]
+    app_data = all_apps[app]
+    queue = queues.value
+    setvar("APP_NAME=%s" % app)
+    setvar("STORAGE_MACHINE=%s" % app_data["storage_sys"])
+    setvar("EXEC_MACHINE=%s" % exec_sys)
+    setvar("QUEUE=%s" % queue)
+
     if (modelTitle.value == "Funwave-tvd"): 
         with logOp:
             cmd("mv input_funwave/input_tmp.txt input_funwave/input.txt")
@@ -344,7 +464,24 @@ def runfun_btn_clicked(a):
             setvar("INPUT_DIR=${AGAVE_USERNAME}_$(date +%Y-%m-%d_%H-%M-%S)")
             cmd("files-mkdir -S ${STORAGE_MACHINE} -N inputs/${INPUT_DIR}")
             cmd("files-upload -F input.tgz -S ${STORAGE_MACHINE} inputs/${INPUT_DIR}/")
+
             submitJob(numXSlider.value, numYSlider.value, "funwave", jobNameText.value, machines.value, queues.value)
+
+            #submitJob(numnodeSlider.value, numprocSlider.value, "funwave", jobNameText.value, machines.value, queues.value)
+    elif (modelTitle.value == "Cactus"): 
+        with logOp:
+            cmd("mv input_cactus/input_tmp.txt input_cactus/input.txt")
+            modInput(numnodeSlider.value*numprocSlider.value, "input_funwave/input.txt")
+            cmd("rm -fr input")
+            cmd("mkdir input")
+            cmd("cp input_funwave/input.txt input")
+            cmd("cp input_funwave/depth.txt input")
+            cmd("tar cvzf input.tgz input")
+            setvar("INPUT_DIR=${AGAVE_USERNAME}_$(date +%Y-%m-%d_%H-%M-%S)")
+            cmd("files-mkdir -S ${STORAGE_MACHINE} -N inputs/${INPUT_DIR}")
+            cmd("files-upload -F input.tgz -S ${STORAGE_MACHINE} inputs/${INPUT_DIR}/")
+            submitJob(numXSlider.value, numYSlider.value, "funwave", jobNameText.value, machines.value, queues.value)
+
         
     elif (modelTitle.value == "SWAN"): 
         with logOp:
@@ -506,6 +643,7 @@ swanVisuAcd.set_title(1,'2D ')
 fwYoption = Dropdown(options=['Choose one','eta','u','v'])
 fwplotsInter = interactive(fwOneD, Y_in_plots = fwYoption)
 fwoneDBox = Box([fwplotsInter])
+caconeDBox = Box([fwplotsInter])
 
 depthBtn = Button(description='display',button_style='primary', layout=Layout(width='auto'))
 depthOutput = Output()
@@ -597,6 +735,11 @@ fwVisuAcd.set_title(0,'1D')
 fwVisuAcd.set_title(1,'2D')
 fwVisuAcd.set_title(2,'3D')
 
+cacVisuAcd = Accordion([caconeDBox, basicAnimBox,rotatingAnimBox])
+cacVisuAcd.set_title(0,'1D')
+cacVisuAcd.set_title(1,'2D')
+cacVisuAcd.set_title(2,'3D')
+
 ############################### Funwave Visualization tab end ##########################################
 
 
@@ -648,6 +791,7 @@ cmd("auth-tokens-refresh")
 clear_output()
 
 def on_change(change):
+    setvar("MODEL_TITLE="+modelTitle.value)
     if change['type'] == 'change' and change['name'] == 'value':
         if(change['new'] == 'SWAN'):
             out.clear_output()
@@ -658,6 +802,11 @@ def on_change(change):
             out.clear_output()
             with out:
                 tab_nest.children = [fwInputBox, runBox, outputBox, fwVisuAcd]
+                display(tab_nest)
+        if(change['new'] == 'Cactus'):
+            out.clear_output()
+            with out:
+                tab_nest.children = [cacInputBox, runBox, outputBox, cacVisuAcd]
                 display(tab_nest)
         if(change['new'] == 'Delft3D'):
             out.clear_output()
@@ -682,5 +831,8 @@ with out:
 display(out)
 
 display(logOp)
+
+if "MODEL_TITLE" in os.environ:
+    modelTitle.value = os.environ["MODEL_TITLE"]
 
 ################################ Finally end ##########################################################
