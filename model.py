@@ -17,6 +17,7 @@ from modInput import modInput
 
 
 logOp = Output()
+logStash = Output()   # use to receive logs that are stashed for user
 clearLogBtn = Button(description='Clear log', button_style='primary', layout = Layout(width = '115px'))
 
 modelTitle = Dropdown(options=['SWAN', 'Funwave-tvd','Delft3D', 'OpenFoam', 'Cactus'])
@@ -368,9 +369,14 @@ delft3dBox = Box(delft3d_items, layout= Layout(flex_flow = 'column', align_items
 
 ##################################### OpenFoam Input tab ######################################
 
-ofCaseName = Text()
+ofCaseName = Dropdown()
 
-ofInputBox = Box([Label(value = 'Case Name') , ofCaseName], 
+with logStash:
+    cmd("tar -zxvf input_openfoam.tgz")
+    with open("input_openfoam/cases.txt", 'r') as fw:
+        ofCaseName.options = fw
+        
+ofInputBox = Box([Label(value = 'Case:') , ofCaseName], 
                  layout = Layout(flex_flow = 'row', align_items = 'center'))
 
 ##################################### OpenFoam Input tab end ###############################
@@ -443,6 +449,13 @@ run_items = [
     Box([runBtn]),
 ]
 
+def modify_openfoam(case):
+    sp = case.split('/')
+    caseName = sp[len(sp)-1]
+    #with open(caseName+"", ')
+    
+
+
 def get_procs():
     nx = numXSlider.value
     ny = numYSlider.value
@@ -510,6 +523,15 @@ def runfun_btn_clicked(a):
             cmd("files-mkdir -S ${STORAGE_MACHINE} -N inputs/${INPUT_DIR}")
             cmd("files-upload -F input.tgz -S ${STORAGE_MACHINE} inputs/${INPUT_DIR}/")
             submitJob(nodes, procs[0], "swan", jobNameText.value, machines.value, queues.value) 
+            
+    elif (modelTitle.value == "OpenFoam"): 
+        with logOp:
+            cmd("rm -fr input")
+            cmd("mkdir input")
+            cmd("cp -r input_openfoam/"+ofCaseName.value+" input")
+            modify_openfoam(ofCaseName.value)
+            
+        
     
 runBtn.on_click(runfun_btn_clicked)
 
