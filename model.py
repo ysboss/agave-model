@@ -453,7 +453,7 @@ def modify_openfoam(case):
     sp = case.split('/')
     caseName = sp[len(sp)-1]
     tmp = ""
-    with open("input/"+caseName.rstrip()+"/system/decomposeParDict", "r") as fd:
+    with open("input/system/decomposeParDict", "r") as fd:
         contents = fd.read()
         procs = get_procs()
         pat1 = r'numberOfSubdomains\s+(\d+)\s*;'
@@ -462,7 +462,7 @@ def modify_openfoam(case):
         d = re.sub(pat2, 'coeffs\n{\n   n   (%d %d %d);\n}\n' %(procs[1], procs[2], procs[3]), c)
         tmp = d
         fd.close()
-    with open("input/"+caseName.rstrip()+"/system/decomposeParDict", "w") as fd:
+    with open("input/system/decomposeParDict", "w") as fd:
         for line in tmp:
             fd.write(line)
         fd.close()
@@ -542,13 +542,13 @@ def runfun_btn_clicked(a):
         with logOp:
             cmd("rm -fr input")
             cmd("mkdir input")
-            cmd("cp -r input_openfoam/"+ofCaseName.value+" input")
+            cmd("cp -a input_openfoam/"+ofCaseName.value[:-1]+"/. input")
             modify_openfoam(ofCaseName.value)
             cmd("tar cvzf input.tgz input")
             setvar("INPUT_DIR=${AGAVE_USERNAME}_$(date +%Y-%m-%d_%H-%M-%S)")
             cmd("files-mkdir -S ${STORAGE_MACHINE} -N inputs/${INPUT_DIR}")
             cmd("files-upload -F input.tgz -S ${STORAGE_MACHINE} inputs/${INPUT_DIR}/")
-            submitJob(nodes, procs[0], "openfoam", jobNameText.value, machines.value, queues.value)
+            #submitJob(nodes, procs[0], "openfoam", jobNameText.value, machines.value, queues.value)
         
     
 runBtn.on_click(runfun_btn_clicked)
