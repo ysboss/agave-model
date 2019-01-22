@@ -5,9 +5,10 @@ ENV HOME /home/jovyan
 WORKDIR $HOME
 
 # Need to have /usr/local/bin/runapp.sh
-RUN echo echo RUNNING OPENFOAM > runapp.sh
+WORKDIR /usr/local/bin/
+RUN echo echo RUNNING OPENFOAM >> runapp.sh
 RUN echo cd /workdir/input >> runapp.sh
-RUN echo mpirun -np \$NP -machinefile /workdir/nodes.txt ./Allrun >> runapp.sh
+RUN echo ./Allrun >> runapp.sh
 RUN chmod +x runapp.sh
 USER jovyan
 
