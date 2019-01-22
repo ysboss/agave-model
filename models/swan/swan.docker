@@ -2,8 +2,6 @@ FROM stevenrbrandt/science-base
 USER root
 RUN mkdir /model
 RUN chown jovyan /model
-RUN touch /etc/ssh/ssh_known_hosts
-RUN mkdir /work
 #USER jovyan
 
 # download swan source code and extract it 
@@ -27,11 +25,8 @@ RUN chmod +rx /model/swan4120/swanrun
 #RUN tar -zxvf refrac.tar.gz
 
 #USER root
-WORKDIR /usr/local/bin
-RUN echo echo RUNNING SWAN > runapp.sh
-RUN echo cd /workdir/input >> runapp.sh
-RUN echo mpirun -np \$NP -machinefile /workdir/nodes.txt /usr/local/bin/swan.exe >> runapp.sh
-RUN chmod +x runapp.sh
+COPY runapp.sh /usr/local/bin/runapp.sh
+RUN chmod +x /usr/local/bin/runapp.sh
 USER jovyan
 
 WORKDIR /workdir

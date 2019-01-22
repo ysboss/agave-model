@@ -31,6 +31,8 @@ RUN make install -j 2
 
 # Some older LSU machines need to accept dsa
 RUN echo PubkeyAcceptedKeyTypes +ssh-dss >> /etc/ssh/ssh_config
+RUN touch /etc/ssh/ssh_known_hosts
+RUN mkdir -p /work
 
 RUN useradd -m jovyan 
 USER jovyan

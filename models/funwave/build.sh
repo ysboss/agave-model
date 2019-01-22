@@ -1,1 +1,1 @@
-docker build --no-cache -f funwave.docker -t stevenrbrandt/funwave .
+docker build -f funwave.docker -t stevenrbrandt/funwave .
