@@ -269,7 +269,7 @@ fwInputBox = Box([fwInputdd, inputBox, fwUpInputBtn, fwInputArea],
 ##################################### Cactus Input tab ################################
 
 
-cacInputdd=Dropdown(options=['Choose Input Template','Basic Template'], value='Choose Input Template')
+cacInputdd=Dropdown(options=['Choose Input Template','Basic Template','HDF5 Template'], value='Choose Input Template')
 
 
 parvals = {}
@@ -287,6 +287,10 @@ def cac_on_change(change):
             with logOp:
                 cmd("tar -zxvf input_cactus.tgz")
             inputTmp = 'input_cactus/basic_template.txt'
+        if(change['new'] == 'HDF5 Template'):
+            with logOp:
+                cmd("tar -zxvf input_cactus.tgz")
+            inputTmp = 'input_cactus/hdf5_template.txt'
     
         with open(inputTmp,"r") as fd:
             for line in fd.readlines():
@@ -318,6 +322,8 @@ def cacUpInput_btn_clicked(a):
     inputTmp = ''
     if(cacInputdd.value == 'Basic Template'):
         inputTmp = 'input_cactus/basic_template.txt'
+    if(cacInputdd.value == 'HDF5 Template'):
+        inputTmp = 'input_cactus/hdf5_template.txt'
         
     with open("input_cactus/input_tmp.txt", "w") as fw:
         with open(inputTmp, "r") as fd:
