@@ -17,6 +17,7 @@ from modInput import modInput
 
 
 logOp = Output()
+logStash = Output()   # use to receive logs that are stashed for user
 clearLogBtn = Button(description='Clear log', button_style='primary', layout = Layout(width = '115px'))
 
 modelTitle = Dropdown(options=['SWAN', 'Funwave-tvd','Delft3D', 'OpenFoam', 'Cactus'])
@@ -368,9 +369,14 @@ delft3dBox = Box(delft3d_items, layout= Layout(flex_flow = 'column', align_items
 
 ##################################### OpenFoam Input tab ######################################
 
-ofCaseName = Text()
+ofCaseName = Dropdown()
 
-ofInputBox = Box([Label(value = 'Case Name') , ofCaseName], 
+with logStash:
+    cmd("tar -zxvf input_openfoam.tgz")
+    with open("input_openfoam/cases.txt", 'r') as fw:
+        ofCaseName.options = fw
+        
+ofInputBox = Box([Label(value = 'Case:') , ofCaseName], 
                  layout = Layout(flex_flow = 'row', align_items = 'center'))
 
 ##################################### OpenFoam Input tab end ###############################
@@ -443,6 +449,27 @@ run_items = [
     Box([runBtn]),
 ]
 
+def modify_openfoam(case):
+    sp = case.split('/')
+    caseName = sp[len(sp)-1]
+    tmp = ""
+    with open("input/system/decomposeParDict", "r") as fd:
+        contents = fd.read()
+        procs = get_procs()
+        pat1 = r'numberOfSubdomains\s+(\d+)\s*;'
+        pat2 = r'coeffs\n\s*{\n\s*n\s*\(\s*(\d+)\s+(\d+)\s+(\d+)\s*\);\s*\n}'
+        c = re.sub(pat1, 'numberOfSubdomains %d;\n' %(procs[0]), contents)
+        d = re.sub(pat2, 'coeffs\n{\n   n   (%d %d %d);\n}\n' %(procs[1], procs[2], procs[3]), c)
+        tmp = d
+        fd.close()
+    with open("input/system/decomposeParDict", "w") as fd:
+        for line in tmp:
+            fd.write(line)
+        fd.close()
+        
+    
+
+
 def get_procs():
     nx = numXSlider.value
     ny = numYSlider.value
@@ -510,6 +537,19 @@ def runfun_btn_clicked(a):
             cmd("files-mkdir -S ${STORAGE_MACHINE} -N inputs/${INPUT_DIR}")
             cmd("files-upload -F input.tgz -S ${STORAGE_MACHINE} inputs/${INPUT_DIR}/")
             submitJob(nodes, procs[0], "swan", jobNameText.value, machines.value, queues.value) 
+            
+    elif (modelTitle.value == "OpenFoam"): 
+        with logOp:
+            cmd("rm -fr input")
+            cmd("mkdir input")
+            cmd("cp -a input_openfoam/"+ofCaseName.value[:-1]+"/. input")
+            modify_openfoam(ofCaseName.value)
+            cmd("tar cvzf input.tgz input")
+            setvar("INPUT_DIR=${AGAVE_USERNAME}_$(date +%Y-%m-%d_%H-%M-%S)")
+            cmd("files-mkdir -S ${STORAGE_MACHINE} -N inputs/${INPUT_DIR}")
+            cmd("files-upload -F input.tgz -S ${STORAGE_MACHINE} inputs/${INPUT_DIR}/")
+            #submitJob(nodes, procs[0], "openfoam", jobNameText.value, machines.value, queues.value)
+        
     
 runBtn.on_click(runfun_btn_clicked)
 

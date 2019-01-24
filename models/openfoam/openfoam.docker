@@ -3,4 +3,16 @@ RUN useradd -m jovyan
 USER jovyan
 ENV HOME /home/jovyan
 WORKDIR $HOME
+
 # Need to have /usr/local/bin/runapp.sh
+USER root
+WORKDIR /usr/local/bin/
+ENV WM_PROJECT_DIR /opt/OpenFOAM/OpenFOAM-v1812
+RUN echo echo RUNNING OPENFOAM >> runapp.sh
+RUN echo cd /workdir/input >> runapp.sh
+RUN echo source /opt/OpenFOAM/setImage_v1812.sh >> runapp.sh
+RUN echo ./Allrun >> runapp.sh
+RUN chmod +x runapp.sh
+USER jovyan
+
+WORKDIR /workdir
