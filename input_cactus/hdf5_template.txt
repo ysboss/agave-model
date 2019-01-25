@@ -1,0 +1,175 @@
+
+#Reorder the parameters for easy comparison to the input.txt in example 3
+ActiveThorns = "CoordBase FunWave FunwaveCoord CartGrid3D Carpet CarpetIOASCII CartGrid3D IOUtil CarpetIOBasic CarpetSlab Boundary SymBase MoL CarpetReduce LocalReduce InitBase CarpetLib LoopControl Tridiagonal"
+
+#----------------------------------------------------
+# Flesh and CCTK parameters
+#----------------------------------------------------
+
+# flesh
+Cactus::cctk_run_title = "Test Run"
+Cactus::cctk_show_schedule = "yes"
+Cactus::cctk_itlast = ${value=100}
+Cactus::allow_mixeddim_gfs = "yes"
+
+# CartGrid3D
+CartGrid3D::type = "coordbase"
+CartGrid3D::avoid_origin = "no"
+CoordBase::domainsize = "minmax"
+CoordBase::spacing    = "gridspacing"
+CoordBase::xmin =  ${value=0}
+CoordBase::xmax =  ${value=30}
+CoordBase::ymin =  ${value=0}
+CoordBase::ymax =  ${value=30}
+CoordBase::zmin =  0.0
+CoordBase::zmax =  0.0
+CoordBase::dx   =  ${value=0.5}
+CoordBase::dy   =  ${value=0.5}
+
+CoordBase::boundary_size_x_lower     = 3
+CoordBase::boundary_size_x_upper     = 3
+CoordBase::boundary_size_y_lower     = 3
+CoordBase::boundary_size_y_upper     = 3
+CoordBase::boundary_size_z_lower     = 0
+CoordBase::boundary_size_z_upper     = 0
+CoordBase::boundary_shiftout_x_lower = 1
+CoordBase::boundary_shiftout_x_upper = 1
+CoordBase::boundary_shiftout_y_lower = 1
+CoordBase::boundary_shiftout_y_upper = 1
+CoordBase::boundary_shiftout_z_lower = 1
+CoordBase::boundary_shiftout_z_upper = 1
+
+# Carpet
+Carpet::domain_from_coordbase = "yes"
+Carpet::ghost_size_x = 3
+Carpet::ghost_size_y = 3
+Carpet::ghost_size_z = 1
+carpet::adaptive_stepsize = yes
+
+# MoL
+MoL::ODE_Method = "RK3"
+MoL::disable_prolongation        = "yes"
+
+# the output dir will be named after the parameter file name
+IO::out_dir = "."
+IO::out_fileinfo="none"
+IOBasic::outInfo_every = 1
+IOBasic::outInfo_vars = "FunWave::eta FunWave::u FunWave::v"
+
+#IOASCII::out1D_every = 1
+#IOASCII::out1d_vars = "FunWave::eta Funwave::depth"
+CarpetIOASCII::compact_format = true
+IOASCII::out2D_every = 1
+IOASCII::out2D_xyplane_z = 0
+#IOASCII::out2D_vars = "FunWave::eta FunWave::u FunWave::v"
+IOASCII::out2D_xz = "no"
+IOASCII::out2D_yz = "no"
+IOASCII::output_ghost_points = "no"
+
+#& = "Funwave::eta"
+
+#----------------------------------------------------
+# Funwave parameters
+#----------------------------------------------------
+
+# Funwave depth 
+FunWave::depth_file_offset_x = 3
+FunWave::depth_file_offset_y = 3
+FunWave::depth_type = "flat"
+FunWave::depth_format = "ele"
+FunWave::depth_file = "/tmp/__depth__.txt"
+FunWave::depth_flat = ${value=0.8}
+#Funwave::test_depth_shore_x = 80
+#Funwave::test_depth_island_x = 40
+#Funwave::test_depth_island_y = 40
+FunWave::depth_xslp = 10.0
+FunWave::depth_slope = 0.05
+FunWave::dt_size = 0
+Funwave::generate_test_depth_data = true
+Funwave::num_wave_components = 1
+Funwave::wave_component_file = "/home/sbrandt/workspace/shi_funwave/example_2/fft/wavemk_per_amp_pha.txt"
+Funwave::peak_period = 1
+
+# import
+Funwave::time_ramp = 1.0
+Funwave::delta_wk = 0.5
+Funwave::dep_wk = 0.45
+Funwave::xc_wk = 3.0
+Funwave::ywidth_wk = 10000.0
+Funwave::tperiod = 1.0
+Funwave::amp_wk = 0.0232
+Funwave::theta_wk = 0.0
+Funwave::freqpeak = 0.2
+Funwave::freqmin = 0.1
+Funwave::freqmax = 0.4
+Funwave::hmo = 1.0
+Funwave::gammatma = 5.0
+Funwave::thetapeak = 10.0
+Funwave::sigma_theta = 15.0
+
+# Funwave wind forcing
+Funwave::wind_force = false
+Funwave::use_wind_mask = false
+Funwave::num_time_wind_data = 2
+Funwave::timewind[0] = 0
+Funwave::wu[0] = 25
+Funwave::wv[0] = 50
+Funwave::timewind[1] = 1000
+Funwave::wu[1] = 100
+Funwave::wv[1] = 100
+Funwave::boundary = funwave
+
+# Funwave wave maker
+FunWave::wavemaker_type = "ini_gau"
+FunWave::xc = ${value=26.5}
+FunWave::yc = ${value=26.9}
+FunWave::amp =  ${value=2.0}
+FunWave::wid =  ${value=1}
+Funwave::wdep = 0.78
+Funwave::xwavemaker = 25.0
+
+# Funwave sponge 
+FunWave::sponge_on = false
+FunWave::sponge_west_width = 2.0
+FunWave::sponge_east_width = 2.0
+FunWave::sponge_north_width = 0.0
+FunWave::sponge_south_width = 0.0
+FunWave::sponge_decay_rate = 0.9
+FunWave::sponge_damping_magnitude = 5.0
+
+# Funwave dispersion (example 3 enables dispersion)
+FunWave::dispersion_on = "true"
+FunWave::gamma1 = 1.0
+FunWave::gamma2 = 1.0
+FunWave::gamma3 = 1.0
+FunWave::beta_ref = -0.531
+FunWave::swe_eta_dep = 0.80
+FunWave::cd = 0.0
+
+# Funwave numerics (MoL parameter controls time integration scheme)
+FunWave::reconstruction_scheme = "fourth"
+FunWave::riemann_solver = "HLLC"
+FunWave::dtfac = 0.5
+FunWave::froudecap = 10.0
+FunWave::mindepth = 0.001
+FunWave::mindepthfrc = 0.001
+FunWave::enable_masks = "true"
+Funwave::estimate_dt_on = "true"
+
+FunwaveCoord::earth_a = 6371000.0
+FunwaveCoord::earth_b = 6371000.0
+
+FunwaveCoord::lat_south = 0
+FunwaveCoord::spherical_coordinates = false
+
+ActiveThorns = "CarpetIOHDF5"
+IOHDF5::out2D_xyplane_z = 0
+IOHDF5::out2D_every = max(Cactus::cctk_itlast/30,1)
+IOHDF5::out2D_vars = "
+  FunWave::eta
+  FunWave::u
+  FunWave::v
+  Grid::Coordinates{out_every=1000000000}
+"
+IOHDF5::out2D_xz = no
+IOHDF5::out2D_yz = no
