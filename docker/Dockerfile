@@ -12,6 +12,7 @@ RUN npm install -g configurable-http-proxy
 RUN pip3 install ipywidgets
 RUN jupyter nbextension enable --py widgetsnbextension
 RUN pip3 install setvar 
+RUN pip3 install h5py
 WORKDIR /usr/local
 RUN git clone http://github.com/agaveplatform/agave-cli cli
 
