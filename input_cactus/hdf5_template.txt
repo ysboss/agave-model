@@ -164,7 +164,7 @@ FunwaveCoord::spherical_coordinates = false
 
 ActiveThorns = "CarpetIOHDF5"
 IOHDF5::out2D_xyplane_z = 0
-IOHDF5::out2D_every = max(Cactus::cctk_itlast/30,1)
+IOHDF5::out2D_every = ${value=1}
 IOHDF5::out2D_vars = "
   FunWave::eta
   FunWave::u
