@@ -4,10 +4,12 @@ FROM ubuntu
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update 
-RUN apt-get install -y g++ make python3-pip python3 wget git make nodejs npm curl jq sshpass sudo ffmpeg bsdmainutils vim tzdata
+RUN apt-get install -y g++ make python3-pip python3 wget git make nodejs npm curl jq sshpass sudo ffmpeg bsdmainutils vim tzdata pkg-config paraview-python
 RUN pip3 install --upgrade pip
 RUN pip3 install jupyter jupyterhub matplotlib==2.0.2 numpy notebook
 RUN npm install -g configurable-http-proxy
+RUN apt-get install -y libcairo2-dev
+RUN apt-get install -y libjpeg9-dev
 
 RUN pip3 install ipywidgets
 RUN jupyter nbextension enable --py widgetsnbextension
