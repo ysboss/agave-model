@@ -1,0 +1,14 @@
+FROM cloudbroker/paraviewweb
+
+RUN useradd -m jovyan -u 1200
+RUN echo "ALL            ALL = (ALL) NOPASSWD: ALL" >> /etc/sudoers
+RUN pip install tzupdate
+
+COPY para-start.sh /usr/local/bin/start.sh
+RUN chmod +x /usr/local/bin/start.sh
+
+ENV HOME /home/jovyan
+WORKDIR /home/jovyan
+RUN chown jovyan /home/jovyan
+
+CMD ["/usr/bin/sudo","/usr/local/bin/start.sh"]
