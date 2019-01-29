@@ -377,13 +377,52 @@ delft3dBox = Box(delft3d_items, layout= Layout(flex_flow = 'column', align_items
 
 ofCaseName = Dropdown()
 
+cases = ["Select Input Case"]
+
 with logStash:
     cmd("tar -zxvf input_openfoam.tgz")
-    with open("input_openfoam/cases.txt", 'r') as fw:
-        ofCaseName.options = fw
-        
-ofInputBox = Box([Label(value = 'Case:') , ofCaseName], 
-                 layout = Layout(flex_flow = 'row', align_items = 'center'))
+    with open("input_openfoam/cases.txt", 'r') as fr:
+        lines = fr.readlines()
+        for line in lines:
+            cases.append(line)
+        ofCaseName.options = cases
+
+def case_on_change(change):
+    if change['type'] == 'change' and change['name'] == 'value':
+        if(change['new'] == 'Select Input Case'):
+            numXSlider.value = 0
+            numYSlider.value = 0
+            numZSlider.value = 0
+            return
+        else:
+            with logOp:
+                with open("input_openfoam/" + ofCaseName.value[:-1] + "/system/decomposeParDict", "r") as fd:
+                    contents = fd.read()
+                    sp = r'(?:\s|//.*)'
+                    pat = re.sub(r'\\s',sp,r'coeffs\s*{\s*n\s+\(\s*(\d+)\s+(\d+)\s+(\d+)\s*\)\s*;\s*}')
+                    #pat = r'coeffs\n\s*{\n\s*n\s*\(\s*(\d+)\s+(\d+)\s+(\d+)\s*\);\s*\n}'
+                    g = re.search(pat, contents)
+                    if g:
+                        numXSlider.value = g.group(1)
+                        numYSlider.value = g.group(2)
+                        numZSlider.value = g.group(3)
+                fd.close()
+                
+ofCaseName.observe(case_on_change)               
+
+def ofUpInput_btn_clicked(a):
+    with open("input_openfoam/" + ofCaseName.value[:-1] + "/system/decomposeParDict", "r") as fd:
+        contents = fd.read()
+        ofInputArea.value = contents;
+    fd.close()
+
+ofUpInputBtn = Button(description='Update OpenFoam Input File',button_style='primary', layout=Layout(width='100%'))
+ofUpInputBtn.on_click(ofUpInput_btn_clicked)
+
+ofInputArea = Textarea(layout= Layout(height = "300px",width = '100%'))
+   
+ofInputBox = Box([ofCaseName, ofUpInputBtn, ofInputArea], 
+                 layout = Layout(flex_flow = 'column', align_items = 'center'))
 
 ##################################### OpenFoam Input tab end ###############################
 
@@ -853,7 +892,8 @@ cmd("auth-tokens-refresh")
 clear_output()
 
 def on_change(change):
-    setvar("MODEL_TITLE="+modelTitle.value)
+    with logOp:
+        setvar("MODEL_TITLE="+modelTitle.value)
     if change['type'] == 'change' and change['name'] == 'value':
         if(change['new'] == 'SWAN'):
             out.clear_output()
