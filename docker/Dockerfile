@@ -1,12 +1,14 @@
-FROM ubuntu
+FROM ubuntu:18.04
 
 # Needed to install tzdata
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update 
-RUN apt-get install -y g++ make python3-pip python3 wget git make nodejs npm curl jq sshpass sudo ffmpeg bsdmainutils vim tzdata pkg-config paraview-python
+RUN apt-get install -y g++ make python python-pip xauth python3-pip python3 wget git make nodejs npm curl jq sshpass sudo ffmpeg bsdmainutils vim tzdata pkg-config paraview-python
 RUN pip3 install --upgrade pip
 RUN pip3 install jupyter jupyterhub matplotlib==2.0.2 numpy notebook
+RUN pip2 install --upgrade pip
+RUN python2 -m pip install ipykernel
 RUN npm install -g configurable-http-proxy
 RUN apt-get install -y libcairo2-dev
 RUN apt-get install -y libjpeg9-dev
@@ -26,6 +28,7 @@ RUN chmod +x /usr/local/bin/runuser.sh
 RUN useradd -m jovyan -u 1200
 RUN echo "ALL            ALL = (ALL) NOPASSWD: ALL" >> /etc/sudoers
 RUN pip3 install tzupdate
+RUN apt-get install -y iproute2 x11-apps net-tools
 USER jovyan
 ENV HOME /home/jovyan
 WORKDIR /home/jovyan

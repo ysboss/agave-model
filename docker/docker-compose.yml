@@ -17,15 +17,3 @@ services:
       - '8003:8003'
     volumes:
       - homefs-agave-model:/home/jovyan
-
-  paraview:
-    build:
-        context: .
-        dockerfile: para.docker
-    image: paraviewweb
-    container_name: para
-    user: jovyan
-    ports:
-      - '8005:80'
-    volumes:
-      - homefs-agave-model:/home/jovyan
