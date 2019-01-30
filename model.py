@@ -1,7 +1,7 @@
 from __future__ import print_function
 import os, re
 import numpy as np
-from ipywidgets import interactive, Layout, Button, Box, HBox, VBox, Text, Dropdown, Label, IntSlider, Textarea, Accordion, ToggleButton, ToggleButtons, Select, HTMLMath, FloatRangeSlider, Output, Tab
+from ipywidgets import interactive, Layout, Button, Box, HBox, VBox, Text, Dropdown, Label, IntSlider, Textarea, Accordion, ToggleButton, ToggleButtons, Select, HTMLMath, FloatRangeSlider, Output, Tab, Checkbox
 from IPython.display import display, clear_output, HTML
 import json
 import systemdata
@@ -41,6 +41,8 @@ cac_para_pairs = {}
 
 
 ######################## SWAN Input tab ############################################################
+
+swanCbox = Checkbox(value = False, description = "Use Own Input")
 
 modeTbtns = ToggleButtons(options=['NONSTAT', 'STAT'])
 dimTbtns = ToggleButtons(options=['TWOD', 'ONED'])
@@ -108,6 +110,12 @@ swanInputAcd.set_title(2,'Output Requests')
 SwanUpInputBtn = Button(description='Update Input File',button_style='primary', layout=Layout(width='100%'))
 
 def swanupdate_btn_clicked(a):
+    if (swanCbox.value == True):
+        with logOp:
+            cmd("rm -f input.tgz")
+            cmd("rm -fr input")
+            cmd("cp -f ../input_swan.tgz input.tgz")
+            return 
     with logOp:
         cmd("tar -zxvf input_swan.tgz")
         cmd("mv input_swan/INPUT input_swan/INPUT_template")
@@ -174,7 +182,7 @@ SwanUpInputBtn.on_click(swanupdate_btn_clicked)
 
 SwanInputArea = Textarea(layout= Layout(height = "300px",width = '100%'))
 
-SwanInputBox = Box([swanInputAcd, SwanUpInputBtn, SwanInputArea], 
+SwanInputBox = Box([swanCbox,swanInputAcd, SwanUpInputBtn, SwanInputArea], 
                  layout = Layout(flex_flow = 'column', align_items = 'center'))
 
 ######################## SWAN Input tab end############################################################
@@ -185,7 +193,7 @@ SwanInputBox = Box([swanInputAcd, SwanUpInputBtn, SwanInputArea],
 
 
 fwInputdd=Dropdown(options=['Choose Input Template','Basic Template'], value='Choose Input Template')
-
+fwCbox = Checkbox(value = False, description = "Use Own Input")
 
 parvals = {}
 inputBox = Box(layout = Layout(flex_flow = 'column'))
@@ -230,10 +238,15 @@ def fw_on_change(change):
 fwInputdd.observe(fw_on_change)
   
 def fwUpInput_btn_clicked(a):
+    if (fwCbox.value == True):
+        with logOp:
+            cmd("rm -f input.tgz")
+            cmd("rm -fr input")
+            cmd("cp -f ../input_funwave.tgz input.tgz")
+            return 
     inputTmp = ''
     if(fwInputdd.value == 'Basic Template'):
         inputTmp = 'input_funwave/basic_template.txt'
-        
     with open("input_funwave/input_tmp.txt", "w") as fw:
         with open(inputTmp, "r") as fd:
             k=0
@@ -244,24 +257,23 @@ def fwUpInput_btn_clicked(a):
                     k+=1
                 else:
                     print(line, end='', file=fw)
-     
     fwInputArea.value = open("input_funwave/input_tmp.txt","r").read()
     surfaceFrame.max = int(float(inputBox.children[2].children[1].value)/float(inputBox.children[3].children[1].value))
     with open("input_funwave/input_tmp.txt", "r") as fw:
-            for line in fw.readlines():
-                g = re.search(r'(\w+)\s*=\s*(\S+)',line)
-                if g:
-                    para = g.group(1)
-                    value = g.group(2)
-                    if para in fw_para_pairs:
-                        fw_para_pairs[para] = value  
+        for line in fw.readlines():
+            g = re.search(r'(\w+)\s*=\s*(\S+)',line)
+            if g:
+                para = g.group(1)
+                value = g.group(2)
+                if para in fw_para_pairs:
+                    fw_para_pairs[para] = value  
     
      
 fwUpInputBtn = Button(description='Update Input File',button_style='primary', layout=Layout(width='100%'))
 fwUpInputBtn.on_click(fwUpInput_btn_clicked)
 
 fwInputArea = Textarea(layout= Layout(height = "300px",width = '100%'))
-fwInputBox = Box([fwInputdd, inputBox, fwUpInputBtn, fwInputArea], 
+fwInputBox = Box([fwInputdd, fwCbox, inputBox, fwUpInputBtn, fwInputArea], 
                   layout = Layout(flex_flow = 'column', align_items = 'center'))
 
 ##################################### Funwave-tvd Input tab end ###############################
@@ -270,7 +282,7 @@ fwInputBox = Box([fwInputdd, inputBox, fwUpInputBtn, fwInputArea],
 
 
 cacInputdd=Dropdown(options=['Choose Input Template','Basic Template','HDF5 Template'], value='Choose Input Template')
-
+cacCbox = Checkbox(value = False, description = "Use Own Input")
 
 parvals = {}
 inputBox = Box(layout = Layout(flex_flow = 'column'))
@@ -319,6 +331,12 @@ def cac_on_change(change):
 cacInputdd.observe(cac_on_change)
   
 def cacUpInput_btn_clicked(a):
+    if (cacCbox.value == True):
+        with logOp:
+            cmd("rm -f input.tgz")
+            cmd("rm -fr input")
+            cmd("cp -f ../input_cactus.tgz input.tgz")
+            return
     inputTmp = ''
     if(cacInputdd.value == 'Basic Template'):
         inputTmp = 'input_cactus/basic_template.txt'
@@ -352,7 +370,7 @@ cacUpInputBtn = Button(description='Update Cactus Input File',button_style='prim
 cacUpInputBtn.on_click(cacUpInput_btn_clicked)
 
 cacInputArea = Textarea(layout= Layout(height = "300px",width = '100%'))
-cacInputBox = Box([cacInputdd, inputBox, cacUpInputBtn, cacInputArea], 
+cacInputBox = Box([cacInputdd, cacCbox, inputBox, cacUpInputBtn, cacInputArea], 
                   layout = Layout(flex_flow = 'column', align_items = 'center'))
 
 ##################################### Cactus Input tab end ###############################
@@ -376,7 +394,7 @@ delft3dBox = Box(delft3d_items, layout= Layout(flex_flow = 'column', align_items
 ##################################### OpenFoam Input tab ######################################
 
 ofCaseName = Dropdown()
-
+ofCbox = Checkbox(value = False, description = "Use Own Input")
 cases = ["Select Input Case"]
 
 with logStash:
@@ -385,43 +403,35 @@ with logStash:
         lines = fr.readlines()
         for line in lines:
             cases.append(line)
-        ofCaseName.options = cases
-
-def case_on_change(change):
-    if change['type'] == 'change' and change['name'] == 'value':
-        if(change['new'] == 'Select Input Case'):
-            numXSlider.value = 0
-            numYSlider.value = 0
-            numZSlider.value = 0
-            return
-        else:
-            with logOp:
-                with open("input_openfoam/" + ofCaseName.value[:-1] + "/system/decomposeParDict", "r") as fd:
-                    contents = fd.read()
-                    sp = r'(?:\s|//.*)'
-                    pat = re.sub(r'\\s',sp,r'coeffs\s*{\s*n\s+\(\s*(\d+)\s+(\d+)\s+(\d+)\s*\)\s*;\s*}')
-                    #pat = r'coeffs\n\s*{\n\s*n\s*\(\s*(\d+)\s+(\d+)\s+(\d+)\s*\);\s*\n}'
-                    g = re.search(pat, contents)
-                    if g:
-                        numXSlider.value = g.group(1)
-                        numYSlider.value = g.group(2)
-                        numZSlider.value = g.group(3)
-                fd.close()
-                
-ofCaseName.observe(case_on_change)               
+        ofCaseName.options = cases       
 
 def ofUpInput_btn_clicked(a):
-    with open("input_openfoam/" + ofCaseName.value[:-1] + "/system/decomposeParDict", "r") as fd:
-        contents = fd.read()
-        ofInputArea.value = contents;
-    fd.close()
+    if (ofCbox.value == True):
+        with logOp:
+            cmd("rm -f input.tgz")
+            cmd("rm -fr input")
+            cmd("cp -f ../input_openfoam.tgz input.tgz")
+            return
+        
+    if not ofCaseName.value == "Select Input Case":
+        with open("input_openfoam/" + ofCaseName.value[:-1] + "/system/decomposeParDict", "r") as fd:
+            contents = fd.read()
+            ofInputArea.value = contents
+            sp = r'(?:\s|//.*)'
+            pat = re.sub(r'\\s',sp,r'coeffs\s*{\s*n\s+\(\s*(\d+)\s+(\d+)\s+(\d+)\s*\)\s*;\s*}')
+            g = re.search(pat, contents)
+            if g:
+                numXSlider.value = g.group(1)
+                numYSlider.value = g.group(2)
+                numZSlider.value = g.group(3)
+        fd.close()
 
 ofUpInputBtn = Button(description='Update OpenFoam Input File',button_style='primary', layout=Layout(width='100%'))
 ofUpInputBtn.on_click(ofUpInput_btn_clicked)
 
 ofInputArea = Textarea(layout= Layout(height = "300px",width = '100%'))
    
-ofInputBox = Box([ofCaseName, ofUpInputBtn, ofInputArea], 
+ofInputBox = Box([ofCaseName, ofCbox, ofUpInputBtn, ofInputArea], 
                  layout = Layout(flex_flow = 'column', align_items = 'center'))
 
 ##################################### OpenFoam Input tab end ###############################
@@ -511,9 +521,6 @@ def modify_openfoam(case):
         for line in tmp:
             fd.write(line)
         fd.close()
-        
-    
-
 
 def get_procs():
     nx = numXSlider.value
@@ -526,10 +533,11 @@ def runfun_btn_clicked(a):
     app = exec_to_app[exec_sys]
     app_data = all_apps[app]
     queue = queues.value
-    setvar("APP_NAME=%s" % app)
-    setvar("STORAGE_MACHINE=%s" % app_data["storage_sys"])
-    setvar("EXEC_MACHINE=%s" % exec_sys)
-    setvar("QUEUE=%s" % queue)
+    with logOp:
+        setvar("APP_NAME=%s" % app)
+        setvar("STORAGE_MACHINE=%s" % app_data["storage_sys"])
+        setvar("EXEC_MACHINE=%s" % exec_sys)
+        setvar("QUEUE=%s" % queue)
     ppn = 1
     for i in range(len(app_data["queues"])):
         if app_data["queues"][i]["name"] == queue:
@@ -542,13 +550,14 @@ def runfun_btn_clicked(a):
 
     if (modelTitle.value == "Funwave-tvd"): 
         with logOp:
-            cmd("mv input_funwave/input_tmp.txt input_funwave/input.txt")
-            modInput(procs[0], "input_funwave/input.txt")
-            cmd("rm -fr input")
-            cmd("mkdir input")
-            cmd("cp input_funwave/input.txt input")
-            cmd("cp input_funwave/depth.txt input")
-            cmd("tar cvzf input.tgz input")
+            if (fwCbox.value == False):
+                cmd("mv input_funwave/input_tmp.txt input_funwave/input.txt")
+                modInput(procs[0], "input_funwave/input.txt")
+                cmd("rm -fr input")
+                cmd("mkdir input")
+                cmd("cp input_funwave/input.txt input")
+                cmd("cp input_funwave/depth.txt input")
+                cmd("tar cvzf input.tgz input")
             setvar("INPUT_DIR=${AGAVE_USERNAME}_$(date +%Y-%m-%d_%H-%M-%S)")
             cmd("files-mkdir -S ${STORAGE_MACHINE} -N inputs/${INPUT_DIR}")
             cmd("files-upload -F input.tgz -S ${STORAGE_MACHINE} inputs/${INPUT_DIR}/")
@@ -557,13 +566,14 @@ def runfun_btn_clicked(a):
 
     elif (modelTitle.value == "Cactus"): 
         with logOp:
-            cmd("mv input_cactus/input_tmp.txt input_cactus/input.txt")
-            modInput(procs[0], "input_funwave/input.txt")
-            cmd("rm -fr input")
-            cmd("mkdir input")
-            cmd("cp input_cactus/input.txt input")
-            cmd("cp input_cactus/depth.txt input")
-            cmd("tar cvzf input.tgz input")
+            if (cacCbox.value == False):
+                cmd("mv input_cactus/input_tmp.txt input_cactus/input.txt")
+                modInput(procs[0], "input_funwave/input.txt")
+                cmd("rm -fr input")
+                cmd("mkdir input")
+                cmd("cp input_cactus/input.txt input")
+                cmd("cp input_cactus/depth.txt input")
+                cmd("tar cvzf input.tgz input")
             setvar("INPUT_DIR=${AGAVE_USERNAME}_$(date +%Y-%m-%d_%H-%M-%S)")
             cmd("files-mkdir -S ${STORAGE_MACHINE} -N inputs/${INPUT_DIR}")
             cmd("files-upload -F input.tgz -S ${STORAGE_MACHINE} inputs/${INPUT_DIR}/")
@@ -573,28 +583,31 @@ def runfun_btn_clicked(a):
         
     elif (modelTitle.value == "SWAN"): 
         with logOp:
-            if not os.path.exists("input_swan"):
-                cmd("tar -zxvf input_swan.tgz")
-            cmd("rm -fr input")
-            cmd("cp -r input_swan input")
-            cmd("tar cvzf input.tgz input")
+            if (swanCbox.value == False):
+                if not os.path.exists("input_swan"):
+                    cmd("tar -zxvf input_swan.tgz")
+                cmd("rm -fr input")
+                cmd("cp -r input_swan input")
+                cmd("tar cvzf input.tgz input")
             setvar("INPUT_DIR=${AGAVE_USERNAME}_$(date +%Y-%m-%d_%H-%M-%S)")
             cmd("files-mkdir -S ${STORAGE_MACHINE} -N inputs/${INPUT_DIR}")
             cmd("files-upload -F input.tgz -S ${STORAGE_MACHINE} inputs/${INPUT_DIR}/")
+            
             submitJob(nodes, procs[0], "swan", jobNameText.value, machines.value, queues.value) 
             
     elif (modelTitle.value == "OpenFoam"): 
         with logOp:
-            cmd("rm -fr input")
-            cmd("mkdir input")
-            cmd("cp -a input_openfoam/"+ofCaseName.value[:-1]+"/. input")
-            modify_openfoam(ofCaseName.value)
-            cmd("tar cvzf input.tgz input")
+            if (ofCbox.value == False):
+                cmd("rm -fr input")
+                cmd("mkdir input")
+                cmd("cp -a input_openfoam/"+ofCaseName.value[:-1]+"/. input")
+                modify_openfoam(ofCaseName.value)
+                cmd("tar cvzf input.tgz input")
             setvar("INPUT_DIR=${AGAVE_USERNAME}_$(date +%Y-%m-%d_%H-%M-%S)")
             cmd("files-mkdir -S ${STORAGE_MACHINE} -N inputs/${INPUT_DIR}")
             cmd("files-upload -F input.tgz -S ${STORAGE_MACHINE} inputs/${INPUT_DIR}/")
+            
             submitJob(nodes, procs[0], "openfoam", jobNameText.value, machines.value, queues.value)
-        
     
 runBtn.on_click(runfun_btn_clicked)
 
