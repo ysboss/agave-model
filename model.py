@@ -42,147 +42,106 @@ cac_para_pairs = {}
 
 ######################## SWAN Input tab ############################################################
 
+swanInputdd = Dropdown(options=['Choose Input Template','Basic Template'], value='Choose Input Template')
 swanCbox = Checkbox(value = False, description = "Use Own Input")
 
-modeTbtns = ToggleButtons(options=['NONSTAT', 'STAT'])
-dimTbtns = ToggleButtons(options=['TWOD', 'ONED'])
-modeBox = Box([Label(value = 'MODE: '), modeTbtns, dimTbtns],layout = Layout(width = '80%', justify_content = 'space-between'))
-
-coordTbtns = ToggleButtons(options=['SPHE', 'CART'])
-spheTbtns = ToggleButtons(options=['None', 'CCM', 'QC'])
-coordBox = Box([Label(value = 'COOR:'), coordTbtns, spheTbtns],
-               layout = Layout(width = '96.8%', justify_content = 'space-between'))
-
-setTbtns = ToggleButtons(options=['NAUT', 'CART'])
-setBox = Box([Label(value = 'SET:'), setTbtns],layout = Layout(width = '42.5%', justify_content = 'space-between'))
-
-fricTbtns = ToggleButtons(options=['JONSWAP', 'COLL', 'MADS'])
-fricText = Text(value = '0.067', layout = Layout(width='60px'))
-fricTxtBox = Box([fricText, HTMLMath(value = r"\(m^2\)/\(s^3\)")])
-fricBox = Box([Label(value = 'FRICTION:'), fricTbtns, fricTxtBox],
-              layout = Layout(width = '72%', justify_content = 'space-between'))
-
-modeStartBox = Box([modeBox, coordBox, setBox, fricBox], layout = Layout(flex_flow = 'column'))
-
-propTbtns = ToggleButtons(options=['BSBT', 'GSE'])
-propBox = Box([Label(value = 'PROP:'), propTbtns],layout = Layout(width = '42.4%', justify_content = 'space-between'))
-
-gen3Tbtns = ToggleButtons(options=['KOMEN', 'JANS', 'WESTH'])
-gen3Box = Box([Label(value = 'GEN3:'), gen3Tbtns],layout = Layout(width = '59.3%', justify_content = 'space-between'))
-
-modelInputBox = Box([propBox, gen3Box], layout = Layout(flex_flow = 'column'))
-
-
-timeBtns = ToggleButtons(options=['0.5', '1', '2'])
-timeBox = Box([Label(value = 'Time Step (h):', layout = Layout(width = '98px')), timeBtns], layout = Layout(width = '90%'))
-
-
-table = ['TIME','XP', 'YP', 'DEP', 'WIND', 'HS', 'DIR', 'RTP', 'PER', 'TM01', 'TM02', 'PDIR']
-
-table_items = []
-for i in range(len(table)):
-    name = table[i].lower()+'Btn'
-    name = ToggleButton(value = True,description = table[i])
-    table_items.append(name)
+swanInput = Box(layout = Layout(flex_flow = 'column'))
+def swan_on_change(change): 
+    inputTmp = ''
+    items = []
+    if change['type'] == 'change' and change['name'] == 'value':
+        if(change['new'] == 'Choose Input Template'):
+            items=[]
+            swanInput.children = items
+            return
+        if(change['new'] == 'Basic Template'):
+            with logOp:
+                cmd("tar -zxvf input_swan.tgz")
+            inputTmp = 'input_swan/basic_template.txt'
+            
+        with open(inputTmp, "r") as fd:
+            for line in fd.readlines():
+                g = re.search(r'[\w:]+\s*.*=*\s*\${(.*)}',line)
+                if g:
+                    label_value = ''
+                    isTB = False
+                    for match in re.findall(r'(\w+)=("[^"]*"|\'[^\']*|[^,\n]*)', g.group(1)):
+                        if match[0] == 'label':
+                            lbs = match[1].split('/')
+                            label_value = lbs[0]
+                            if (len(lbs) == 2):
+                                isTB = True
+                        if match[0] == 'option':
+                            ops = match[1].split('/')
+                            # if the first element of options is 'CO', remove it's label name.
+                            if (ops[0] == 'CO'):
+                                label = Label(layout = Layout(width = "150px"))
+                                if (not isTB):
+                                    togBtns = ToggleButtons(options = ops[1:])
+                                else :
+                                    togBtns = ToggleButton(description = ops[1], value = True)
+                            else :
+                                label = Label(value = label_value + ':', layout = Layout(width = "150px"))
+                                if (not isTB):
+                                    togBtns = ToggleButtons(options = ops)
+                                else :
+                                    togBtns = ToggleButton(description = ops[0], value = True)
+                            box = Box([label, togBtns], layout = Layout(width = '100%', justify_content = 'flex-start'))
+                            items.append(box)
+        fd.close()
+        swanInput.children = items
     
-tableBtnsBox = Box(table_items,layout = Layout(width = '90%', justify_content = 'space-between'))
-tableBox = Box([Label(value = 'Table :', layout = Layout(width = '103px')), tableBtnsBox],layout = Layout(width = '90%'))
-               
-sp1dTbtn = ToggleButton(value = True,description = 'spec1d')
-sp2dTbtn = ToggleButton(value = False,description = 'spec2d')
-specBox = Box([Label(value = 'Spectral :', layout = Layout(width = '100px')), sp1dTbtn, sp2dTbtn], 
-              layout = Layout(width = '90%'))
-
-windTbtn = ToggleButton(value = True,description = 'wind')
-hsTbtn = ToggleButton(value = True,description = 'hs')
-dirTbtn = ToggleButton(value = False,description = 'dir')
-perTbtn = ToggleButton(value = False,description = 'per')
-blockBox = Box([Label(value = 'Block :', layout = Layout(width = '100px')), windTbtn, hsTbtn, dirTbtn, perTbtn], 
-               layout = Layout(width = '90%'))    
+swanInputdd.observe(swan_on_change)
     
-outputRequestBox = Box([timeBox, tableBox, specBox, blockBox], layout = Layout(flex_flow = 'column'))
-
-swanInputAcd = Accordion(children = [modeStartBox,modelInputBox,outputRequestBox], layout= Layout(width = '100%'))
-swanInputAcd.set_title(0,'Model Start-up')
-swanInputAcd.set_title(1,'Model Input')
-swanInputAcd.set_title(2,'Output Requests')
-
-SwanUpInputBtn = Button(description='Update Input File',button_style='primary', layout=Layout(width='100%'))
-
-def swanupdate_btn_clicked(a):
+    
+def swanUpdate_btn_clicked(a):
     if (swanCbox.value == True):
         with logOp:
             cmd("rm -f input.tgz")
             cmd("rm -fr input")
             cmd("cp -f ../input_swan.tgz input.tgz")
             return 
-    with logOp:
-        cmd("tar -zxvf input_swan.tgz")
-        cmd("mv input_swan/INPUT input_swan/INPUT_template")
-    
-    # set sphe method
-    # for CART, there is no method needed. 
-    # for SPHE, there are CCM and QC option. 
-    if spheTbtns.value == "None":
-        spheMethod = ""
-    else:
-        spheMethod = spheTbtns.value
-        
-    table_vars = ""
-    for i in range (len(table_items)):
-        if table_items[i].value == True:
-            table_vars += ' '+table_items[i].description
-        
-    name_value_pairs = {
-        "MODE"      : modeTbtns.value+' '+dimTbtns.value,
-        "COORD"     : coordTbtns.value+' '+spheMethod,
-        "SET"       : setTbtns.value,
-        "FRICTION"  : fricTbtns.value+' '+fricText.value,
-        "PROP"      : propTbtns.value,
-        "GEN3"      : gen3Tbtns.value+' AGROW',
-        "TIME_STEP" : timeBtns.value+' HR',
-        "TABLE"     : table_vars,
-        "SPEC1D"    : sp1dTbtn.value,
-        "SPEC2D"    : sp2dTbtn.value,
-        "WIND"      : windTbtn.value,
-        "HS"        : hsTbtn.value,
-        "DIR"       : dirTbtn.value,
-        "PER"       : perTbtn.value
-    }
-    with open("input_swan/INPUT_template","r") as template:
-        with open("input_swan/INPUT","w+") as ipt:
-            for line in template.readlines():
-                g = re.match("^(MODE|COORD|SET|FRICTION|PROP|GEN3)\s*",line)
-                h = re.match("^(TABLE)(\s*\S*\s\S*\s*\S*)[\w\s]*(OUT\s\S*)(\s*\d\s*\w*)",line)
-                r = re.match("(^(SPEC|BLOCK)[\s\S]*(SPEC1D|SPEC2D|WIND|HS|DIR|PER)[\s\S]*)(\s*\d\s*\w*)",line)
-                s = re.match("^(COMPUTE)\s\S*\s*(\d*\.\d*)\s*(\d\s\S*)\s*(\d*\.\d*)",line)
-                if g: 
-                    name = g.group(1)
-                    if name in name_value_pairs:
-                        ipt.write(name+" "+name_value_pairs[name]+"\n")
-                elif h:
-                    ipt.write(h.group(1)+h.group(2)+name_value_pairs[h.group(1)]+' '+h.group(3)
-                              +' '+name_value_pairs['TIME_STEP']+"\n")
-                elif r:
-                    if name_value_pairs[r.group(3)] == True:
-                        ipt.write(r.group(1)+name_value_pairs['TIME_STEP']+"\n")
-                    else:
-                        ipt.write("$"+r.group(0)+"\n")
-                elif s:
-                    ipt.write(s.group(1)+' '+modeTbtns.value+' '+s.group(2)+' '+name_value_pairs['TIME_STEP']
-                              +' '+s.group(4)+"\n")
+    inputTmp = ''
+    if(swanInputdd.value == 'Basic Template'):
+        inputTmp = 'input_swan/basic_template.txt'
+    with open("input_swan/input_tmp-test.txt", "w") as fw:
+        with open(inputTmp, "r") as fd:
+            k = 0
+            for line in fd.readlines():
+                g = re.search(r'[\w:]+\s*.*=*\s*\${(.*)}' , line)
+                if g:
+                    isTB = False
+                    newVals = []
+                    for match in re.findall(r'(\w+)=("[^"]*"|\'[^\']*|[^,\n]*)', g.group(1)):
+                        if match[0] == 'label':
+                            lbs = match[1].split('/')
+                            if (len(lbs) == 2):
+                                isTB = True
+                        if match[0] == 'option':
+                            if not isTB:
+                                newVals.append(swanInput.children[k].children[1].value)
+                            else:
+                                if (swanInput.children[k].children[1].value):
+                                    newVals.append(swanInput.children[k].children[1].description)
+                            k+=1
+                    newLine = ''
+                    for item in newVals:
+                        newLine = newLine + ' ' + item + ' '
+                    tmpLine = re.sub(r'\${.*}', newLine, line)
+                    fw.write(tmpLine)
                 else:
-                    ipt.write(line)
-            ipt.close()
-        template.close()
-   
-    SwanInputArea.value = open("input_swan/INPUT","r").read()
-    
-SwanUpInputBtn.on_click(swanupdate_btn_clicked)
+                    fw.write(line)
+        fd.close()
+    fw.close()
+    swanInputArea.value = open("input_swan/input_tmp-test.txt", "r").read()
+                    
+                 
+swanUpInputBtn = Button(description='Update Input File',button_style='primary', layout=Layout(width='100%'))
+swanUpInputBtn.on_click(swanUpdate_btn_clicked)
 
-SwanInputArea = Textarea(layout= Layout(height = "300px",width = '100%'))
+swanInputArea = Textarea(layout= Layout(height = "300px",width = '100%'))
 
-SwanInputBox = Box([swanCbox,swanInputAcd, SwanUpInputBtn, SwanInputArea], 
+swanInputBox = Box([swanInputdd, swanCbox, swanInput, swanUpInputBtn, swanInputArea], 
                  layout = Layout(flex_flow = 'column', align_items = 'center'))
 
 ######################## SWAN Input tab end############################################################
@@ -894,7 +853,7 @@ openfoamVisuBox = Box(delft3d_items, layout= Layout(flex_flow = 'column', align_
 ################################ Finally ##########################################################
         
 tab_nest = Tab()
-tab_nest.children = [SwanInputBox, runBox, outputBox, swanVisuAcd]
+tab_nest.children = [swanInputBox, runBox, outputBox, swanVisuAcd]
 tab_nest.set_title(0, 'Input')
 tab_nest.set_title(1, 'Run')
 tab_nest.set_title(2, 'Output')
@@ -911,7 +870,7 @@ def on_change(change):
         if(change['new'] == 'SWAN'):
             out.clear_output()
             with out:
-                tab_nest.children = [SwanInputBox, runBox, outputBox, swanVisuAcd]
+                tab_nest.children = [swanInputBox, runBox, outputBox, swanVisuAcd]
                 display(tab_nest)
         if(change['new'] == 'Funwave-tvd'):
             out.clear_output()
