@@ -37,8 +37,82 @@ fw_para_pairs ={
 }  
 cac_para_pairs = {}
 
-######################## Previous end ############################################################
+def generatePara(templateFile):
+    items = []
+    with open(templateFile, 'r') as fd:
+        for line in fd.readlines():
+            g = re.search(r'[\w:]+\s*.*=*\s*\${(.*)}',line)
+            if g:
+                label_value = ''
+                isTB = False
+                for match in re.findall(r'(\w+)=("[^"]*"|\'[^\']*|[^,\n]*)', g.group(1)):
+                    if match[0] == 'label':
+                        lbs = match[1].split('/')
+                        label_value = lbs[0]
+                        if len(lbs) == 2:
+                            isTB = True
+                    if match[0] == 'option':
+                        ops = match[1].split('/')
+                        # if the first element of options is 'CO', remove it's label name.
+                        if ops[0] == 'CO':
+                            label = Label(layout = Layout(width = "150px"))
+                            if not isTB:
+                                togBtns = ToggleButtons(options = ops[1:])
+                            else:
+                                togBtns = ToggleButton(description = ops[1], value = True)
+                        else:
+                            label = Label(value = label_value, layout = Layout(width = "150px"))
+                            if not isTB:
+                                togBtns = ToggleButtons(options = ops)
+                            else:
+                                togBtns = ToggleButton(description = ops[0], value = True)
+                        box = Box([label, togBtns], layout = Layout(width = '100%', justify_content = 'flex-start'))
+                        items.append(box)
+                    if match[0] == 'value':
+                        label = Label(value = label_value, layout = Layout(width = "150px"))
+                        text = Text(value = match[1])
+                        box = Box([label, text], layout = Layout(width = '100%', justify_content = 'flex-start'))
+                        items.append(box)
+                        
+                            
+    fd.close()
+    return items
 
+def updatePara(templateFile, newInput, inputBox):
+    
+    with open(newInput, "w") as fw:
+        with open(templateFile, "r") as fd:
+            count = 0
+            for line in fd.readlines():
+                g = re.search(r'[\w:]+\s*.*=*\s*\${(.*)}' , line)
+                if g:
+                    isTB = False
+                    newVals = []
+                    for match in re.findall(r'(\w+)=("[^"]*"|\'[^\']*|[^,\n]*)', g.group(1)):
+                        if match[0] == 'label':
+                            lbs = match[1].split('/')
+                            if (len(lbs) == 2):
+                                isTB = True
+                        if match[0] == 'option':
+                            if not isTB:
+                                newVals.append(inputBox.children[count].children[1].value)
+                            else:
+                                if (inputBox.children[count].children[1].value):
+                                    newVals.append(inputBox.children[count].children[1].description)
+                            count+=1
+                        if match[0] == 'value':
+                            newVals.append(inputBox.children[count].children[1].value)
+                            count+=1
+                    newLine = ''
+                    for item in newVals:
+                        newLine = newLine + ' ' + item + ' '
+                    fw.write(re.sub(r'\${.*}', newLine, line))
+                else:
+                    fw.write(line)
+        fd.close()
+    fw.close()    
+    
+######################## Previous end ############################################################
 
 ######################## SWAN Input tab ############################################################
 
@@ -58,38 +132,8 @@ def swan_on_change(change):
             with logOp:
                 cmd("tar -zxvf input_swan.tgz")
             inputTmp = 'input_swan/basic_template.txt'
-            
-        with open(inputTmp, "r") as fd:
-            for line in fd.readlines():
-                g = re.search(r'[\w:]+\s*.*=*\s*\${(.*)}',line)
-                if g:
-                    label_value = ''
-                    isTB = False
-                    for match in re.findall(r'(\w+)=("[^"]*"|\'[^\']*|[^,\n]*)', g.group(1)):
-                        if match[0] == 'label':
-                            lbs = match[1].split('/')
-                            label_value = lbs[0]
-                            if (len(lbs) == 2):
-                                isTB = True
-                        if match[0] == 'option':
-                            ops = match[1].split('/')
-                            # if the first element of options is 'CO', remove it's label name.
-                            if (ops[0] == 'CO'):
-                                label = Label(layout = Layout(width = "150px"))
-                                if (not isTB):
-                                    togBtns = ToggleButtons(options = ops[1:])
-                                else :
-                                    togBtns = ToggleButton(description = ops[1], value = True)
-                            else :
-                                label = Label(value = label_value + ':', layout = Layout(width = "150px"))
-                                if (not isTB):
-                                    togBtns = ToggleButtons(options = ops)
-                                else :
-                                    togBtns = ToggleButton(description = ops[0], value = True)
-                            box = Box([label, togBtns], layout = Layout(width = '100%', justify_content = 'flex-start'))
-                            items.append(box)
-        fd.close()
-        swanInput.children = items
+       
+        swanInput.children = generatePara(inputTmp)
     
 swanInputdd.observe(swan_on_change)
     
@@ -104,36 +148,10 @@ def swanUpdate_btn_clicked(a):
     inputTmp = ''
     if(swanInputdd.value == 'Basic Template'):
         inputTmp = 'input_swan/basic_template.txt'
-    with open("input_swan/input_tmp-test.txt", "w") as fw:
-        with open(inputTmp, "r") as fd:
-            k = 0
-            for line in fd.readlines():
-                g = re.search(r'[\w:]+\s*.*=*\s*\${(.*)}' , line)
-                if g:
-                    isTB = False
-                    newVals = []
-                    for match in re.findall(r'(\w+)=("[^"]*"|\'[^\']*|[^,\n]*)', g.group(1)):
-                        if match[0] == 'label':
-                            lbs = match[1].split('/')
-                            if (len(lbs) == 2):
-                                isTB = True
-                        if match[0] == 'option':
-                            if not isTB:
-                                newVals.append(swanInput.children[k].children[1].value)
-                            else:
-                                if (swanInput.children[k].children[1].value):
-                                    newVals.append(swanInput.children[k].children[1].description)
-                            k+=1
-                    newLine = ''
-                    for item in newVals:
-                        newLine = newLine + ' ' + item + ' '
-                    tmpLine = re.sub(r'\${.*}', newLine, line)
-                    fw.write(tmpLine)
-                else:
-                    fw.write(line)
-        fd.close()
-    fw.close()
-    swanInputArea.value = open("input_swan/input_tmp-test.txt", "r").read()
+    
+    updatePara(inputTmp, "input_swan/input_tmp.txt", swanInput)
+    
+    swanInputArea.value = open("input_swan/input_tmp.txt", "r").read()
                     
                  
 swanUpInputBtn = Button(description='Update Input File',button_style='primary', layout=Layout(width='100%'))
@@ -155,7 +173,7 @@ fwInputdd=Dropdown(options=['Choose Input Template','Basic Template'], value='Ch
 fwCbox = Checkbox(value = False, description = "Use Own Input")
 
 parvals = {}
-inputBox = Box(layout = Layout(flex_flow = 'column'))
+fwInput = Box(layout = Layout(flex_flow = 'column'))
 
 def fw_on_change(change):
     inputTmp = ''
@@ -163,36 +181,14 @@ def fw_on_change(change):
     if change['type'] == 'change' and change['name'] == 'value':
         if(change['new'] == 'Choose Input Template'):
             items=[]
-            inputBox.children = items
+            fwInput.children = items
             return
         if(change['new'] == 'Basic Template'):
             with logOp:
                 cmd("tar -zxvf input_funwave.tgz")
             inputTmp = 'input_funwave/basic_template.txt'
     
-        with open(inputTmp,"r") as fd:
-            for line in fd.readlines():
-                g = re.search(r'(\w+)\s*=\s*\${(.*)}',line)
-                if g:
-                    for match in re.findall(r'(\w+)=("[^"]*"|\'[^\']*|[^,\n]*)',g.group(2)):
-                        if match[0] == 'value':
-                            label = line.split()[0]+'Label'
-                            label = Label(value = line.split()[0].upper()+":")
-                            text = line.split()[0]
-                            text = Text(value=match[1])
-                            box = line.split()[0]+'Box'
-                            box = Box([label, text],layout = Layout(width = '100%', justify_content = 'space-between'))
-                            items.append(box)
-                        if match[0] == 'option':
-                            label = line.split()[0]+'Label'
-                            label = Label(value = line.split()[0].upper()+":")
-                            togBtns = line.split()[0]
-                            togBtns = ToggleButtons(options=['T', 'F'])
-                            box = line.split()[0]+'Box'
-                            box = Box([label, togBtns], layout = Layout(width = '100%', justify_content = 'space-between')) 
-                            items.append(box)
-                        
-        inputBox.children = items
+        fwInput.children = generatePara(inputTmp)
     
 fwInputdd.observe(fw_on_change)
   
@@ -206,18 +202,11 @@ def fwUpInput_btn_clicked(a):
     inputTmp = ''
     if(fwInputdd.value == 'Basic Template'):
         inputTmp = 'input_funwave/basic_template.txt'
-    with open("input_funwave/input_tmp.txt", "w") as fw:
-        with open(inputTmp, "r") as fd:
-            k=0
-            for line in fd.readlines():
-                g = re.search(r'(\w+)\s*=\s*\${(.*)}',line)
-                if g:
-                    print("%s = %s" % (g.group(1),inputBox.children[k].children[1].value),file=fw)
-                    k+=1
-                else:
-                    print(line, end='', file=fw)
+        
+    updatePara(inputTmp, "input_funwave/input_tmp.txt", fwInput)
+    
     fwInputArea.value = open("input_funwave/input_tmp.txt","r").read()
-    surfaceFrame.max = int(float(inputBox.children[2].children[1].value)/float(inputBox.children[3].children[1].value))
+    #surfaceFrame.max = int(float(inputBox.children[2].children[1].value)/float(inputBox.children[3].children[1].value))
     with open("input_funwave/input_tmp.txt", "r") as fw:
         for line in fw.readlines():
             g = re.search(r'(\w+)\s*=\s*(\S+)',line)
@@ -232,7 +221,7 @@ fwUpInputBtn = Button(description='Update Input File',button_style='primary', la
 fwUpInputBtn.on_click(fwUpInput_btn_clicked)
 
 fwInputArea = Textarea(layout= Layout(height = "300px",width = '100%'))
-fwInputBox = Box([fwInputdd, fwCbox, inputBox, fwUpInputBtn, fwInputArea], 
+fwInputBox = Box([fwInputdd, fwCbox, fwInput, fwUpInputBtn, fwInputArea], 
                   layout = Layout(flex_flow = 'column', align_items = 'center'))
 
 ##################################### Funwave-tvd Input tab end ###############################
@@ -244,7 +233,7 @@ cacInputdd=Dropdown(options=['Choose Input Template','Basic Template','HDF5 Temp
 cacCbox = Checkbox(value = False, description = "Use Own Input")
 
 parvals = {}
-inputBox = Box(layout = Layout(flex_flow = 'column'))
+cacInput = Box(layout = Layout(flex_flow = 'column'))
 
 def cac_on_change(change):
     inputTmp = ''
@@ -263,29 +252,7 @@ def cac_on_change(change):
                 cmd("tar -zxvf input_cactus.tgz")
             inputTmp = 'input_cactus/hdf5_template.txt'
     
-        with open(inputTmp,"r") as fd:
-            for line in fd.readlines():
-                g = re.search(r'([\w:]+)\s*=\s*\${(.*)}',line)
-                if g:
-                    for match in re.findall(r'(\w+)=("[^"]*"|\'[^\']*|[^,\n]*)',g.group(2)):
-                        if match[0] == 'value':
-                            label = line.split()[0]+'Label'
-                            label = Label(value = line.split()[0].upper()+":")
-                            text = line.split()[0]
-                            text = Text(value=match[1])
-                            box = line.split()[0]+'Box'
-                            box = Box([label, text],layout = Layout(width = '100%', justify_content = 'space-between'))
-                            items.append(box)
-                        if match[0] == 'option':
-                            label = line.split()[0]+'Label'
-                            label = Label(value = line.split()[0].upper()+":")
-                            togBtns = line.split()[0]
-                            togBtns = ToggleButtons(options=['T', 'F'])
-                            box = line.split()[0]+'Box'
-                            box = Box([label, togBtns], layout = Layout(width = '100%', justify_content = 'space-between')) 
-                            items.append(box)
-                        
-        inputBox.children = items
+        cacInput.children = generatePara(inputTmp)
     
 cacInputdd.observe(cac_on_change)
   
@@ -301,20 +268,11 @@ def cacUpInput_btn_clicked(a):
         inputTmp = 'input_cactus/basic_template.txt'
     if(cacInputdd.value == 'HDF5 Template'):
         inputTmp = 'input_cactus/hdf5_template.txt'
-        
-    with open("input_cactus/input_tmp.txt", "w") as fw:
-        with open(inputTmp, "r") as fd:
-            k=0
-            for line in fd.readlines():
-                g = re.search(r'([\w:]+)\s*=\s*\${(.*)}',line)
-                if g:
-                    print("%s = %s" % (g.group(1),inputBox.children[k].children[1].value),file=fw)
-                    k+=1
-                else:
-                    print(line, end='', file=fw)
-     
+    
+    updatePara(inputTmp, "input_cactus/input_tmp.txt", cacInput)
+       
     cacInputArea.value = open("input_cactus/input_tmp.txt","r").read()
-    print("inputBox.children[3].children[1].value=",float(inputBox.children[3].children[1].value))
+    #print("inputBox.children[3].children[1].value=",float(inputBox.children[3].children[1].value))
     #surfaceFrame.max = int(float(inputBox.children[2].children[1].value)/float(inputBox.children[3].children[1].value))
     with open("input_cactus/input_tmp.txt", "r") as fw:
             for line in fw.readlines():
@@ -329,7 +287,7 @@ cacUpInputBtn = Button(description='Update Cactus Input File',button_style='prim
 cacUpInputBtn.on_click(cacUpInput_btn_clicked)
 
 cacInputArea = Textarea(layout= Layout(height = "300px",width = '100%'))
-cacInputBox = Box([cacInputdd, cacCbox, inputBox, cacUpInputBtn, cacInputArea], 
+cacInputBox = Box([cacInputdd, cacCbox, cacInput, cacUpInputBtn, cacInputArea], 
                   layout = Layout(flex_flow = 'column', align_items = 'center'))
 
 ##################################### Cactus Input tab end ###############################
@@ -543,8 +501,9 @@ def runfun_btn_clicked(a):
     elif (modelTitle.value == "SWAN"): 
         with logOp:
             if (swanCbox.value == False):
-                if not os.path.exists("input_swan"):
-                    cmd("tar -zxvf input_swan.tgz")
+#                 if not os.path.exists("input_swan"):
+#                     cmd("tar -zxvf input_swan.tgz")
+                cmd("mv input_swan/input_tmp.txt input_swan/INPUT")
                 cmd("rm -fr input")
                 cmd("cp -r input_swan input")
                 cmd("tar cvzf input.tgz input")
