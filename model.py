@@ -85,15 +85,24 @@ def updatePara(templateFile, newInput, inputBox):
                 g = re.search(r'[\w:]+\s*.*=*\s*\${(.*)}' , line)
                 if g:
                     isTB = False
+                    isStr = False
+                    string = ''
                     newVals = []
                     for match in re.findall(r'(\w+)=("[^"]*"|\'[^\']*|[^,\n]*)', g.group(1)):
                         if match[0] == 'label':
                             lbs = match[1].split('/')
                             if (len(lbs) == 2):
                                 isTB = True
+                        if match[0] == 'string':
+                            string = match[1]
+                            isStr = True
                         if match[0] == 'option':
                             if not isTB:
-                                newVals.append(inputBox.children[count].children[1].value)
+                                if isStr:
+                                    if inputBox.children[count].children[1].value == 'True':
+                                        newVals.append(string[1:-1])
+                                else:
+                                    newVals.append(inputBox.children[count].children[1].value)
                             else:
                                 if (inputBox.children[count].children[1].value):
                                     newVals.append(inputBox.children[count].children[1].description)
@@ -118,12 +127,12 @@ def template_on_change(change):
             tab_nest.children[0].children[2].children = []
             return
         if(change['new'] == 'Basic Template'):
-            with logOp:
-                cmd("tar -zxvf input_" + cur_model + ".tgz")
+#             with logOp:
+#                 cmd("tar -zxvf input_" + cur_model + ".tgz")
             inputTmp = 'input_' + cur_model + '/basic_template.txt'
         if(change['new'] == 'HDF5 Template'):
-            with logOp:
-                cmd("tar -zxvf input_" + cur_model + ".tgz")
+#             with logOp:
+#                 cmd("tar -zxvf input_" + cur_model + ".tgz")
             inputTmp = 'input_' + cur_model + '/hdf5_template.txt'
         
         tab_nest.children[0].children[2].children = generatePara(inputTmp)
