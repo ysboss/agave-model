@@ -15,7 +15,7 @@ from modInput import modInput
 
 ######################## Previous ############################################################
 
-
+cur_model = 'swan'
 logOp = Output()
 logStash = Output()   # use to receive logs that are stashed for user
 clearLogBtn = Button(description='Clear log', button_style='primary', layout = Layout(width = '115px'))
@@ -73,8 +73,6 @@ def generatePara(templateFile):
                         text = Text(value = match[1])
                         box = Box([label, text], layout = Layout(width = '100%', justify_content = 'flex-start'))
                         items.append(box)
-                        
-                            
     fd.close()
     return items
 
@@ -112,53 +110,58 @@ def updatePara(templateFile, newInput, inputBox):
         fd.close()
     fw.close()    
     
+    
+def template_on_change(change):
+    inputTmp = ''
+    if change['type'] == 'change' and change['name'] == 'value':
+        if(change['new'] == 'Choose Input Template'):
+            tab_nest.children[0].children[2].children = []
+            return
+        if(change['new'] == 'Basic Template'):
+            with logOp:
+                cmd("tar -zxvf input_" + cur_model + ".tgz")
+            inputTmp = 'input_' + cur_model + '/basic_template.txt'
+        if(change['new'] == 'HDF5 Template'):
+            with logOp:
+                cmd("tar -zxvf input_" + cur_model + ".tgz")
+            inputTmp = 'input_' + cur_model + '/hdf5_template.txt'
+        
+        tab_nest.children[0].children[2].children = generatePara(inputTmp)
+        
+        
+def update_btn_clicked(a):
+    if (tab_nest.children[0].children[1].value == True):
+        with logOp:
+            cmd("rm -f input.tgz")
+            cmd("rm -fr input")
+            cmd("cp -f ../input_" + cur_model + ".tgz input.tgz")
+            return
+        
+    newInput = 'input_'+ cur_model + '/input_tmp.txt'
+    inputTmp = ''
+    if(tab_nest.children[0].children[0].value == 'Basic Template'):
+        inputTmp = 'input_' + cur_model + '/basic_template.txt'
+    if(tab_nest.children[0].children[0].value == 'HDF5 Template'):
+        inputTmp = 'input_' + cur_model + '/basic_template.txt'
+    
+    updatePara(inputTmp, newInput, tab_nest.children[0].children[2])
+    
+    tab_nest.children[0].children[4].value = open(newInput, 'r').read()
+    
+
+
+
 ######################## Previous end ############################################################
 
 ######################## SWAN Input tab ############################################################
 
 swanInputdd = Dropdown(options=['Choose Input Template','Basic Template'], value='Choose Input Template')
 swanCbox = Checkbox(value = False, description = "Use Own Input")
-
 swanInput = Box(layout = Layout(flex_flow = 'column'))
-def swan_on_change(change): 
-    inputTmp = ''
-    items = []
-    if change['type'] == 'change' and change['name'] == 'value':
-        if(change['new'] == 'Choose Input Template'):
-            items=[]
-            swanInput.children = items
-            return
-        if(change['new'] == 'Basic Template'):
-            with logOp:
-                cmd("tar -zxvf input_swan.tgz")
-            inputTmp = 'input_swan/basic_template.txt'
-       
-        swanInput.children = generatePara(inputTmp)
-    
-swanInputdd.observe(swan_on_change)
-    
-    
-def swanUpdate_btn_clicked(a):
-    if (swanCbox.value == True):
-        with logOp:
-            cmd("rm -f input.tgz")
-            cmd("rm -fr input")
-            cmd("cp -f ../input_swan.tgz input.tgz")
-            return 
-    inputTmp = ''
-    if(swanInputdd.value == 'Basic Template'):
-        inputTmp = 'input_swan/basic_template.txt'
-    
-    updatePara(inputTmp, "input_swan/input_tmp.txt", swanInput)
-    
-    swanInputArea.value = open("input_swan/input_tmp.txt", "r").read()
-                    
-                 
+swanInputdd.observe(template_on_change)
 swanUpInputBtn = Button(description='Update Input File',button_style='primary', layout=Layout(width='100%'))
-swanUpInputBtn.on_click(swanUpdate_btn_clicked)
-
+swanUpInputBtn.on_click(update_btn_clicked)
 swanInputArea = Textarea(layout= Layout(height = "300px",width = '100%'))
-
 swanInputBox = Box([swanInputdd, swanCbox, swanInput, swanUpInputBtn, swanInputArea], 
                  layout = Layout(flex_flow = 'column', align_items = 'center'))
 
@@ -171,55 +174,10 @@ swanInputBox = Box([swanInputdd, swanCbox, swanInput, swanUpInputBtn, swanInputA
 
 fwInputdd=Dropdown(options=['Choose Input Template','Basic Template'], value='Choose Input Template')
 fwCbox = Checkbox(value = False, description = "Use Own Input")
-
-parvals = {}
-fwInput = Box(layout = Layout(flex_flow = 'column'))
-
-def fw_on_change(change):
-    inputTmp = ''
-    items = []
-    if change['type'] == 'change' and change['name'] == 'value':
-        if(change['new'] == 'Choose Input Template'):
-            items=[]
-            fwInput.children = items
-            return
-        if(change['new'] == 'Basic Template'):
-            with logOp:
-                cmd("tar -zxvf input_funwave.tgz")
-            inputTmp = 'input_funwave/basic_template.txt'
-    
-        fwInput.children = generatePara(inputTmp)
-    
-fwInputdd.observe(fw_on_change)
-  
-def fwUpInput_btn_clicked(a):
-    if (fwCbox.value == True):
-        with logOp:
-            cmd("rm -f input.tgz")
-            cmd("rm -fr input")
-            cmd("cp -f ../input_funwave.tgz input.tgz")
-            return 
-    inputTmp = ''
-    if(fwInputdd.value == 'Basic Template'):
-        inputTmp = 'input_funwave/basic_template.txt'
-        
-    updatePara(inputTmp, "input_funwave/input_tmp.txt", fwInput)
-    
-    fwInputArea.value = open("input_funwave/input_tmp.txt","r").read()
-    #surfaceFrame.max = int(float(inputBox.children[2].children[1].value)/float(inputBox.children[3].children[1].value))
-    with open("input_funwave/input_tmp.txt", "r") as fw:
-        for line in fw.readlines():
-            g = re.search(r'(\w+)\s*=\s*(\S+)',line)
-            if g:
-                para = g.group(1)
-                value = g.group(2)
-                if para in fw_para_pairs:
-                    fw_para_pairs[para] = value  
-    
-     
+fwInput = Box(layout = Layout(flex_flow = 'column'))    
+fwInputdd.observe(template_on_change)
 fwUpInputBtn = Button(description='Update Input File',button_style='primary', layout=Layout(width='100%'))
-fwUpInputBtn.on_click(fwUpInput_btn_clicked)
-
+fwUpInputBtn.on_click(update_btn_clicked)
 fwInputArea = Textarea(layout= Layout(height = "300px",width = '100%'))
 fwInputBox = Box([fwInputdd, fwCbox, fwInput, fwUpInputBtn, fwInputArea], 
                   layout = Layout(flex_flow = 'column', align_items = 'center'))
@@ -231,61 +189,10 @@ fwInputBox = Box([fwInputdd, fwCbox, fwInput, fwUpInputBtn, fwInputArea],
 
 cacInputdd=Dropdown(options=['Choose Input Template','Basic Template','HDF5 Template'], value='Choose Input Template')
 cacCbox = Checkbox(value = False, description = "Use Own Input")
-
-parvals = {}
-cacInput = Box(layout = Layout(flex_flow = 'column'))
-
-def cac_on_change(change):
-    inputTmp = ''
-    items = []
-    if change['type'] == 'change' and change['name'] == 'value':
-        if(change['new'] == 'Choose Input Template'):
-            items=[]
-            inputBox.children = items
-            return
-        if(change['new'] == 'Basic Template'):
-            with logOp:
-                cmd("tar -zxvf input_cactus.tgz")
-            inputTmp = 'input_cactus/basic_template.txt'
-        if(change['new'] == 'HDF5 Template'):
-            with logOp:
-                cmd("tar -zxvf input_cactus.tgz")
-            inputTmp = 'input_cactus/hdf5_template.txt'
-    
-        cacInput.children = generatePara(inputTmp)
-    
-cacInputdd.observe(cac_on_change)
-  
-def cacUpInput_btn_clicked(a):
-    if (cacCbox.value == True):
-        with logOp:
-            cmd("rm -f input.tgz")
-            cmd("rm -fr input")
-            cmd("cp -f ../input_cactus.tgz input.tgz")
-            return
-    inputTmp = ''
-    if(cacInputdd.value == 'Basic Template'):
-        inputTmp = 'input_cactus/basic_template.txt'
-    if(cacInputdd.value == 'HDF5 Template'):
-        inputTmp = 'input_cactus/hdf5_template.txt'
-    
-    updatePara(inputTmp, "input_cactus/input_tmp.txt", cacInput)
-       
-    cacInputArea.value = open("input_cactus/input_tmp.txt","r").read()
-    #print("inputBox.children[3].children[1].value=",float(inputBox.children[3].children[1].value))
-    #surfaceFrame.max = int(float(inputBox.children[2].children[1].value)/float(inputBox.children[3].children[1].value))
-    with open("input_cactus/input_tmp.txt", "r") as fw:
-            for line in fw.readlines():
-                g = re.search(r'([\w+:])\s*=\s*(\S+)',line)
-                if g:
-                    para = g.group(1)
-                    value = g.group(2)
-                    cac_para_pairs[para] = value  
-    
-     
+cacInput = Box(layout = Layout(flex_flow = 'column'))    
+cacInputdd.observe(template_on_change)     
 cacUpInputBtn = Button(description='Update Cactus Input File',button_style='primary', layout=Layout(width='100%'))
-cacUpInputBtn.on_click(cacUpInput_btn_clicked)
-
+cacUpInputBtn.on_click(update_btn_clicked)
 cacInputArea = Textarea(layout= Layout(height = "300px",width = '100%'))
 cacInputBox = Box([cacInputdd, cacCbox, cacInput, cacUpInputBtn, cacInputArea], 
                   layout = Layout(flex_flow = 'column', align_items = 'center'))
@@ -823,30 +730,37 @@ cmd("auth-tokens-refresh")
 clear_output()
 
 def on_change(change):
+    global cur_model
     with logOp:
         setvar("MODEL_TITLE="+modelTitle.value)
     if change['type'] == 'change' and change['name'] == 'value':
         if(change['new'] == 'SWAN'):
+            cur_model = 'swan'
             out.clear_output()
             with out:
                 tab_nest.children = [swanInputBox, runBox, outputBox, swanVisuAcd]
                 display(tab_nest)
+                
         if(change['new'] == 'Funwave-tvd'):
+            cur_model = 'funwave'
             out.clear_output()
             with out:
                 tab_nest.children = [fwInputBox, runBox, outputBox, fwVisuAcd]
                 display(tab_nest)
         if(change['new'] == 'Cactus'):
+            cur_model = 'cactus'
             out.clear_output()
             with out:
                 tab_nest.children = [cacInputBox, runBox, outputBox, cacVisuAcd]
                 display(tab_nest)
         if(change['new'] == 'Delft3D'):
+            cur_model = 'delft3d'
             out.clear_output()
             with out:
                 tab_nest.children = [delft3dBox, runBox, outputBox, delft3dVisuBox]
                 display(tab_nest)
         if(change['new'] == 'OpenFoam'):
+            cur_model = 'openfoam'
             out.clear_output()
             with out:
                 tab_nest.children = [ofInputBox, runBox, outputBox, openfoamVisuBox]
@@ -867,5 +781,9 @@ display(logOp)
 
 if "MODEL_TITLE" in os.environ:
     modelTitle.value = os.environ["MODEL_TITLE"]
+    
+# print (tab_nest.children[0].children[0])
+# print (tab_nest.children[0].children[1])
+# print (tab_nest.children[0].children[2].children)
 
 ################################ Finally end ##########################################################
