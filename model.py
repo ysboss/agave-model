@@ -158,6 +158,29 @@ def update_btn_clicked(a):
     tab_nest.children[0].children[4].value = open(newInput, 'r').read()
     
 
+def runModel(a):
+    with logOp:
+        if (tab_nest.children[0].children[1].value == False):
+            cmd("rm -fr input")
+            cmd("mkdir input")
+            if (cur_model == "swan"):
+                cmd("mv input_" + cur_model + "/input_tmp.txt input_" + cur_model + "/INPUT")
+                cmd("cp -r input_" + cur_model + " input")
+            if (cur_model == "funwave" or cur_model == "cactus"):
+                cmd("mv input_" + cur_model + "/input_tmp.txt input_" + cur_model + "/input.txt")
+                modInput(procs[0], "input_" + cur_model + "/input.txt")
+                cmd("cp input_" + cur_model + "/input.txt input")
+                cmd("cp input_" + cur_model + "/depth.txt input")
+            cmd("tar cvzf input.tgz input")
+            
+        setvar("INPUT_DIR=${AGAVE_USERNAME}_$(date +%Y-%m-%d_%H-%M-%S)")
+        cmd("files-mkdir -S ${STORAGE_MACHINE} -N inputs/${INPUT_DIR}")
+        cmd("files-upload -F input.tgz -S ${STORAGE_MACHINE} inputs/${INPUT_DIR}/")
+        submitJob(nodes, procs[0], cur_model, jobNameText.value, machines.value, queues.value)
+    
+            
+    
+
 
 
 ######################## Previous end ############################################################
@@ -380,69 +403,30 @@ def runfun_btn_clicked(a):
     nodes = procs[0]//ppn
     if procs[0] % ppn != 0:
         nodes += 1
-
-    if (modelTitle.value == "Funwave-tvd"): 
-        with logOp:
-            if (fwCbox.value == False):
-                cmd("mv input_funwave/input_tmp.txt input_funwave/input.txt")
-                modInput(procs[0], "input_funwave/input.txt")
-                cmd("rm -fr input")
-                cmd("mkdir input")
-                cmd("cp input_funwave/input.txt input")
-                cmd("cp input_funwave/depth.txt input")
-                cmd("tar cvzf input.tgz input")
-            setvar("INPUT_DIR=${AGAVE_USERNAME}_$(date +%Y-%m-%d_%H-%M-%S)")
-            cmd("files-mkdir -S ${STORAGE_MACHINE} -N inputs/${INPUT_DIR}")
-            cmd("files-upload -F input.tgz -S ${STORAGE_MACHINE} inputs/${INPUT_DIR}/")
-
-            submitJob(nodes, procs[0], "funwave", jobNameText.value, machines.value, queues.value)
-
-    elif (modelTitle.value == "Cactus"): 
-        with logOp:
-            if (cacCbox.value == False):
-                cmd("mv input_cactus/input_tmp.txt input_cactus/input.txt")
-                modInput(procs[0], "input_funwave/input.txt")
-                cmd("rm -fr input")
-                cmd("mkdir input")
-                cmd("cp input_cactus/input.txt input")
-                cmd("cp input_cactus/depth.txt input")
-                cmd("tar cvzf input.tgz input")
-            setvar("INPUT_DIR=${AGAVE_USERNAME}_$(date +%Y-%m-%d_%H-%M-%S)")
-            cmd("files-mkdir -S ${STORAGE_MACHINE} -N inputs/${INPUT_DIR}")
-            cmd("files-upload -F input.tgz -S ${STORAGE_MACHINE} inputs/${INPUT_DIR}/")
-
-            submitJob(nodes, procs[0], "cactus", jobNameText.value, machines.value, queues.value)
-
         
-    elif (modelTitle.value == "SWAN"): 
-        with logOp:
-            if (swanCbox.value == False):
-#                 if not os.path.exists("input_swan"):
-#                     cmd("tar -zxvf input_swan.tgz")
-                cmd("mv input_swan/input_tmp.txt input_swan/INPUT")
-                cmd("rm -fr input")
-                cmd("cp -r input_swan input")
-                cmd("tar cvzf input.tgz input")
-            setvar("INPUT_DIR=${AGAVE_USERNAME}_$(date +%Y-%m-%d_%H-%M-%S)")
-            cmd("files-mkdir -S ${STORAGE_MACHINE} -N inputs/${INPUT_DIR}")
-            cmd("files-upload -F input.tgz -S ${STORAGE_MACHINE} inputs/${INPUT_DIR}/")
-            
-            submitJob(nodes, procs[0], "swan", jobNameText.value, machines.value, queues.value) 
-            
-    elif (modelTitle.value == "OpenFoam"): 
-        with logOp:
-            if (ofCbox.value == False):
-                cmd("rm -fr input")
-                cmd("mkdir input")
-                cmd("cp -a input_openfoam/"+ofCaseName.value[:-1]+"/. input")
+    with logOp:
+        if (tab_nest.children[0].children[1].value == False):
+            cmd("rm -fr input")
+            cmd("mkdir input")
+            if (cur_model == "swan"):
+                cmd("mv input_" + cur_model + "/input_tmp.txt input_" + cur_model + "/INPUT")
+                cmd("cp -r input_" + cur_model + " input")
+            if (cur_model == "funwave" or cur_model == "cactus"):
+                cmd("mv input_" + cur_model + "/input_tmp.txt input_" + cur_model + "/input.txt")
+                modInput(procs[0], "input_funwave/input.txt")
+                cmd("cp input_" + cur_model + "/input.txt input")
+                cmd("cp input_" + cur_model + "/depth.txt input")
+            if (cur_model == "openfoam"):
+                cmd("cp -a input_" + cur_model + "/"+ofCaseName.value[:-1]+"/. input")
                 modify_openfoam(ofCaseName.value)
-                cmd("tar cvzf input.tgz input")
-            setvar("INPUT_DIR=${AGAVE_USERNAME}_$(date +%Y-%m-%d_%H-%M-%S)")
-            cmd("files-mkdir -S ${STORAGE_MACHINE} -N inputs/${INPUT_DIR}")
-            cmd("files-upload -F input.tgz -S ${STORAGE_MACHINE} inputs/${INPUT_DIR}/")
+                
+            cmd("tar cvzf input.tgz input")
             
-            submitJob(nodes, procs[0], "openfoam", jobNameText.value, machines.value, queues.value)
-    
+        setvar("INPUT_DIR=${AGAVE_USERNAME}_$(date +%Y-%m-%d_%H-%M-%S)")
+        cmd("files-mkdir -S ${STORAGE_MACHINE} -N inputs/${INPUT_DIR}")
+        cmd("files-upload -F input.tgz -S ${STORAGE_MACHINE} inputs/${INPUT_DIR}/")
+        submitJob(nodes, procs[0], cur_model, jobNameText.value, machines.value, queues.value)
+        
 runBtn.on_click(runfun_btn_clicked)
 
 runBox = VBox(run_items)
@@ -774,7 +758,7 @@ def on_change(change):
             with out:
                 tab_nest.children = [ofInputBox, runBox, outputBox, openfoamVisuBox]
                 display(tab_nest)
-           
+                
 modelTitle.observe(on_change)
 
 display(modelBox)
