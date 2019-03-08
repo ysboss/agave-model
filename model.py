@@ -41,7 +41,7 @@ def generatePara(templateFile):
     items = []
     with open(templateFile, 'r') as fd:
         for line in fd.readlines():
-            g = re.search(r'[\w:]+\s*.*=*\s*\${(.*)}',line)
+            g = re.search(r'[\w:]*\s*.*=*\s*\${(.*)}',line)
             if g:
                 label_value = ''
                 isTB = False
@@ -82,7 +82,7 @@ def updatePara(templateFile, newInput, inputBox):
         with open(templateFile, "r") as fd:
             count = 0
             for line in fd.readlines():
-                g = re.search(r'[\w:]+\s*.*=*\s*\${(.*)}' , line)
+                g = re.search(r'[\w:]*\s*.*=*\s*\${(.*)}' , line)
                 if g:
                     isTB = False
                     isStr = False
@@ -127,12 +127,12 @@ def template_on_change(change):
             tab_nest.children[0].children[2].children = []
             return
         if(change['new'] == 'Basic Template'):
-#             with logOp:
-#                 cmd("tar -zxvf input_" + cur_model + ".tgz")
+            with logOp:
+                cmd("tar -zxvf input_" + cur_model + ".tgz")
             inputTmp = 'input_' + cur_model + '/basic_template.txt'
         if(change['new'] == 'HDF5 Template'):
-#             with logOp:
-#                 cmd("tar -zxvf input_" + cur_model + ".tgz")
+            with logOp:
+                cmd("tar -zxvf input_" + cur_model + ".tgz")
             inputTmp = 'input_' + cur_model + '/hdf5_template.txt'
         
         tab_nest.children[0].children[2].children = generatePara(inputTmp)
@@ -156,29 +156,8 @@ def update_btn_clicked(a):
     updatePara(inputTmp, newInput, tab_nest.children[0].children[2])
     
     tab_nest.children[0].children[4].value = open(newInput, 'r').read()
-    
-
-def runModel(a):
-    with logOp:
-        if (tab_nest.children[0].children[1].value == False):
-            cmd("rm -fr input")
-            cmd("mkdir input")
-            if (cur_model == "swan"):
-                cmd("mv input_" + cur_model + "/input_tmp.txt input_" + cur_model + "/INPUT")
-                cmd("cp -r input_" + cur_model + " input")
-            if (cur_model == "funwave" or cur_model == "cactus"):
-                cmd("mv input_" + cur_model + "/input_tmp.txt input_" + cur_model + "/input.txt")
-                modInput(procs[0], "input_" + cur_model + "/input.txt")
-                cmd("cp input_" + cur_model + "/input.txt input")
-                cmd("cp input_" + cur_model + "/depth.txt input")
-            cmd("tar cvzf input.tgz input")
-            
-        setvar("INPUT_DIR=${AGAVE_USERNAME}_$(date +%Y-%m-%d_%H-%M-%S)")
-        cmd("files-mkdir -S ${STORAGE_MACHINE} -N inputs/${INPUT_DIR}")
-        cmd("files-upload -F input.tgz -S ${STORAGE_MACHINE} inputs/${INPUT_DIR}/")
-        submitJob(nodes, procs[0], cur_model, jobNameText.value, machines.value, queues.value)
-    
-            
+  
+             
     
 
 
@@ -406,11 +385,11 @@ def runfun_btn_clicked(a):
         
     with logOp:
         if (tab_nest.children[0].children[1].value == False):
-            cmd("rm -fr input")
+            cmd("rm -fr input") 
             cmd("mkdir input")
             if (cur_model == "swan"):
                 cmd("mv input_" + cur_model + "/input_tmp.txt input_" + cur_model + "/INPUT")
-                cmd("cp -r input_" + cur_model + " input")
+                cmd("cp -rT input_" + cur_model + " input")
             if (cur_model == "funwave" or cur_model == "cactus"):
                 cmd("mv input_" + cur_model + "/input_tmp.txt input_" + cur_model + "/input.txt")
                 modInput(procs[0], "input_funwave/input.txt")
@@ -499,8 +478,8 @@ def download_btn_clicked(a):
         
             if(outputSelect.value == 'output.tar.gz'):
                 cmd("rm -fr output")
-                rcmd = 'tar -zxvf output.tar.gz'
-                cmd(rcmd)
+                cmd("mkdir -p " + jobid)
+                cmd('tar -zxvf output.tar.gz -C ' + jobid)
             elif(re.match(r'.*\.(txt|out|err|ipcexe)',outputSelect.value)):
                 with open(outputSelect.value,'r') as fd:
                     for line in fd.readlines():
@@ -775,8 +754,4 @@ display(logOp)
 if "MODEL_TITLE" in os.environ:
     modelTitle.value = os.environ["MODEL_TITLE"]
     
-# print (tab_nest.children[0].children[0])
-# print (tab_nest.children[0].children[1])
-# print (tab_nest.children[0].children[2].children)
-
 ################################ Finally end ##########################################################
