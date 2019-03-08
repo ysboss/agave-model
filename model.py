@@ -478,7 +478,7 @@ def download_btn_clicked(a):
         
             if(outputSelect.value == 'output.tar.gz'):
                 cmd("rm -fr output")
-                cmd("mkdir -p " + jobid)
+                cmd("mkdir -p output_" + jobid)
                 cmd('tar -zxvf output.tar.gz -C ' + jobid)
             elif(re.match(r'.*\.(txt|out|err|ipcexe)',outputSelect.value)):
                 with open(outputSelect.value,'r') as fd:
