@@ -29,14 +29,6 @@ def clearLog_btn_clicked(a):
 
 clearLogBtn.on_click(clearLog_btn_clicked)
 
-fw_para_pairs ={
-    "TOTAL_TIME":"",
-    "PLOT_INTV":"",
-    "Mglob":"",
-    "Nglob":""
-}  
-cac_para_pairs = {}
-
 def generatePara(templateFile):
     items = []
     with open(templateFile, 'r') as fd:
@@ -270,11 +262,6 @@ ofInputBox = Box([ofCaseName, ofCbox, ofUpInputBtn, ofInputArea],
                  layout = Layout(flex_flow = 'column', align_items = 'center'))
 
 ##################################### OpenFoam Input tab end ###############################
-
-
-
-
-
 
 
 
@@ -525,177 +512,23 @@ outputBox = HBox([VBox(output_items_left, layout = Layout(width='50%')), VBox(ou
 ################################# Output tab end ###################################
 
 
+################################# image tab  ###################################
 
-################################## SWAN Visualization tab #####################################
-
-Yoption = Dropdown(options=['Choose one','Hsig','RTpeak','PkDir','X_Windv','Y_Windv'])
-plotsInter = interactive(oneDPlots, Y_axis = Yoption )
-oneDBox = Box([plotsInter])
-
-hsPreprocessBtn = Button(description='HS preprocess',button_style='primary', layout=Layout(width='auto'))
-hsPreprocessBtn.on_click(hsPreprocess_btn_clicked)
-
-hsIndex = IntSlider(value=0, min=0, max=120)
-hsInter = interactive(twoDAnimate, Time_Step = hsIndex)
-
-twoDBox = Box([hsPreprocessBtn, hsInter], layout = Layout(flex_flow = 'column', align_items='stretch'))
-
-swanVisuAcd =Accordion(children = [oneDBox,twoDBox])
-swanVisuAcd.set_title(0,'1D ')
-swanVisuAcd.set_title(1,'2D ')
-
-################################## SWAN Visualization tab end #####################################
+imageTab = Box()
 
 
-
-############################### Funwave Visualization tab ##########################################
-
-
-fwYoption = Dropdown(options=['Choose one','eta','u','v'])
-fwplotsInter = interactive(fwOneD, Y_in_plots = fwYoption)
-fwoneDBox = Box([fwplotsInter])
-caconeDBox = Box([fwplotsInter])
-
-depthBtn = Button(description='display',button_style='primary', layout=Layout(width='auto'))
-depthOutput = Output()
-
-def depth_Btn_clicked(a):
-    with depthOutput:
-        display(waterDepth(fw_para_pairs['Mglob'],fw_para_pairs['Nglob']))
-
-depthBtn.on_click(depth_Btn_clicked)
-depthBox = Box([Label(value='Water Depth'),depthBtn],layout = Layout(width = '80%'))
-
-depProfileN = IntSlider(value=0, min=0, max=200)
-depProfileInter = interactive(depProfile, N = depProfileN)
-depProfileBox = Box([Label(value='Depth Profile Snapshot'), depProfileInter])
-
-depProfileAnimaRange = FloatRangeSlider(value=[5,7], min=0.0, max=30, step=0.2,
-                                 description='Time period (s):',readout=True,readout_format='.2f', layout = Layout(width ="60%"))
-depProfileAnimBtn = Button(description='display',button_style='primary', layout=Layout(width='auto'))
-depProfileAnimOutput = Output()
-
-def depProfileAnim_Btn_clicked(a):
-    anim = depProfileWithEta(depProfileAnimaRange.value[0], depProfileAnimaRange.value[1], 
-                             fw_para_pairs['TOTAL_TIME'], fw_para_pairs['PLOT_INTV'], fw_para_pairs['Mglob'])
-    depProfileAnimOutput.clear_output()
-    with depProfileAnimOutput:
-        display(HTML(anim.to_html5_video()))
-depProfileAnimBtn.on_click(depProfileAnim_Btn_clicked)
-depProfileAnimBox = Box([Label(value='Cross-shore profile animation'), depProfileAnimaRange, depProfileAnimBtn], 
-                  layout = Layout(width = '80%', justify_content = 'space-between'))
-
-
-twoDsnapFrame = IntSlider(value=0, min=0, max=151)
-twoDsnapInter = interactive(twoDsnapPlot, frame = twoDsnapFrame)
-twoDsnapBox = Box([Label(value='Surface Elevation snapshot'),twoDsnapInter])
-
-twoDanimRange = FloatRangeSlider(value=[5,7], min=0.0, max=30, step=0.2,
-                                 description='Time period (s):',readout=True,readout_format='.2f', layout = Layout(width ="60%"))
-twoDanimBtn = Button(description='display',button_style='primary', layout=Layout(width='auto'))
-twoDanimOutput = Output()
-def twoDanim_Btn_clicked(a):
-    anim = twoDsnapAnim(twoDanimRange.value[0],twoDanimRange.value[1], fw_para_pairs['PLOT_INTV'])
-    twoDanimOutput.clear_output()
-    with twoDanimOutput:
-        display(HTML(anim.to_html5_video()))
-twoDanimBtn.on_click(twoDanim_Btn_clicked)
-twoDanimBox = Box([Label(value='Surface Elevation animation'), twoDanimRange, twoDanimBtn], 
-                  layout = Layout(width = '80%', justify_content = 'space-between'))
-
-basicBtn = Button(description='display',button_style='primary', layout=Layout(width='auto'))
-basicOutput = Output()
-
-def basic_Btn_clicked(a):
-    frames = []
-    for i in range(1,surfaceFrame.max):
-        frames += [np.genfromtxt("output/output/eta_%05d" % i)]
-    anim = basicAnimation(frames)
-    with basicOutput:
-        display(HTML(anim.to_html5_video()))
-
-basicBtn.on_click(basic_Btn_clicked)
-basicBox = Box([Label(value='Surface Elevation animation 2'),basicBtn], layout = Layout(width = '80%'))
-
-
-basicAnimBox = Box([depthBox, depthOutput,depProfileBox, depProfileAnimBox, depProfileAnimOutput, 
-                    twoDsnapBox, twoDanimBox, twoDanimOutput],
-                   layout = Layout(flex_flow = 'column', align_items='stretch',))
-
-surfaceFrame = IntSlider(value=0, min=0, max=31)
-surfaceInter = interactive(surfacePlot, frame = surfaceFrame)
-surfaceBox = Box([Label(value='Surface Elevation snapshot'),surfaceInter])
-
-rotatingBtn = Button(description='display',button_style='primary', layout=Layout(width='auto'))
-rotatingOutput = Output()
-
-def rotating_Btn_clicked(a):
-    frames = []
-    for i in range(1,surfaceFrame.max):
-        frames += [np.genfromtxt("output/output/eta_%05d" % i)]
-    anim = rotatingAnimation(frames)
-    with rotatingOutput:
-        display(HTML(anim.to_html5_video()))
-
-rotatingBtn.on_click(rotating_Btn_clicked)
-rotatingBox = Box([Label(value='Surface Elevation animation'),rotatingBtn], layout = Layout(width = '80%'))
-rotatingAnimBox = Box([surfaceBox, rotatingBox, rotatingOutput], layout = Layout(flex_flow = 'column', align_items='stretch'))
-
-fwVisuAcd = Accordion([fwoneDBox, basicAnimBox,rotatingAnimBox])
-fwVisuAcd.set_title(0,'1D')
-fwVisuAcd.set_title(1,'2D')
-fwVisuAcd.set_title(2,'3D')
-
-cacVisuAcd = Accordion([caconeDBox, basicAnimBox,rotatingAnimBox])
-cacVisuAcd.set_title(0,'1D')
-cacVisuAcd.set_title(1,'2D')
-cacVisuAcd.set_title(2,'3D')
-
-############################### Funwave Visualization tab end ##########################################
-
-
-
-
-
-
-############################### Delft3D Visualization tab    ##########################################
-
-delft3d_visu=[Label(value='Coming soon', layout = Layout(width = '200px'))]   
-delft3dVisuBox = Box(delft3d_items, layout= Layout(flex_flow = 'column', align_items='stretch', disabled=False))
-
-
-
-############################### Delft3D Visualization tab end ##########################################
-
-
-
-
-
-
-
-############################### OpenFoam Visualization tab    ##########################################
-
-openfoam_visu=[Label(value='Coming soon', layout = Layout(width = '200px'))]   
-openfoamVisuBox = Box(delft3d_items, layout= Layout(flex_flow = 'column', align_items='stretch', disabled=False))
-
-
-############################### OpenFoam Visualization tab end ##########################################
-
-
-
-
-
+################################# image tab end ###################################
 
 
 
 ################################ Finally ##########################################################
         
 tab_nest = Tab()
-tab_nest.children = [swanInputBox, runBox, outputBox, swanVisuAcd]
+tab_nest.children = [swanInputBox, runBox, outputBox, imageTab]
 tab_nest.set_title(0, 'Input')
 tab_nest.set_title(1, 'Run')
 tab_nest.set_title(2, 'Output')
-tab_nest.set_title(3, 'Visualization')
+tab_nest.set_title(3, 'Building')
 
 setvar("""PATH=$HOME/agave-model/bin:$PATH""")
 cmd("auth-tokens-refresh")
@@ -710,32 +543,32 @@ def on_change(change):
             cur_model = 'swan'
             out.clear_output()
             with out:
-                tab_nest.children = [swanInputBox, runBox, outputBox, swanVisuAcd]
+                tab_nest.children = [swanInputBox, runBox, outputBox, imageTab]
                 display(tab_nest)
                 
         if(change['new'] == 'Funwave-tvd'):
             cur_model = 'funwave'
             out.clear_output()
             with out:
-                tab_nest.children = [fwInputBox, runBox, outputBox, fwVisuAcd]
+                tab_nest.children = [fwInputBox, runBox, outputBox, imageTab]
                 display(tab_nest)
         if(change['new'] == 'Cactus'):
             cur_model = 'cactus'
             out.clear_output()
             with out:
-                tab_nest.children = [cacInputBox, runBox, outputBox, cacVisuAcd]
+                tab_nest.children = [cacInputBox, runBox, outputBox, imageTab]
                 display(tab_nest)
         if(change['new'] == 'Delft3D'):
             cur_model = 'delft3d'
             out.clear_output()
             with out:
-                tab_nest.children = [delft3dBox, runBox, outputBox, delft3dVisuBox]
+                tab_nest.children = [delft3dBox, runBox, outputBox, imageTab]
                 display(tab_nest)
         if(change['new'] == 'OpenFoam'):
             cur_model = 'openfoam'
             out.clear_output()
             with out:
-                tab_nest.children = [ofInputBox, runBox, outputBox, openfoamVisuBox]
+                tab_nest.children = [ofInputBox, runBox, outputBox, imageTab]
                 display(tab_nest)
                 
 modelTitle.observe(on_change)
