@@ -512,9 +512,41 @@ outputBox = HBox([VBox(output_items_left, layout = Layout(width='50%')), VBox(ou
 ################################# Output tab end ###################################
 
 
-################################# image tab  ###################################
+################################# building tab  ###################################
+build_item_layout = Layout(
+    display = 'flex',
+    flex_flow = 'row',
+    justify_content = 'flex-start',
+    width = '50%'
+)
 
-imageTab = Box()
+modelDd = Dropdown(options=['Swan','Funwave-tvd','OpenFoam'])
+modelVersionDd = Dropdown(options = ['41.20','40.85'])
+mpiDd = Dropdown(options = ['3.3','3.2'])
+h5Dd = Dropdown(options = ['1.10.5','1.10.4', '1.10.3'])
+
+buildBtn = Button(description = "Build", button_style='primary', layout= Layout(width = '50px'))
+
+build_items = [
+    Box([Label(value="MODEL", layout = Layout(width = '350px')), modelDd], layout = build_item_layout),
+    Box([Label(value="MODEL VERSION", layout = Layout(width = '350px')), modelVersionDd], layout = build_item_layout),
+    Box([Label(value="MPICH", layout = Layout(width = '350px')), mpiDd], layout = build_item_layout),
+    Box([Label(value="HDF5", layout = Layout(width = '350px')), h5Dd], layout = build_item_layout),
+    Box([buildBtn]),
+]
+
+def model_change(change):
+    if change['type'] == 'change' and change['name'] == 'value':
+        if(change['new'] == 'Swan'):
+            modelVersionDd.options = ['41.20','40.85']
+        if(change['new'] == 'Funwave-tvd'):
+            modelVersionDd.options = ['3.3','3.2', '3.1', '3.0']
+        if(change['new'] == 'OpenFoam'):
+            modelVersionDd.options = ['v1812','v1712']
+            
+modelDd.observe(model_change)
+
+buildTab = VBox(build_items)
 
 
 ################################# image tab end ###################################
@@ -524,11 +556,11 @@ imageTab = Box()
 ################################ Finally ##########################################################
         
 tab_nest = Tab()
-tab_nest.children = [swanInputBox, runBox, outputBox, imageTab]
+tab_nest.children = [swanInputBox, runBox, outputBox, buildTab]
 tab_nest.set_title(0, 'Input')
 tab_nest.set_title(1, 'Run')
 tab_nest.set_title(2, 'Output')
-tab_nest.set_title(3, 'Building')
+tab_nest.set_title(3, 'Build')
 
 setvar("""PATH=$HOME/agave-model/bin:$PATH""")
 cmd("auth-tokens-refresh")
@@ -543,32 +575,32 @@ def on_change(change):
             cur_model = 'swan'
             out.clear_output()
             with out:
-                tab_nest.children = [swanInputBox, runBox, outputBox, imageTab]
+                tab_nest.children = [swanInputBox, runBox, outputBox, buildTab]
                 display(tab_nest)
                 
         if(change['new'] == 'Funwave-tvd'):
             cur_model = 'funwave'
             out.clear_output()
             with out:
-                tab_nest.children = [fwInputBox, runBox, outputBox, imageTab]
+                tab_nest.children = [fwInputBox, runBox, outputBox, buildTab]
                 display(tab_nest)
         if(change['new'] == 'Cactus'):
             cur_model = 'cactus'
             out.clear_output()
             with out:
-                tab_nest.children = [cacInputBox, runBox, outputBox, imageTab]
+                tab_nest.children = [cacInputBox, runBox, outputBox, buildTab]
                 display(tab_nest)
         if(change['new'] == 'Delft3D'):
             cur_model = 'delft3d'
             out.clear_output()
             with out:
-                tab_nest.children = [delft3dBox, runBox, outputBox, imageTab]
+                tab_nest.children = [delft3dBox, runBox, outputBox, buildTab]
                 display(tab_nest)
         if(change['new'] == 'OpenFoam'):
             cur_model = 'openfoam'
             out.clear_output()
             with out:
-                tab_nest.children = [ofInputBox, runBox, outputBox, imageTab]
+                tab_nest.children = [ofInputBox, runBox, outputBox, buildTab]
                 display(tab_nest)
                 
 modelTitle.observe(on_change)
