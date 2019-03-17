@@ -237,7 +237,7 @@ def ofUpInput_btn_clicked(a):
         with logOp:
             cmd("rm -f input.tgz")
             cmd("rm -fr input")
-            cmd("cp -f ../input_openfoam.tgz input.tgz")
+            cmd("cp -f ../input_openfoam_own.tgz input.tgz")
             return
         
     if not ofCaseName.value == "Select Input Case":
@@ -387,7 +387,7 @@ def runfun_btn_clicked(a):
                 modify_openfoam(ofCaseName.value)
                 
             cmd("tar cvzf input.tgz input")
-            
+                
         setvar("INPUT_DIR=${AGAVE_USERNAME}_$(date +%Y-%m-%d_%H-%M-%S)")
         cmd("files-mkdir -S ${STORAGE_MACHINE} -N inputs/${INPUT_DIR}")
         cmd("files-upload -F input.tgz -S ${STORAGE_MACHINE} inputs/${INPUT_DIR}/")
