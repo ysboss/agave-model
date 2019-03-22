@@ -221,27 +221,39 @@ delft3dBox = Box(delft3d_items, layout= Layout(flex_flow = 'column', align_items
 ##################################### OpenFoam Input tab ######################################
 
 ofCaseName = Dropdown()
+ofOwnCaseName = Dropdown(options=["Select Input Case of Own"])
 ofCbox = Checkbox(value = False, description = "Use Own Input")
-cases = ["Select Input Case"]
+casesTutorials = ["Select Input Case of Tutorials"]
+casesOwn = ["Select Input Case of Own"]
 
 with logStash:
     cmd("tar -zxvf input_openfoam.tgz")
-    with open("input_openfoam/cases.txt", 'r') as fr:
+    with open("input_openfoam/tutorials/cases.txt", 'r') as fr:
         lines = fr.readlines()
         for line in lines:
-            cases.append(line)
-        ofCaseName.options = cases       
-
+            casesTutorials.append(line)
+        ofCaseName.options = casesTutorials 
+        
+def ofCbox_change(change):
+    if change['type'] == 'change' and change['name'] == 'value':
+        if(change['new'] == True):
+            ownfiles = os.listdir("input_openfoam/foam_run/")
+            ofOwnCaseName.options = ownfiles
+        if(change['new'] == False):
+            ofOwnCaseName.options = ["Select Input Case of Own"]
+            
+ofCbox.observe(ofCbox_change)
+            
 def ofUpInput_btn_clicked(a):
     if (ofCbox.value == True):
         with logOp:
             cmd("rm -f input.tgz")
             cmd("rm -fr input")
-            cmd("cp -f ../input_openfoam.tgz input.tgz")
+            cmd("cp -f input_openfoam/foam_run/" + ofOwnCaseName.value + " input.tgz")
             return
         
     if not ofCaseName.value == "Select Input Case":
-        with open("input_openfoam/" + ofCaseName.value[:-1] + "/system/decomposeParDict", "r") as fd:
+        with open("input_openfoam/tutorials/" + ofCaseName.value[:-1] + "/system/decomposeParDict", "r") as fd:
             contents = fd.read()
             ofInputArea.value = contents
             sp = r'(?:\s|//.*)'
@@ -258,7 +270,7 @@ ofUpInputBtn.on_click(ofUpInput_btn_clicked)
 
 ofInputArea = Textarea(layout= Layout(height = "300px",width = '100%'))
    
-ofInputBox = Box([ofCaseName, ofCbox, ofUpInputBtn, ofInputArea], 
+ofInputBox = Box([ofCaseName, ofCbox, ofOwnCaseName, ofUpInputBtn, ofInputArea], 
                  layout = Layout(flex_flow = 'column', align_items = 'center'))
 
 ##################################### OpenFoam Input tab end ###############################
@@ -383,7 +395,7 @@ def runfun_btn_clicked(a):
                 cmd("cp input_" + cur_model + "/input.txt input")
                 cmd("cp input_" + cur_model + "/depth.txt input")
             if (cur_model == "openfoam"):
-                cmd("cp -a input_" + cur_model + "/"+ofCaseName.value[:-1]+"/. input")
+                cmd("cp -a input_" + cur_model + "/tutorials/"+ofCaseName.value[:-1]+"/. input")
                 modify_openfoam(ofCaseName.value)
                 
             cmd("tar cvzf input.tgz input")
