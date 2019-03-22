@@ -237,7 +237,7 @@ def ofUpInput_btn_clicked(a):
         with logOp:
             cmd("rm -f input.tgz")
             cmd("rm -fr input")
-            cmd("cp -f ../input_openfoam_own.tgz input.tgz")
+            cmd("cp -f ../input_openfoam.tgz input.tgz")
             return
         
     if not ofCaseName.value == "Select Input Case":
