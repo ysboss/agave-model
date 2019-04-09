@@ -1,5 +1,7 @@
 #!/bin/bash
-source $ENV_SH
+
+source /usr/local/bin/env.sh
+
 if [ "$OPENFOAM_VER" != "" ]
 then
     echo "BUILDING OPENFOAM: Version $OPENFOAM_VER"

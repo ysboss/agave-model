@@ -1,11 +1,8 @@
 #!/bin/bash
-export MPICH_HOME="${HOME}/${CONTAINER_VER}/mpich${MPICH_VER}"
-export PATH=$MPICH_HOME/bin:$PATH
-export LD_LIBRARY_PATH=$MPICH_HOME/bin:$LD_LIBRARY_PATH
+
+source /usr/local/bin/env.sh 
 
 export HYPRE_HOME="${HOME}/${CONTAINER_VER}/hypre${HYPRE_VER}"
-export PATH=${HYPRE_HOME}:$PATH
-export LD_LIBRARY_PATH=$HYPRE_HOME/lib:$LD_LIBRARY_PATH
 
 if [ "$NHWAVE_VER" != "" ]
 then
@@ -32,10 +29,4 @@ then
     echo "BUILDING HERE:"
     pwd
     make clean && make 
-
-    # set up enviroment variable of nhwave
-    echo "export PATH=$PATH:${BASE_DIR}/NHWAVE" > env.sh
-    chmod 755 env.sh
-    chmod 755 $BASE_DIR/NHWAVE/src/nhwave
-    source env.sh
 fi

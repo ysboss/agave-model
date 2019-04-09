@@ -27,12 +27,12 @@ RUN hdf5.sh
 ENV HYPRE_VER 2.11.2
 COPY hypre.sh /usr/local/bin/hypre.sh
 RUN chmod 755 /usr/local/bin/hypre.sh
-#RUN hypre.sh
+RUN hypre.sh
 
 ENV NHWAVE_VER 3.0
 COPY nhwave.sh /usr/local/bin/nhwave.sh
 RUN chmod 755 /usr/local/bin/nhwave.sh
-#RUN nhwave.sh
+RUN nhwave.sh
 
 
 ENV SWAN_V1 41
@@ -45,4 +45,4 @@ ENV OPENFOAM_VER 1806
 ENV USER root
 COPY openfoam.sh /usr/local/bin/openfoam.sh
 RUN chmod 755 /usr/local/bin/openfoam.sh
-#RUN openfoam.sh
+RUN openfoam.sh
