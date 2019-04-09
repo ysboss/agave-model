@@ -21,9 +21,4 @@ then
     cd mpich-$MPICH_VER
     ./configure --prefix=${MPICH_HOME}
     make install -j $PROCS
-    echo "export MPICH_HOME=${MPICH_HOME}" > env.sh
-    echo "export PATH=${MPICH_HOME}/bin:${PATH}" >> env.sh
-    echo "export LD_LIBRARY_PATH=${MPICH_HOME}/lib:${LD_LIBRARY_PATH}" >> env.sh
-    chmod 755 env.sh 
-    ./env.sh
 fi

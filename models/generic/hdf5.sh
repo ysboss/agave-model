@@ -4,7 +4,6 @@ then
    echo "Please specify the H5 version using H5_VER" 
    exit 2
 fi
-source $ENV_SH
 export H5_HOME="$HOME/${CONTAINER_VER}/dep-mpich${MPICH_VER}/h5-${H5_VER}"
 if [ ! -d $H5_HOME ]
 then

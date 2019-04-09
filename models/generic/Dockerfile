@@ -11,6 +11,8 @@ RUN apt-get update && \
 ENV CONTAINER_VER ubuntu_16.04
 ENV PROCS 10
 ENV PATH /usr/local/bin:/usr/bin/:/bin:/usr/sbin:/sbin
+COPY env.sh /usr/local/bin/env.sh
+RUN chmod 755 /usr/local/bin/env.sh
 
 ENV MPICH_VER 3.1.4
 COPY mpich.sh /usr/local/bin/mpich.sh
@@ -20,7 +22,7 @@ RUN mpich.sh
 ENV H5_VER 1.8.21
 COPY hdf5.sh /usr/local/bin/hdf5.sh
 RUN chmod 755 /usr/local/bin/hdf5.sh
-#RUN hdf5.sh
+RUN hdf5.sh
 
 ENV HYPRE_VER 2.11.2
 COPY hypre.sh /usr/local/bin/hypre.sh
@@ -37,7 +39,7 @@ ENV SWAN_V1 41
 ENV SWAN_V2 20
 COPY swan.sh /usr/local/bin/swan.sh
 RUN chmod 755 /usr/local/bin/swan.sh
-#RUN swan.sh
+RUN swan.sh
 
 ENV OPENFOAM_VER 1806
 ENV USER root
