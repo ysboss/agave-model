@@ -49,7 +49,8 @@ def configure(agave_username, machine_username, machine_name, project_name):
     setvar("STORAGE_MACHINE=${MACHINE}-storage-${AGAVE_USERNAME}3")
     
     writefile("${STORAGE_MACHINE}.txt","""{
-        "id": "${STORAGE_MACHINE}",
+        "id": "${f
+        }",
         "name": "${MACHINE} storage (${MACHINE_USERNAME})",
         "description": "The ${MACHINE} computer",
         "site": "${DOMAIN}",
@@ -535,6 +536,210 @@ def submitJob(nodes, procs, model, jobName, execMachine, queue):
     # Parse out the job id from the output
     JOB_ID=$(echo $OUTPUT | cut -d' ' -f4)
     """)
+    
+def submitBuildJob(execMachine, queue):
+    
+    setvar("EXEC_MACHINE="+ execMachine)
+    setvar("QUEUE="+ queue)
+    
+    if "PBTOK" in os.environ:
+        writefile("job.txt","""
+        {
+            "name":"build_job",
+            "appId": "crcollaboratory-shelob-build-ysboss-2.0",
+            "executionSystem": "${EXEC_MACHINE}",
+            "batchQueue": "${QUEUE}",
+            "maxRunTime": "72:00:00",
+            "nodeCount": 1,
+            "processorsPerNode": 8,
+            "archive": false,
+            "archiveSystem": "${STORAGE_MACHINE}",
+            "inputs": {
+                "input tarball": "agave://${STORAGE_MACHINE}/inputs/${INPUT_DIR}/env_setting.txt"
+            },
+            "parameters": {
+                "simagename":"generic",
+                "inputdir":"${INPUT_DIR}"
+            },
+            "notifications": [
+            {
+                "url":"${EMAIL}",
+                "event":"FINISHED",
+                "persistent":"true",
+                "policy": {
+                    "retryStrategy": "DELAYED",
+                    "retryLimit": 3,
+                    "retryRate": 5,
+                    "retryDelay": 5,
+                    "saveOnFailure": true
+                    }
+            },
+            {
+                "url":"${EMAIL}",
+                "event":"FAILED",
+                "persistent":"true",
+                "policy": {
+                    "retryStrategy": "DELAYED",
+                    "retryLimit": 3,
+                    "retryRate": 5,
+                    "retryDelay": 5,
+                    "saveOnFailure": true
+                    }
+            },
+            {
+                "url":"https://www.cct.lsu.edu/~sbrandt/pushbullet.php?key=${PBTOK}&status=\${JOB_STATUS}:\${JOB_ID}",
+                "event":"RUNNING",
+                "persistent":"true",
+                "policy": {
+                    "retryStrategy": "DELAYED",
+                    "retryLimit": 3,
+                    "retryRate": 5,
+                    "retryDelay": 5,
+                    "saveOnFailure": true
+                    }
+            },
+            {
+                "url":"https://www.cct.lsu.edu/~sbrandt/pushbullet.php?key=${PBTOK}&status=\${JOB_STATUS}:\${JOB_ID}",
+                "event":"KILLED",
+                "persistent":"true",
+                "policy": {
+                    "retryStrategy": "DELAYED",
+                    "retryLimit": 3,
+                    "retryRate": 5,
+                    "retryDelay": 5,
+                    "saveOnFailure": true
+                    }
+            },
+            {
+                "url":"https://www.cct.lsu.edu/~sbrandt/pushbullet.php?key=${PBTOK}&status=\${JOB_STATUS}:\${JOB_ID}",
+                "event":"STOPPED",
+                "persistent":"true",
+                "policy": {
+                    "retryStrategy": "DELAYED",
+                    "retryLimit": 3,
+                    "retryRate": 5,
+                    "retryDelay": 5,
+                    "saveOnFailure": true
+                    }
+            },
+            {
+                "url":"https://www.cct.lsu.edu/~sbrandt/pushbullet.php?key=${PBTOK}&status=\${JOB_STATUS}:\${JOB_ID}",
+                "event":"PAUSED",
+                "persistent":"true",
+                "policy": {
+                    "retryStrategy": "DELAYED",
+                    "retryLimit": 3,
+                    "retryRate": 5,
+                    "retryDelay": 5,
+                    "saveOnFailure": true
+                    }
+            },
+            {
+                "url":"https://www.cct.lsu.edu/~sbrandt/pushbullet.php?key=${PBTOK}&status=\${JOB_STATUS}:\${JOB_ID}",
+                "event":"SUBMITTING",
+                "persistent":"true",
+                "policy": {
+                    "retryStrategy": "DELAYED",
+                    "retryLimit": 3,
+                    "retryRate": 5,
+                    "retryDelay": 5,
+                    "saveOnFailure": true
+                    }
+            },
+            {
+                "url":"https://www.cct.lsu.edu/~sbrandt/pushbullet.php?key=${PBTOK}&status=\${JOB_STATUS}:\${JOB_ID}",
+                "event":"QUEUED",
+                "persistent":"true",
+                "policy": {
+                    "retryStrategy": "DELAYED",
+                    "retryLimit": 3,
+                    "retryRate": 5,
+                    "retryDelay": 5,
+                    "saveOnFailure": true
+                    }
+            },
+            {
+                "url":"https://www.cct.lsu.edu/~sbrandt/pushbullet.php?key=${PBTOK}&status=\${JOB_STATUS}:\${JOB_ID}",
+                "event":"FINISHED",
+                "persistent":"true",
+                "policy": {
+                    "retryStrategy": "DELAYED",
+                    "retryLimit": 3,
+                    "retryRate": 5,
+                    "retryDelay": 5,
+                    "saveOnFailure": true
+                    }
+            },
+            {
+                "url":"https://www.cct.lsu.edu/~sbrandt/pushbullet.php?key=${PBTOK}&status=\${JOB_STATUS}:\${JOB_ID}",
+                "event":"FAILED",
+                "persistent":"true",
+                "policy": {
+                    "retryStrategy": "DELAYED",
+                    "retryLimit": 3,
+                    "retryRate": 5,
+                    "retryDelay": 5,
+                    "saveOnFailure": true
+                    }
+            }
+          ]
+        }
+        """)
+    else:
+        writefile("job.txt","""
+        {
+            "name":"build_job",
+            "appId": "${APP_NAME}",
+            "executionSystem": "${EXEC_MACHINE}",
+            "batchQueue": "${QUEUE}",
+            "maxRunTime": "72:00:00",
+            "nodeCount": 1,
+            "processorsPerNode": 1,
+            "archive": false,
+            "archiveSystem": "${STORAGE_MACHINE}",
+            "inputs": {
+                "input": "agave://${STORAGE_MACHINE}/inputs/${INPUT_DIR}/env_setting.sh"
+            },
+            "parameters": {
+                "simagename":"${MODEL}",
+                "inputdir":"${INPUT_DIR}"
+            },
+            "notifications": [
+            {
+                "url":"${EMAIL}",
+                "event":"FINISHED",
+                "persistent":"true",
+                "policy": {
+                    "retryStrategy": "DELAYED",
+                    "retryLimit": 3,
+                    "retryRate": 5,
+                    "retryDelay": 5,
+                    "saveOnFailure": true
+                    }
+            },
+            {
+                "url":"${EMAIL}",
+                "event":"FAILED",
+                "persistent":"true",
+                "policy": {
+                    "retryStrategy": "DELAYED",
+                    "retryLimit": 3,
+                    "retryRate": 5,
+                    "retryDelay": 5,
+                    "saveOnFailure": true
+                    }
+            }
+          ]
+        }
+        """)
+
+    setvar("""
+    # Capture the output of the job submit command
+    OUTPUT=$(jobs-submit -F job.txt)
+    # Parse out the job id from the output
+    JOB_ID=$(echo $OUTPUT | cut -d' ' -f4)
+    """)
+    
     
     
 def configure2(agave_username, exec_machine, storage_name, project_name):
