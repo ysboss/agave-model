@@ -1,4 +1,7 @@
 #!/bin/bash
+cd /workdir/input
+source env_setting.txt
+
 echo "START BUILDING"
 if [ "$MPICH_VER" != "" ]
 then   
