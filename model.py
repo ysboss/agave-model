@@ -1,7 +1,8 @@
 from __future__ import print_function
 import os, re
 import numpy as np
-from ipywidgets import interactive, Layout, Button, Box, HBox, VBox, Text, Dropdown, Label, IntSlider, Textarea, Accordion, ToggleButton, ToggleButtons, Select, HTMLMath, FloatRangeSlider, Output, Tab, Checkbox
+import ipywidgets
+from ipywidgets import interactive, Layout, Button, Box, HBox, VBox, Text, Dropdown, Label, IntSlider, Textarea, Accordion, ToggleButton, ToggleButtons, Select, HTMLMath, FloatRangeSlider, Output, Tab, Checkbox, HTML
 from IPython.display import display, clear_output, HTML
 import json
 import systemdata
@@ -20,8 +21,11 @@ logOp = Output()
 logStash = Output()   # use to receive logs that are stashed for user
 clearLogBtn = Button(description='Clear log', button_style='primary', layout = Layout(width = '115px'))
 
-modelTitle = Dropdown(options=['SWAN', 'Funwave-tvd','Delft3D', 'OpenFoam', 'Cactus'])
-modelBox = Box([modelTitle, clearLogBtn], 
+modelTitle = Dropdown(options=['SWAN', 'Funwave-tvd','Delft3D', 'OpenFoam', 'Cactus', 'NHWAVE'])
+modelVersion = Dropdown()
+modelBox = VBox([Box([Label(value="Model", layout = Layout(width = '50px')), modelTitle]), 
+                 Box([Label(value="Version", layout = Layout(width = '50px')),modelVersion])])
+globalBox = Box([modelBox, clearLogBtn], 
                layout = Layout(display = 'flex', flex_flow = 'row', justify_content = 'space-between', width = '100%'))
 
 def clearLog_btn_clicked(a):
@@ -201,6 +205,23 @@ cacInputBox = Box([cacInputdd, cacCbox, cacInput, cacUpInputBtn, cacInputArea],
                   layout = Layout(flex_flow = 'column', align_items = 'center'))
 
 ##################################### Cactus Input tab end ###############################
+
+
+
+##################################### NHWAVE Input tab ################################
+
+
+nhInputdd=Dropdown(options=['Choose Input Template','Basic Template'], value='Choose Input Template')
+nhCbox = Checkbox(value = False, description = "Use Own Input")
+nhInput = Box(layout = Layout(flex_flow = 'column'))    
+nhInputdd.observe(template_on_change)
+nhUpInputBtn = Button(description='Update Input File',button_style='primary', layout=Layout(width='100%'))
+nhUpInputBtn.on_click(update_btn_clicked)
+nhInputArea = Textarea(layout= Layout(height = "300px",width = '100%'))
+nhInputBox = Box([nhInputdd, nhCbox, nhInput, nhUpInputBtn, nhInputArea], 
+                  layout = Layout(flex_flow = 'column', align_items = 'center'))
+
+##################################### Funwave-tvd Input tab end ###############################
 
 
 
@@ -532,31 +553,63 @@ build_item_layout = Layout(
     width = '50%'
 )
 
-modelDd = Dropdown(options=['Swan','Funwave-tvd','OpenFoam'])
+modelDd = Dropdown(options=['Swan','Funwave-tvd','OpenFoam', 'NHWAVE'])
 modelVersionDd = Dropdown(options = ['41.20','40.85'])
-mpiDd = Dropdown(options = ['3.3','3.2'])
-h5Dd = Dropdown(options = ['1.10.5','1.10.4', '1.10.3'])
+mpiDd = Dropdown(options = ['None','3.3','3.2', '3.1.4'])
+h5Dd = Dropdown(options = ['None','1.10.5','1.10.4', '1.8.21'])
+hypreDd = Dropdown(options = ['None','2.11.2', '2.10.1'])
 
 buildBtn = Button(description = "Build", button_style='primary', layout= Layout(width = '50px'))
+build_model = Label(value=modelTitle.value + " VERSION", layout = Layout(width = '350px'))
 
 build_items = [
-    Box([Label(value="MODEL", layout = Layout(width = '350px')), modelDd], layout = build_item_layout),
-    Box([Label(value="MODEL VERSION", layout = Layout(width = '350px')), modelVersionDd], layout = build_item_layout),
+    Box([build_model, modelVersionDd], layout = build_item_layout),
+    Box([Label(value="Build Machine", layout = Layout(width = '350px')), machines], layout = build_item_layout),
+    Box([Label(value="Queue", layout = Layout(width = '350px')), queues], layout = build_item_layout),
+    ipywidgets.HTML(value="<b><font color='OrangeRed'><font size='2.5'>Select Dependent Software</b>"), 
+    #Box([Label(value="MODEL", layout = Layout(width = '350px')), modelDd], layout = build_item_layout),
     Box([Label(value="MPICH", layout = Layout(width = '350px')), mpiDd], layout = build_item_layout),
     Box([Label(value="HDF5", layout = Layout(width = '350px')), h5Dd], layout = build_item_layout),
+    Box([Label(value="HYPRE", layout = Layout(width = '350px')), hypreDd], layout = build_item_layout),
     Box([buildBtn]),
 ]
 
-def model_change(change):
-    if change['type'] == 'change' and change['name'] == 'value':
-        if(change['new'] == 'Swan'):
-            modelVersionDd.options = ['41.20','40.85']
-        if(change['new'] == 'Funwave-tvd'):
-            modelVersionDd.options = ['3.3','3.2', '3.1', '3.0']
-        if(change['new'] == 'OpenFoam'):
-            modelVersionDd.options = ['v1812','v1712']
+# def model_change(change):
+#     if change['type'] == 'change' and change['name'] == 'value':
+#         if(change['new'] == 'Swan'):
+#             modelVersionDd.options = ['41.20','40.85']
+#         if(change['new'] == 'Funwave-tvd'):
+#             modelVersionDd.options = ['3.3','3.2', '3.1', '3.0']
+#         if(change['new'] == 'OpenFoam'):
+#             modelVersionDd.options = ['1812','1806', '1712']
+#         if(change['new'] == 'NHWAVE'):
+#             modelVersionDd.options = ['3.0']
             
-modelDd.observe(model_change)
+def buildBtn_clicked(a):
+    model_ver = modelDd.value.upper() + "_VER"
+    mpi_ver = '' if mpiDd.value is "None" else mpiDd.value
+    h5_ver = '' if h5Dd.value is "None" else h5Dd.value
+    hypre_ver = '' if hypreDd.value is "None" else hypreDd.value
+  
+    writefile("env_setting.txt","""
+#!/bin/bash
+export """+model_ver+"""="""+modelVersionDd.value+"""
+export MPICH_VER="""+mpi_ver+"""
+export HDF5_VER="""+h5_ver+"""
+export HYPRE_VER="""+hypre_ver+"""
+    """)
+    
+#     cmd("rm -fr build_input") 
+#     cmd("mkdir build_input")
+#     cmd("cp env_setting build_input/")
+    setvar("INPUT_DIR=${AGAVE_USERNAME}_$(date +%Y-%m-%d_%H-%M-%S)")
+    cmd("files-mkdir -S ${STORAGE_MACHINE} -N inputs/${INPUT_DIR}")
+    cmd("files-upload -F env_setting.txt -S ${STORAGE_MACHINE} inputs/${INPUT_DIR}/")
+    submitBuildJob(machines.value, queues.value)
+    
+buildBtn.on_click(buildBtn_clicked)
+            
+#modelDd.observe(model_change)
 
 buildTab = VBox(build_items)
 
@@ -583,7 +636,9 @@ def on_change(change):
     with logOp:
         setvar("MODEL_TITLE="+modelTitle.value)
     if change['type'] == 'change' and change['name'] == 'value':
+        build_model.value = modelTitle.value + " VERSION"
         if(change['new'] == 'SWAN'):
+            modelVersionDd.options = ['41.20','40.85']
             cur_model = 'swan'
             out.clear_output()
             with out:
@@ -591,6 +646,7 @@ def on_change(change):
                 display(tab_nest)
                 
         if(change['new'] == 'Funwave-tvd'):
+            modelVersionDd.options = ['3.3','3.2', '3.1', '3.0']
             cur_model = 'funwave'
             out.clear_output()
             with out:
@@ -609,15 +665,23 @@ def on_change(change):
                 tab_nest.children = [delft3dBox, runBox, outputBox, buildTab]
                 display(tab_nest)
         if(change['new'] == 'OpenFoam'):
+            modelVersionDd.options = ['1812','1806', '1712']
             cur_model = 'openfoam'
             out.clear_output()
             with out:
                 tab_nest.children = [ofInputBox, runBox, outputBox, buildTab]
                 display(tab_nest)
+        if(change['new'] == 'NHWAVE'):
+            modelVersionDd.options = ['3.0']
+            cur_model = 'nhwave'
+            out.clear_output()
+            with out:
+                tab_nest.children = [nhInputBox, runBox, outputBox, buildTab]
+                display(tab_nest)
                 
 modelTitle.observe(on_change)
 
-display(modelBox)
+display(globalBox)
 
 out = Output()
 
