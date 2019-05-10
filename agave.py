@@ -559,7 +559,12 @@ def submitBuildJob(execMachine, queue):
             },
             "parameters": {
                 "simagename":"generic",
-                "inputdir":"${INPUT_DIR}"
+                "inputdir":"${INPUT_DIR}",
+                "model":"${MODEL_TITLE}",
+                "model_ver":"${MODEL_VER}",
+                "mpich":"${MPICH_VER}",
+                "hdf5":"${HDF5_VER}",
+                "hypre":"${HYPRE_VER}"
             },
             "notifications": [
             {
@@ -702,7 +707,11 @@ def submitBuildJob(execMachine, queue):
             },
             "parameters": {
                 "simagename":"${MODEL}",
-                "inputdir":"${INPUT_DIR}"
+                "inputdir":"${INPUT_DIR}",
+                "model":"${MODEL_TITLE}",
+                "mpich":"${MPICH_VER}",
+                "hdf5":"${HDF5_VER}",
+                "hypre":"${HYPRE_VER}"
             },
             "notifications": [
             {
