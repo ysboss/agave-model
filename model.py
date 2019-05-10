@@ -30,6 +30,7 @@ globalBox = Box([modelBox, clearLogBtn],
 
 def clearLog_btn_clicked(a):
     logOp.clear_output()
+    msgOut.clear_output()
 
 clearLogBtn.on_click(clearLog_btn_clicked)
 
@@ -561,6 +562,7 @@ hypreDd = Dropdown(options = ['None','2.11.2', '2.10.1'])
 
 buildBtn = Button(description = "Build", button_style='primary', layout= Layout(width = '50px'))
 build_model = Label(value=modelTitle.value + " VERSION", layout = Layout(width = '350px'))
+msgOut = Output()
 
 build_items = [
     Box([build_model, modelVersionDd], layout = build_item_layout),
@@ -572,6 +574,7 @@ build_items = [
     Box([Label(value="HDF5", layout = Layout(width = '350px')), h5Dd], layout = build_item_layout),
     Box([Label(value="HYPRE", layout = Layout(width = '350px')), hypreDd], layout = build_item_layout),
     Box([buildBtn]),
+    Box([msgOut])
 ]
 
 # def model_change(change):
@@ -584,14 +587,29 @@ build_items = [
 #             modelVersionDd.options = ['1812','1806', '1712']
 #         if(change['new'] == 'NHWAVE'):
 #             modelVersionDd.options = ['3.0']
-            
+def isjobexist():
+    query_cmd = "jobs-search 'status=FINISHED' 'parameters.like={*\"model\":\""+modelTitle.value+"\"*,*\"hdf5\":\""+h5Dd.value+"\"*,*\"model_ver\":\""+modelVersionDd.value+"\"*,*\"simagename\":\"generic\"*,*\"mpich\":\""+mpiDd.value+"\"*,*\"hypre\":\""+hypreDd.value+"\"*}'"
+    print (query_cmd)
+    
+    out = cmd(query_cmd,show=False,trace=False)
+    result = out['stdout'][0]
+    if not result:
+        return False
+    return True
+        
+         
 def buildBtn_clicked(a):
-    model_ver = modelDd.value.upper() + "_VER"
+    model_ver = modelTitle.value.upper() + "_VER"
     mpi_ver = '' if mpiDd.value is "None" else mpiDd.value
     h5_ver = '' if h5Dd.value is "None" else h5Dd.value
     hypre_ver = '' if hypreDd.value is "None" else hypreDd.value
-  
-    writefile("env_setting.txt","""
+    
+    with logOp:
+        setvar("MPICH_VER=" + mpiDd.value)
+        setvar("HDF5_VER=" + h5Dd.value)
+        setvar("HYPRE_VER=" + hypreDd.value)
+        setvar("MODEL_VER=" + modelVersionDd.value)
+        writefile("env_setting.txt","""
 #!/bin/bash
 export """+model_ver+"""="""+modelVersionDd.value+"""
 export MPICH_VER="""+mpi_ver+"""
@@ -602,10 +620,21 @@ export HYPRE_VER="""+hypre_ver+"""
 #     cmd("rm -fr build_input") 
 #     cmd("mkdir build_input")
 #     cmd("cp env_setting build_input/")
-    setvar("INPUT_DIR=${AGAVE_USERNAME}_$(date +%Y-%m-%d_%H-%M-%S)")
-    cmd("files-mkdir -S ${STORAGE_MACHINE} -N inputs/${INPUT_DIR}")
-    cmd("files-upload -F env_setting.txt -S ${STORAGE_MACHINE} inputs/${INPUT_DIR}/")
-    submitBuildJob(machines.value, queues.value)
+        exist = isjobexist()
+        if exist is True:
+            with msgOut:
+                print ("The job exist, no build job would be submitted!")
+        else:
+            setvar("INPUT_DIR=${AGAVE_USERNAME}_$(date +%Y-%m-%d_%H-%M-%S)")
+            cmd("files-mkdir -S ${STORAGE_MACHINE} -N inputs/${INPUT_DIR}")
+            cmd("files-upload -F env_setting.txt -S ${STORAGE_MACHINE} inputs/${INPUT_DIR}/")
+            submitBuildJob(machines.value, queues.value)
+            
+            # set job permissions to users
+            users = ['ysboss','tg457049','lzhu','nanw','reza']
+            for user in users:
+                cmd('jobs-pems-update -u '+user+' -p ALL ${JOB_ID}')
+            
     
 buildBtn.on_click(buildBtn_clicked)
             
