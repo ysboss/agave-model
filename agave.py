@@ -558,13 +558,8 @@ def submitBuildJob(execMachine, queue):
                 "input tarball": "agave://${STORAGE_MACHINE}/inputs/${INPUT_DIR}/env_setting.txt"
             },
             "parameters": {
-                "simagename":"generic",
-                "inputdir":"${INPUT_DIR}",
-                "model":"${MODEL_TITLE}",
-                "model_ver":"${MODEL_VER}",
-                "mpich":"${MPICH_VER}",
-                "hdf5":"${HDF5_VER}",
-                "hypre":"${HYPRE_VER}"
+            "simagename":"generic",
+                "versions":"model=${MODEL_TITLE}&model_ver=${MODEL_VER}&mpich=${MPICH_VER}&hdf5=${HDF5_VER}&hypre=${HYPRE_VER}"
             },
             "notifications": [
             {
@@ -706,12 +701,7 @@ def submitBuildJob(execMachine, queue):
                 "input": "agave://${STORAGE_MACHINE}/inputs/${INPUT_DIR}/env_setting.sh"
             },
             "parameters": {
-                "simagename":"${MODEL}",
-                "inputdir":"${INPUT_DIR}",
-                "model":"${MODEL_TITLE}",
-                "mpich":"${MPICH_VER}",
-                "hdf5":"${HDF5_VER}",
-                "hypre":"${HYPRE_VER}"
+                "simage":"generic&model=${MODEL_TITLE}&model_ver=${MODEL_VER}&mpich=${MPICH_VER}&hdf5=${HDF5_VER}&hypre=${HYPRE_VER}"
             },
             "notifications": [
             {
