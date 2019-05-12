@@ -21,7 +21,7 @@ logOp = Output()
 logStash = Output()   # use to receive logs that are stashed for user
 clearLogBtn = Button(description='Clear log', button_style='primary', layout = Layout(width = '115px'))
 
-modelTitle = Dropdown(options=['SWAN', 'Funwave-tvd','Delft3D', 'OpenFoam', 'Cactus', 'NHWAVE'])
+modelTitle = Dropdown(options=['SWAN', 'Funwave_tvd','Delft3D', 'OpenFoam', 'Cactus', 'NHWAVE'])
 modelVersion = Dropdown()
 modelBox = VBox([Box([Label(value="Model", layout = Layout(width = '50px')), modelTitle]), 
                  Box([Label(value="Version", layout = Layout(width = '50px')),modelVersion])])
@@ -554,8 +554,8 @@ build_item_layout = Layout(
     width = '50%'
 )
 
-modelDd = Dropdown(options=['Swan','Funwave-tvd','OpenFoam', 'NHWAVE'])
-modelVersionDd = Dropdown(options = ['41.20','40.85'])
+modelDd = Dropdown(options=['Swan','Funwave_tvd','OpenFoam', 'NHWAVE'])
+modelVersionDd = Dropdown(options = ['4120','4110AB'])
 mpiDd = Dropdown(options = ['None','3.3','3.2', '3.1.4'])
 h5Dd = Dropdown(options = ['None','1.10.5','1.10.4', '1.8.21'])
 hypreDd = Dropdown(options = ['None','2.11.2', '2.10.1'])
@@ -588,7 +588,8 @@ build_items = [
 #         if(change['new'] == 'NHWAVE'):
 #             modelVersionDd.options = ['3.0']
 def isjobexist():
-    query_cmd = "jobs-search 'status=FINISHED' 'parameters.like={*\"model\":\""+modelTitle.value+"\"*,*\"hdf5\":\""+h5Dd.value+"\"*,*\"model_ver\":\""+modelVersionDd.value+"\"*,*\"simagename\":\"generic\"*,*\"mpich\":\""+mpiDd.value+"\"*,*\"hypre\":\""+hypreDd.value+"\"*}'"
+    query_terms = 'model='+modelTitle.value+'&model_ver='+modelVersionDd.value+'&mpich='+mpiDd.value+'&hdf5='+h5Dd.value+'&hypre='+hypreDd.value
+    query_cmd = "jobs-search 'status=FINISHED' 'parameters.like={*\"versions\":\""+query_terms+"\"*}'"
     print (query_cmd)
     
     out = cmd(query_cmd,show=False,trace=False)
@@ -613,7 +614,7 @@ def buildBtn_clicked(a):
 #!/bin/bash
 export """+model_ver+"""="""+modelVersionDd.value+"""
 export MPICH_VER="""+mpi_ver+"""
-export HDF5_VER="""+h5_ver+"""
+export H5_VER="""+h5_ver+"""
 export HYPRE_VER="""+hypre_ver+"""
     """)
     
@@ -633,7 +634,7 @@ export HYPRE_VER="""+hypre_ver+"""
             # set job permissions to users
             users = ['ysboss','tg457049','lzhu','nanw','reza']
             for user in users:
-                cmd('jobs-pems-update -u '+user+' -p ALL ${JOB_ID}')
+                cmd('jobs-pems-update -u '+user+' -p READ ${JOB_ID}')
             
     
 buildBtn.on_click(buildBtn_clicked)
@@ -667,27 +668,29 @@ def on_change(change):
     if change['type'] == 'change' and change['name'] == 'value':
         build_model.value = modelTitle.value + " VERSION"
         if(change['new'] == 'SWAN'):
-            modelVersionDd.options = ['41.20','40.85']
+            modelVersionDd.options = ['4120','4110AB']
             cur_model = 'swan'
             out.clear_output()
             with out:
                 tab_nest.children = [swanInputBox, runBox, outputBox, buildTab]
                 display(tab_nest)
                 
-        if(change['new'] == 'Funwave-tvd'):
-            modelVersionDd.options = ['3.3','3.2', '3.1', '3.0']
+        if(change['new'] == 'Funwave_tvd'):
+            modelVersionDd.options = ['3.3']
             cur_model = 'funwave'
             out.clear_output()
             with out:
                 tab_nest.children = [fwInputBox, runBox, outputBox, buildTab]
                 display(tab_nest)
         if(change['new'] == 'Cactus'):
+            modelVersionDd.options = []
             cur_model = 'cactus'
             out.clear_output()
             with out:
                 tab_nest.children = [cacInputBox, runBox, outputBox, buildTab]
                 display(tab_nest)
         if(change['new'] == 'Delft3D'):
+            modelVersionDd.options = []
             cur_model = 'delft3d'
             out.clear_output()
             with out:
