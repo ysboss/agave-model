@@ -663,9 +663,10 @@ clear_output()
 
 def on_change(change):
     global cur_model
-    with logOp:
-        setvar("MODEL_TITLE="+modelTitle.value)
     if change['type'] == 'change' and change['name'] == 'value':
+        with logOp:
+            setvar("MODEL_TITLE="+modelTitle.value)
+    
         build_model.value = modelTitle.value + " VERSION"
         if(change['new'] == 'SWAN'):
             modelVersionDd.options = ['4120','4110AB']
