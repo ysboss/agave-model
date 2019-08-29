@@ -10,13 +10,11 @@ RUN pip3 install jupyter jupyterhub matplotlib==2.0.2 numpy notebook
 RUN pip2 install --upgrade pip
 RUN python2 -m pip install ipykernel
 RUN npm install -g configurable-http-proxy
-RUN apt-get install -y libcairo2-dev
-RUN apt-get install -y libjpeg9-dev
+RUN apt-get install -y libcairo2-dev libjpeg9-dev
 
 RUN pip3 install ipywidgets
 RUN jupyter nbextension enable --py widgetsnbextension
-RUN pip3 install setvar 
-RUN pip3 install h5py
+RUN pip3 install setvar h5py
 WORKDIR /usr/local
 RUN git clone http://github.com/agaveplatform/agave-cli cli
 
