@@ -15,10 +15,9 @@ RUN apt-get install -y libcairo2-dev libjpeg9-dev
 RUN pip3 install ipywidgets
 RUN jupyter nbextension enable --py widgetsnbextension
 RUN pip3 install setvar h5py
-# WORKDIR /usr/local
-# RUN git clone https://github.com/TACC/agavepy
-# RUN cd agavepy && make install 
-RUN pip install agavepy
+WORKDIR /usr/local
+RUN git clone https://github.com/TACC/agavepy
+RUN cd agavepy && pip install --upgrade --user .
 WORKDIR /usr/local
 RUN git clone https://github.com/TACC-Cloud/agave-cli cli
 
