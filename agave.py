@@ -344,7 +344,6 @@ def submitJob(nodes, procs, model, jobName, execMachine, queue):
         {
             "name":"${JOB_NAME}",
             "appId": "${APP_NAME}",
-            "executionSystem": "${EXEC_MACHINE}",
             "batchQueue": "${QUEUE}",
             "maxRunTime": "72:00:00",
             "nodeCount": """+str(nodes)+""",
@@ -355,14 +354,13 @@ def submitJob(nodes, procs, model, jobName, execMachine, queue):
                 "input tarball": "agave://${STORAGE_MACHINE}/inputs/${INPUT_DIR}/input.tgz"
             },
             "parameters": {
-                "simagename":"${MODEL}",
-                "inputdir":"${INPUT_DIR}"
+                "simagename":"${MODEL}"
             },
             "notifications": [
             {
                 "url":"${EMAIL}",
                 "event":"FINISHED",
-                "persistent":"true",
+                "persistent": true,
                 "policy": {
                     "retryStrategy": "DELAYED",
                     "retryLimit": 3,
@@ -374,7 +372,7 @@ def submitJob(nodes, procs, model, jobName, execMachine, queue):
             {
                 "url":"${EMAIL}",
                 "event":"FAILED",
-                "persistent":"true",
+                "persistent": true,
                 "policy": {
                     "retryStrategy": "DELAYED",
                     "retryLimit": 3,
@@ -386,7 +384,7 @@ def submitJob(nodes, procs, model, jobName, execMachine, queue):
             {
                 "url":"https://www.cct.lsu.edu/~sbrandt/pushbullet.php?key=${PBTOK}&status=\${JOB_STATUS}:\${JOB_ID}",
                 "event":"RUNNING",
-                "persistent":"true",
+                "persistent": true,
                 "policy": {
                     "retryStrategy": "DELAYED",
                     "retryLimit": 3,
@@ -398,7 +396,7 @@ def submitJob(nodes, procs, model, jobName, execMachine, queue):
             {
                 "url":"https://www.cct.lsu.edu/~sbrandt/pushbullet.php?key=${PBTOK}&status=\${JOB_STATUS}:\${JOB_ID}",
                 "event":"KILLED",
-                "persistent":"true",
+                "persistent": true,
                 "policy": {
                     "retryStrategy": "DELAYED",
                     "retryLimit": 3,
@@ -410,7 +408,7 @@ def submitJob(nodes, procs, model, jobName, execMachine, queue):
             {
                 "url":"https://www.cct.lsu.edu/~sbrandt/pushbullet.php?key=${PBTOK}&status=\${JOB_STATUS}:\${JOB_ID}",
                 "event":"STOPPED",
-                "persistent":"true",
+                "persistent": true,
                 "policy": {
                     "retryStrategy": "DELAYED",
                     "retryLimit": 3,
@@ -422,7 +420,7 @@ def submitJob(nodes, procs, model, jobName, execMachine, queue):
             {
                 "url":"https://www.cct.lsu.edu/~sbrandt/pushbullet.php?key=${PBTOK}&status=\${JOB_STATUS}:\${JOB_ID}",
                 "event":"PAUSED",
-                "persistent":"true",
+                "persistent": true,
                 "policy": {
                     "retryStrategy": "DELAYED",
                     "retryLimit": 3,
@@ -434,7 +432,7 @@ def submitJob(nodes, procs, model, jobName, execMachine, queue):
             {
                 "url":"https://www.cct.lsu.edu/~sbrandt/pushbullet.php?key=${PBTOK}&status=\${JOB_STATUS}:\${JOB_ID}",
                 "event":"SUBMITTING",
-                "persistent":"true",
+                "persistent": true,
                 "policy": {
                     "retryStrategy": "DELAYED",
                     "retryLimit": 3,
@@ -446,7 +444,7 @@ def submitJob(nodes, procs, model, jobName, execMachine, queue):
             {
                 "url":"https://www.cct.lsu.edu/~sbrandt/pushbullet.php?key=${PBTOK}&status=\${JOB_STATUS}:\${JOB_ID}",
                 "event":"QUEUED",
-                "persistent":"true",
+                "persistent": true,
                 "policy": {
                     "retryStrategy": "DELAYED",
                     "retryLimit": 3,
@@ -458,7 +456,7 @@ def submitJob(nodes, procs, model, jobName, execMachine, queue):
             {
                 "url":"https://www.cct.lsu.edu/~sbrandt/pushbullet.php?key=${PBTOK}&status=\${JOB_STATUS}:\${JOB_ID}",
                 "event":"FINISHED",
-                "persistent":"true",
+                "persistent": true,
                 "policy": {
                     "retryStrategy": "DELAYED",
                     "retryLimit": 3,
@@ -470,7 +468,7 @@ def submitJob(nodes, procs, model, jobName, execMachine, queue):
             {
                 "url":"https://www.cct.lsu.edu/~sbrandt/pushbullet.php?key=${PBTOK}&status=\${JOB_STATUS}:\${JOB_ID}",
                 "event":"FAILED",
-                "persistent":"true",
+                "persistent": true,
                 "policy": {
                     "retryStrategy": "DELAYED",
                     "retryLimit": 3,
@@ -487,25 +485,23 @@ def submitJob(nodes, procs, model, jobName, execMachine, queue):
         {
             "name":"${JOB_NAME}",
             "appId": "${APP_NAME}",
-            "executionSystem": "${EXEC_MACHINE}",
             "batchQueue": "${QUEUE}",
             "maxRunTime": "72:00:00",
             "nodeCount": """+str(nodes)+""",
             "processorsPerNode": """+str(procs)+""",
-            "archive": false,
+            "archive": true,
             "archiveSystem": "${STORAGE_MACHINE}",
             "inputs": {
                 "input tarball": "agave://${STORAGE_MACHINE}/inputs/${INPUT_DIR}/input.tgz"
             },
             "parameters": {
-                "simagename":"${MODEL}",
-                "inputdir":"${INPUT_DIR}"
+                "simagename":"${MODEL}"
             },
             "notifications": [
             {
                 "url":"${EMAIL}",
                 "event":"FINISHED",
-                "persistent":"true",
+                "persistent": true,
                 "policy": {
                     "retryStrategy": "DELAYED",
                     "retryLimit": 3,
@@ -517,7 +513,7 @@ def submitJob(nodes, procs, model, jobName, execMachine, queue):
             {
                 "url":"${EMAIL}",
                 "event":"FAILED",
-                "persistent":"true",
+                "persistent": true,
                 "policy": {
                     "retryStrategy": "DELAYED",
                     "retryLimit": 3,

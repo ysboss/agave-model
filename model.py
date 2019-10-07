@@ -423,8 +423,10 @@ def runfun_btn_clicked(a):
             cmd("tar cvzf input.tgz input")
                 
         setvar("INPUT_DIR=${AGAVE_USERNAME}_$(date +%Y-%m-%d_%H-%M-%S)")
-        cmd("files-mkdir -S ${STORAGE_MACHINE} -N inputs/${INPUT_DIR}")
-        cmd("files-upload -F input.tgz -S ${STORAGE_MACHINE} inputs/${INPUT_DIR}/")
+        #cmd("files-mkdir -S ${STORAGE_MACHINE} -N inputs/${INPUT_DIR}")
+        #cmd("files-upload -F input.tgz -S ${STORAGE_MACHINE} inputs/${INPUT_DIR}/")
+        cmd("files-mkdir agave://${STORAGE_MACHINE}/inputs/${INPUT_DIR}")
+        cmd("files-cp input.tgz agave://${STORAGE_MACHINE}/inputs/${INPUT_DIR}/")
         submitJob(nodes, procs[0], cur_model, jobNameText.value, machines.value, queues.value)
         
 runBtn.on_click(runfun_btn_clicked)
