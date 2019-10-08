@@ -125,11 +125,11 @@ def template_on_change(change):
             return
         if(change['new'] == 'Basic Template'):
             with logOp:
-                cmd("tar -zxvf input_" + cur_model + ".tgz")
+                cmd("tar -xvf input_" + cur_model + ".tgz")
             inputTmp = 'input_' + cur_model + '/basic_template.txt'
         if(change['new'] == 'HDF5 Template'):
             with logOp:
-                cmd("tar -zxvf input_" + cur_model + ".tgz")
+                cmd("tar -xvf input_" + cur_model + ".tgz")
             inputTmp = 'input_' + cur_model + '/hdf5_template.txt'
         
         tab_nest.children[0].children[2].children = generatePara(inputTmp)
@@ -249,7 +249,7 @@ casesTutorials = ["Select Input Case of Tutorials"]
 casesOwn = ["Select Input Case of Own"]
 
 with logStash:
-    cmd("tar -zxvf input_openfoam.tgz")
+    cmd("tar -xvf input_openfoam.tgz")
     with open("input_openfoam/tutorials/cases.txt", 'r') as fr:
         lines = fr.readlines()
         for line in lines:
@@ -502,7 +502,7 @@ def download_btn_clicked(a):
             if(outputSelect.value == 'output.tar.gz'):
                 cmd("rm -fr output")
                 cmd("mkdir -p output_" + jobid)
-                cmd('tar -zxvf output.tar.gz -C ' + jobid)
+                cmd('tar -xvf output.tar.gz -C ' + jobid)
             elif(re.match(r'.*\.(txt|out|err|ipcexe)',outputSelect.value)):
                 with open(outputSelect.value,'r') as fd:
                     for line in fd.readlines():
