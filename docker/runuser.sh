@@ -10,6 +10,21 @@ cd agave-model
 
 sudo tzupdate
 
+# Get newest updates from the git repo.
+git fetch
+
+# For each file in the repo...
+for i in $(git ls-files)
+do
+    # Check to see if file $i is locally modified...
+    git diff --quiet $i
+    if [ $? = 0 ]
+    then
+        # if it's not, then fetch the newest version from master.
+        git checkout origin/master -- $i
+    fi
+done
+
 SECRET_TOKEN=$(< /dev/urandom tr -dc _A-Z-a-z-0-9 | head -c${1:-32};echo;)
 echo
 echo "To access the notebook, open this file in a browser copy and paste this URL:"

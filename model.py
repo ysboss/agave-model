@@ -1,10 +1,12 @@
 from __future__ import print_function
 import os, re
 import numpy as np
-from ipywidgets import interactive, Layout, Button, Box, HBox, VBox, Text, Dropdown, Label, IntSlider, Textarea, Accordion, ToggleButton, ToggleButtons, Select, HTMLMath, FloatRangeSlider, Output, Tab
+import ipywidgets
+from ipywidgets import interactive, Layout, Button, Box, HBox, VBox, Text, Dropdown, Label, IntSlider, Textarea, Accordion, ToggleButton, ToggleButtons, Select, HTMLMath, FloatRangeSlider, Output, Tab, Checkbox, HTML
 from IPython.display import display, clear_output, HTML
 import json
-import systemdata
+import traceback
+import sys
 
 from agave import *
 from setvar import *
@@ -13,168 +15,257 @@ from swanPlots import *
 from command import cmd
 from modInput import modInput
 
+import imp
+if "jetlag" in globals():
+    imp.reload(jetlag)
+else:
+    import jetlag
+from jetlag import *
+from knownsystems import *
+
 ######################## Previous ############################################################
 
+def bread(fname):
+    fd = os.open(fname,os.O_RDONLY)
+    s = ''
+    while True:
+        contents = os.read(fd,1000)
+        if len(contents) == 0:
+            break
+        for k in contents:
+            s += chr(k)
+    os.close(fd)
+    return re.findall(r'.*\n?',s)
 
+tab_nest = None
+
+def relink(dir_a, dir_b):
+    for f in os.listdir(dir_a):
+        fa = dir_a+"/"+f
+        fb = dir_b+"/"+f
+        if os.path.isdir(fa):
+            os.makedirs(fb, exist_ok=True)
+            relink(fa, fb)
+        else:
+            os.link(fa, fb)
+
+uv = Universal()
+uv.load(
+    backend_agave,
+    'sbrandt@cct.lsu.edu',
+    'shelob'
+)
+uv.refresh_token()
+
+cur_model = 'swan'
 logOp = Output()
 logStash = Output()   # use to receive logs that are stashed for user
 clearLogBtn = Button(description='Clear log', button_style='primary', layout = Layout(width = '115px'))
 
-modelTitle = Dropdown(options=['SWAN', 'Funwave-tvd','Delft3D', 'OpenFoam', 'Cactus'])
-modelBox = Box([modelTitle, clearLogBtn], 
+modelTitle = Dropdown(options=['SWAN', 'Funwave_tvd','Delft3D', 'OpenFoam', 'Cactus', 'NHWAVE'])
+modelVersion = Dropdown()
+modelBox = VBox([Box([Label(value="Model", layout = Layout(width = '50px')), modelTitle]), 
+                 Box([Label(value="Version", layout = Layout(width = '50px')),modelVersion])])
+globalBox = Box([modelBox, clearLogBtn], 
                layout = Layout(display = 'flex', flex_flow = 'row', justify_content = 'space-between', width = '100%'))
 
 def clearLog_btn_clicked(a):
     logOp.clear_output()
+    msgOut.clear_output()
 
 clearLogBtn.on_click(clearLog_btn_clicked)
 
-fw_para_pairs ={
-    "TOTAL_TIME":"",
-    "PLOT_INTV":"",
-    "Mglob":"",
-    "Nglob":""
-}  
-cac_para_pairs = {}
+def generatePara(templateFile):
+    items = []
+    if True: #with open(templateFile, 'r') as fd:
+        for line in bread(templateFile): #fd.readlines():
+            g = re.search(r'[\w:]*\s*.*=*\s*\${(.*)}',line)
+            if g:
+                label_value = ''
+                isTB = False
+                for match in re.findall(r'(\w+)=("[^"]*"|\'[^\']*\'|[^,\n]*)', g.group(1)):
+                    if match[0] == 'label':
+                        if match[1][0] == '"' and match[1][-1] == '"':
+                            val = match[1][1:-1]
+                        elif match[1][0] == "'" and match[1][-1] == "'":
+                            val = match[1][1:-1]
+                        else:
+                            val = match[1]
+                        lbs = val.split('/')
+                        label_value = lbs[0]
+                        if len(lbs) == 2:
+                            isTB = True
+                    if match[0] == 'option':
+                        ops = match[1].split('/')
+                        # if the first element of options is 'CO', remove it's label name.
+                        if ops[0] == 'CO':
+                            label = Label(layout = Layout(width = "150px"))
+                            if not isTB:
+                                togBtns = ToggleButtons(options = ops[1:])
+                            else:
+                                togBtns = ToggleButton(description = ops[1], value = True)
+                        else:
+                            label = Label(value = label_value, layout = Layout(width = "150px"))
+                            if not isTB:
+                                togBtns = ToggleButtons(options = ops)
+                            else:
+                                togBtns = ToggleButton(description = ops[0], value = True)
+                        box = Box([label, togBtns], layout = Layout(width = '100%', justify_content = 'flex-start'))
+                        items.append(box)
+                    if match[0] == 'value':
+                        label = Label(value = label_value, layout = Layout(width = "150px"))
+                        text = Text(value = match[1])
+                        box = Box([label, text], layout = Layout(width = '100%', justify_content = 'flex-start'))
+                        items.append(box)
+    return items
+
+def updatePara(templateFile, newInput, inputBox):
+    with open(newInput, "w") as fw:
+        if True: #with open(templateFile, "r") as fd:
+            count = 0
+            for line in bread(templateFile): #fd.readlines():
+                g = re.search(r'[\w:]*\s*.*=*\s*\${(.*)}' , line)
+                if g:
+                    isTB = False
+                    isStr = False
+                    string = ''
+                    newVals = []
+                    for match in re.findall(r'(\w+)=("[^"]*"|\'[^\']*|[^,\n]*)', g.group(1)):
+                        if match[0] == 'label':
+                            lbs = match[1].split('/')
+                            if (len(lbs) == 2):
+                                isTB = True
+                        if match[0] == 'string':
+                            string = match[1]
+                            isStr = True
+                        if match[0] == 'option':
+                            if not isTB:
+                                if isStr:
+                                    if inputBox.children[count].children[1].value == 'True':
+                                        newVals.append(string[1:-1])
+                                else:
+                                    newVals.append(inputBox.children[count].children[1].value)
+                            else:
+                                if (inputBox.children[count].children[1].value):
+                                    newVals.append(inputBox.children[count].children[1].description)
+                            count+=1
+                        if match[0] == 'value':
+                            newVals.append(inputBox.children[count].children[1].value)
+                            count+=1
+                    newLine = ''
+                    for item in newVals:
+                        newLine = newLine + ' ' + item + ' '
+                    fw.write(re.sub(r'\${.*}', newLine, line))
+                else:
+                    fw.write(line)
+        #fd.close()
+    #fw.close()    
+    
+
+menus = {}
+def set_tabs():
+        global cur_model, menus
+        tabs = ["Choose Input Template"]
+        menus[cur_model] = {}
+        for f in os.listdir("input_"+cur_model):
+            if not re.search(r'_template',f):
+                continue
+            fn = "input_"+cur_model+"/"+f
+            #with open(fn,"r") as fr:
+            if True:
+                found = False
+                for line in bread(fn): #fr.readlines():
+                    g = re.search(r'\bmenu:\s*(.*\S)\s*->\s*(.*\S)',line)
+                    if g:
+                        label = g.group(1)
+                        menus[cur_model][label] = {}
+                        menus[cur_model][label]["outfile"] = g.group(2)
+                        menus[cur_model][label]["infile"] = f
+                        found = True
+            if not found:
+                label = f
+                menus[cur_model][label] = {}
+                menus[cur_model][label]["outfile"] = re.sub(r'_template','',f)
+                menus[cur_model][label]["infile"] = f
+            tabs += [label]
+        if tab_nest is not None:
+            item = tab_nest.children[0].children[0]
+            tabs = tuple(tabs)
+            if item.options == tabs:
+                return tabs
+            item.options = tabs
+            item.index = 0
+        return tabs
+    
+def template_on_change(change):
+    set_tabs()
+    inputTmp = ''
+    if change['type'] == 'change' and change['name'] == 'value':
+#        if(change['new'] == 'Choose Input Template'):
+#            #tab_nest.children[0].children[2].children = []
+#            return
+#        if(change['new'] == 'Basic Template'):
+#            with logOp:
+#                cmd("tar -xvf input_" + cur_model + ".tgz")
+#            inputTmp = 'input_' + cur_model + '/basic_template.txt'
+#        if(change['new'] == 'HDF5 Template'):
+#            with logOp:
+#                cmd("tar -xvf input_" + cur_model + ".tgz")
+#            inputTmp = 'input_' + cur_model + '/hdf5_template.txt'
+#        
+         item = tab_nest.children[0].children[0]
+         if item.index is not None:
+            val = item.options[item.index]
+            if val not in menus[cur_model]:
+                return
+            inputTmp = 'input_' + cur_model + '/' + menus[cur_model][val]["infile"]
+            tab_nest.children[0].children[2].children = generatePara(inputTmp)
+        
+        
+def update_btn_clicked(a):
+    set_tabs()
+    item = tab_nest.children[0].children[0]
+    itemValue = item.options[item.index]
+    if itemValue not in +menus[cur_model]:
+        return
+    inputFile = "input_"+cur_model+"/"+menus[cur_model][itemValue]["infile"]
+    outputFile = "input_"+cur_model+"/"+menus[cur_model][itemValue]["outfile"]
+    updatePara(inputFile, outputFile, tab_nest.children[0].children[2])
+#    if (tab_nest.children[0].children[1].value == True):
+#        with logOp:
+#            cmd("rm -f input.tgz")
+#            cmd("rm -fr input")
+#            cmd("cp -f ../input_" + cur_model + ".tgz input.tgz")
+#            return
+#        
+#    newInput = 'input_'+ cur_model + '/input_tmp.txt'
+#    inputTmp = ''
+#    if(tab_nest.children[0].children[0].value == 'Basic Template'):
+#        inputTmp = 'input_' + cur_model + '/basic_template.txt'
+#    if(tab_nest.children[0].children[0].value == 'HDF5 Template'):
+#        inputTmp = 'input_' + cur_model + '/basic_template.txt'
+#    
+#    updatePara(inputTmp, newInput, tab_nest.children[0].children[2])
+#    
+#    tab_nest.children[0].children[4].value = open(newInput, 'r').read()
+  
+             
+    
+
+
 
 ######################## Previous end ############################################################
 
-
 ######################## SWAN Input tab ############################################################
 
-modeTbtns = ToggleButtons(options=['NONSTAT', 'STAT'])
-dimTbtns = ToggleButtons(options=['TWOD', 'ONED'])
-modeBox = Box([Label(value = 'MODE: '), modeTbtns, dimTbtns],layout = Layout(width = '80%', justify_content = 'space-between'))
-
-coordTbtns = ToggleButtons(options=['SPHE', 'CART'])
-spheTbtns = ToggleButtons(options=['None', 'CCM', 'QC'])
-coordBox = Box([Label(value = 'COOR:'), coordTbtns, spheTbtns],
-               layout = Layout(width = '96.8%', justify_content = 'space-between'))
-
-setTbtns = ToggleButtons(options=['NAUT', 'CART'])
-setBox = Box([Label(value = 'SET:'), setTbtns],layout = Layout(width = '42.5%', justify_content = 'space-between'))
-
-fricTbtns = ToggleButtons(options=['JONSWAP', 'COLL', 'MADS'])
-fricText = Text(value = '0.067', layout = Layout(width='60px'))
-fricTxtBox = Box([fricText, HTMLMath(value = r"\(m^2\)/\(s^3\)")])
-fricBox = Box([Label(value = 'FRICTION:'), fricTbtns, fricTxtBox],
-              layout = Layout(width = '72%', justify_content = 'space-between'))
-
-modeStartBox = Box([modeBox, coordBox, setBox, fricBox], layout = Layout(flex_flow = 'column'))
-
-propTbtns = ToggleButtons(options=['BSBT', 'GSE'])
-propBox = Box([Label(value = 'PROP:'), propTbtns],layout = Layout(width = '42.4%', justify_content = 'space-between'))
-
-gen3Tbtns = ToggleButtons(options=['KOMEN', 'JANS', 'WESTH'])
-gen3Box = Box([Label(value = 'GEN3:'), gen3Tbtns],layout = Layout(width = '59.3%', justify_content = 'space-between'))
-
-modelInputBox = Box([propBox, gen3Box], layout = Layout(flex_flow = 'column'))
-
-
-timeBtns = ToggleButtons(options=['0.5', '1', '2'])
-timeBox = Box([Label(value = 'Time Step (h):', layout = Layout(width = '98px')), timeBtns], layout = Layout(width = '90%'))
-
-
-table = ['TIME','XP', 'YP', 'DEP', 'WIND', 'HS', 'DIR', 'RTP', 'PER', 'TM01', 'TM02', 'PDIR']
-
-table_items = []
-for i in range(len(table)):
-    name = table[i].lower()+'Btn'
-    name = ToggleButton(value = True,description = table[i])
-    table_items.append(name)
-    
-tableBtnsBox = Box(table_items,layout = Layout(width = '90%', justify_content = 'space-between'))
-tableBox = Box([Label(value = 'Table :', layout = Layout(width = '103px')), tableBtnsBox],layout = Layout(width = '90%'))
-               
-sp1dTbtn = ToggleButton(value = True,description = 'spec1d')
-sp2dTbtn = ToggleButton(value = False,description = 'spec2d')
-specBox = Box([Label(value = 'Spectral :', layout = Layout(width = '100px')), sp1dTbtn, sp2dTbtn], 
-              layout = Layout(width = '90%'))
-
-windTbtn = ToggleButton(value = True,description = 'wind')
-hsTbtn = ToggleButton(value = True,description = 'hs')
-dirTbtn = ToggleButton(value = False,description = 'dir')
-perTbtn = ToggleButton(value = False,description = 'per')
-blockBox = Box([Label(value = 'Block :', layout = Layout(width = '100px')), windTbtn, hsTbtn, dirTbtn, perTbtn], 
-               layout = Layout(width = '90%'))    
-    
-outputRequestBox = Box([timeBox, tableBox, specBox, blockBox], layout = Layout(flex_flow = 'column'))
-
-swanInputAcd = Accordion(children = [modeStartBox,modelInputBox,outputRequestBox], layout= Layout(width = '100%'))
-swanInputAcd.set_title(0,'Model Start-up')
-swanInputAcd.set_title(1,'Model Input')
-swanInputAcd.set_title(2,'Output Requests')
-
-SwanUpInputBtn = Button(description='Update Input File',button_style='primary', layout=Layout(width='100%'))
-
-def swanupdate_btn_clicked(a):
-    with logOp:
-        cmd("tar -zxvf input_swan.tgz")
-        cmd("mv input_swan/INPUT input_swan/INPUT_template")
-    
-    # set sphe method
-    # for CART, there is no method needed. 
-    # for SPHE, there are CCM and QC option. 
-    if spheTbtns.value == "None":
-        spheMethod = ""
-    else:
-        spheMethod = spheTbtns.value
-        
-    table_vars = ""
-    for i in range (len(table_items)):
-        if table_items[i].value == True:
-            table_vars += ' '+table_items[i].description
-        
-    name_value_pairs = {
-        "MODE"      : modeTbtns.value+' '+dimTbtns.value,
-        "COORD"     : coordTbtns.value+' '+spheMethod,
-        "SET"       : setTbtns.value,
-        "FRICTION"  : fricTbtns.value+' '+fricText.value,
-        "PROP"      : propTbtns.value,
-        "GEN3"      : gen3Tbtns.value+' AGROW',
-        "TIME_STEP" : timeBtns.value+' HR',
-        "TABLE"     : table_vars,
-        "SPEC1D"    : sp1dTbtn.value,
-        "SPEC2D"    : sp2dTbtn.value,
-        "WIND"      : windTbtn.value,
-        "HS"        : hsTbtn.value,
-        "DIR"       : dirTbtn.value,
-        "PER"       : perTbtn.value
-    }
-    with open("input_swan/INPUT_template","r") as template:
-        with open("input_swan/INPUT","w+") as ipt:
-            for line in template.readlines():
-                g = re.match("^(MODE|COORD|SET|FRICTION|PROP|GEN3)\s*",line)
-                h = re.match("^(TABLE)(\s*\S*\s\S*\s*\S*)[\w\s]*(OUT\s\S*)(\s*\d\s*\w*)",line)
-                r = re.match("(^(SPEC|BLOCK)[\s\S]*(SPEC1D|SPEC2D|WIND|HS|DIR|PER)[\s\S]*)(\s*\d\s*\w*)",line)
-                s = re.match("^(COMPUTE)\s\S*\s*(\d*\.\d*)\s*(\d\s\S*)\s*(\d*\.\d*)",line)
-                if g: 
-                    name = g.group(1)
-                    if name in name_value_pairs:
-                        ipt.write(name+" "+name_value_pairs[name]+"\n")
-                elif h:
-                    ipt.write(h.group(1)+h.group(2)+name_value_pairs[h.group(1)]+' '+h.group(3)
-                              +' '+name_value_pairs['TIME_STEP']+"\n")
-                elif r:
-                    if name_value_pairs[r.group(3)] == True:
-                        ipt.write(r.group(1)+name_value_pairs['TIME_STEP']+"\n")
-                    else:
-                        ipt.write("$"+r.group(0)+"\n")
-                elif s:
-                    ipt.write(s.group(1)+' '+modeTbtns.value+' '+s.group(2)+' '+name_value_pairs['TIME_STEP']
-                              +' '+s.group(4)+"\n")
-                else:
-                    ipt.write(line)
-            ipt.close()
-        template.close()
-   
-    SwanInputArea.value = open("input_swan/INPUT","r").read()
-    
-SwanUpInputBtn.on_click(swanupdate_btn_clicked)
-
-SwanInputArea = Textarea(layout= Layout(height = "300px",width = '100%'))
-
-SwanInputBox = Box([swanInputAcd, SwanUpInputBtn, SwanInputArea], 
+swanInputdd = Dropdown(options=set_tabs(), value='Choose Input Template')
+swanCbox = Checkbox(value = False, description = "Use Own Input")
+swanInput = Box(layout = Layout(flex_flow = 'column'))
+swanInputdd.observe(template_on_change)
+swanUpInputBtn = Button(description='Update Input File',button_style='primary', layout=Layout(width='100%'))
+swanUpInputBtn.on_click(update_btn_clicked)
+swanInputArea = Textarea(layout= Layout(height = "300px",width = '100%'))
+swanInputBox = Box([swanInputdd, swanCbox, swanInput, swanUpInputBtn, swanInputArea], 
                  layout = Layout(flex_flow = 'column', align_items = 'center'))
 
 ######################## SWAN Input tab end############################################################
@@ -185,83 +276,13 @@ SwanInputBox = Box([swanInputAcd, SwanUpInputBtn, SwanInputArea],
 
 
 fwInputdd=Dropdown(options=['Choose Input Template','Basic Template'], value='Choose Input Template')
-
-
-parvals = {}
-inputBox = Box(layout = Layout(flex_flow = 'column'))
-
-def fw_on_change(change):
-    inputTmp = ''
-    items = []
-    if change['type'] == 'change' and change['name'] == 'value':
-        if(change['new'] == 'Choose Input Template'):
-            items=[]
-            inputBox.children = items
-            return
-        if(change['new'] == 'Basic Template'):
-            with logOp:
-                cmd("tar -zxvf input_funwave.tgz")
-            inputTmp = 'input_funwave/basic_template.txt'
-    
-        with open(inputTmp,"r") as fd:
-            for line in fd.readlines():
-                g = re.search(r'(\w+)\s*=\s*\${(.*)}',line)
-                if g:
-                    for match in re.findall(r'(\w+)=("[^"]*"|\'[^\']*|[^,\n]*)',g.group(2)):
-                        if match[0] == 'value':
-                            label = line.split()[0]+'Label'
-                            label = Label(value = line.split()[0].upper()+":")
-                            text = line.split()[0]
-                            text = Text(value=match[1])
-                            box = line.split()[0]+'Box'
-                            box = Box([label, text],layout = Layout(width = '100%', justify_content = 'space-between'))
-                            items.append(box)
-                        if match[0] == 'option':
-                            label = line.split()[0]+'Label'
-                            label = Label(value = line.split()[0].upper()+":")
-                            togBtns = line.split()[0]
-                            togBtns = ToggleButtons(options=['T', 'F'])
-                            box = line.split()[0]+'Box'
-                            box = Box([label, togBtns], layout = Layout(width = '100%', justify_content = 'space-between')) 
-                            items.append(box)
-                        
-        inputBox.children = items
-    
-fwInputdd.observe(fw_on_change)
-  
-def fwUpInput_btn_clicked(a):
-    inputTmp = ''
-    if(fwInputdd.value == 'Basic Template'):
-        inputTmp = 'input_funwave/basic_template.txt'
-        
-    with open("input_funwave/input_tmp.txt", "w") as fw:
-        with open(inputTmp, "r") as fd:
-            k=0
-            for line in fd.readlines():
-                g = re.search(r'(\w+)\s*=\s*\${(.*)}',line)
-                if g:
-                    print("%s = %s" % (g.group(1),inputBox.children[k].children[1].value),file=fw)
-                    k+=1
-                else:
-                    print(line, end='', file=fw)
-     
-    fwInputArea.value = open("input_funwave/input_tmp.txt","r").read()
-    surfaceFrame.max = int(float(inputBox.children[2].children[1].value)/float(inputBox.children[3].children[1].value))
-    with open("input_funwave/input_tmp.txt", "r") as fw:
-            for line in fw.readlines():
-                g = re.search(r'(\w+)\s*=\s*(\S+)',line)
-                if g:
-                    para = g.group(1)
-                    value = g.group(2)
-                    if para in fw_para_pairs:
-                        fw_para_pairs[para] = value  
-    
-     
+fwCbox = Checkbox(value = False, description = "Use Own Input")
+fwInput = Box(layout = Layout(flex_flow = 'column'))    
+fwInputdd.observe(template_on_change)
 fwUpInputBtn = Button(description='Update Input File',button_style='primary', layout=Layout(width='100%'))
-fwUpInputBtn.on_click(fwUpInput_btn_clicked)
-
+fwUpInputBtn.on_click(update_btn_clicked)
 fwInputArea = Textarea(layout= Layout(height = "300px",width = '100%'))
-fwInputBox = Box([fwInputdd, inputBox, fwUpInputBtn, fwInputArea], 
+fwInputBox = Box([fwInputdd, fwCbox, fwInput, fwUpInputBtn, fwInputArea], 
                   layout = Layout(flex_flow = 'column', align_items = 'center'))
 
 ##################################### Funwave-tvd Input tab end ###############################
@@ -270,92 +291,33 @@ fwInputBox = Box([fwInputdd, inputBox, fwUpInputBtn, fwInputArea],
 
 
 cacInputdd=Dropdown(options=['Choose Input Template','Basic Template','HDF5 Template'], value='Choose Input Template')
-
-
-parvals = {}
-inputBox = Box(layout = Layout(flex_flow = 'column'))
-
-def cac_on_change(change):
-    inputTmp = ''
-    items = []
-    if change['type'] == 'change' and change['name'] == 'value':
-        if(change['new'] == 'Choose Input Template'):
-            items=[]
-            inputBox.children = items
-            return
-        if(change['new'] == 'Basic Template'):
-            with logOp:
-                cmd("tar -zxvf input_cactus.tgz")
-            inputTmp = 'input_cactus/basic_template.txt'
-        if(change['new'] == 'HDF5 Template'):
-            with logOp:
-                cmd("tar -zxvf input_cactus.tgz")
-            inputTmp = 'input_cactus/hdf5_template.txt'
-    
-        with open(inputTmp,"r") as fd:
-            for line in fd.readlines():
-                g = re.search(r'([\w:]+)\s*=\s*\${(.*)}',line)
-                if g:
-                    for match in re.findall(r'(\w+)=("[^"]*"|\'[^\']*|[^,\n]*)',g.group(2)):
-                        if match[0] == 'value':
-                            label = line.split()[0]+'Label'
-                            label = Label(value = line.split()[0].upper()+":")
-                            text = line.split()[0]
-                            text = Text(value=match[1])
-                            box = line.split()[0]+'Box'
-                            box = Box([label, text],layout = Layout(width = '100%', justify_content = 'space-between'))
-                            items.append(box)
-                        if match[0] == 'option':
-                            label = line.split()[0]+'Label'
-                            label = Label(value = line.split()[0].upper()+":")
-                            togBtns = line.split()[0]
-                            togBtns = ToggleButtons(options=['T', 'F'])
-                            box = line.split()[0]+'Box'
-                            box = Box([label, togBtns], layout = Layout(width = '100%', justify_content = 'space-between')) 
-                            items.append(box)
-                        
-        inputBox.children = items
-    
-cacInputdd.observe(cac_on_change)
-  
-def cacUpInput_btn_clicked(a):
-    inputTmp = ''
-    if(cacInputdd.value == 'Basic Template'):
-        inputTmp = 'input_cactus/basic_template.txt'
-    if(cacInputdd.value == 'HDF5 Template'):
-        inputTmp = 'input_cactus/hdf5_template.txt'
-        
-    with open("input_cactus/input_tmp.txt", "w") as fw:
-        with open(inputTmp, "r") as fd:
-            k=0
-            for line in fd.readlines():
-                g = re.search(r'([\w:]+)\s*=\s*\${(.*)}',line)
-                if g:
-                    print("%s = %s" % (g.group(1),inputBox.children[k].children[1].value),file=fw)
-                    k+=1
-                else:
-                    print(line, end='', file=fw)
-     
-    cacInputArea.value = open("input_cactus/input_tmp.txt","r").read()
-    print("inputBox.children[3].children[1].value=",float(inputBox.children[3].children[1].value))
-    #surfaceFrame.max = int(float(inputBox.children[2].children[1].value)/float(inputBox.children[3].children[1].value))
-    with open("input_cactus/input_tmp.txt", "r") as fw:
-            for line in fw.readlines():
-                g = re.search(r'([\w+:])\s*=\s*(\S+)',line)
-                if g:
-                    para = g.group(1)
-                    value = g.group(2)
-                    cac_para_pairs[para] = value  
-    
-     
+cacCbox = Checkbox(value = False, description = "Use Own Input")
+cacInput = Box(layout = Layout(flex_flow = 'column'))    
+cacInputdd.observe(template_on_change)     
 cacUpInputBtn = Button(description='Update Cactus Input File',button_style='primary', layout=Layout(width='100%'))
-cacUpInputBtn.on_click(cacUpInput_btn_clicked)
-
+cacUpInputBtn.on_click(update_btn_clicked)
 cacInputArea = Textarea(layout= Layout(height = "300px",width = '100%'))
-cacInputBox = Box([cacInputdd, inputBox, cacUpInputBtn, cacInputArea], 
+cacInputBox = Box([cacInputdd, cacCbox, cacInput, cacUpInputBtn, cacInputArea], 
                   layout = Layout(flex_flow = 'column', align_items = 'center'))
 
 ##################################### Cactus Input tab end ###############################
+
+
+
+##################################### NHWAVE Input tab ################################
+
+
+nhInputdd=Dropdown(options=['Choose Input Template','Basic Template'], value='Choose Input Template')
+nhCbox = Checkbox(value = False, description = "Use Own Input")
+nhInput = Box(layout = Layout(flex_flow = 'column'))    
+nhInputdd.observe(template_on_change)
+nhUpInputBtn = Button(description='Update Input File',button_style='primary', layout=Layout(width='100%'))
+nhUpInputBtn.on_click(update_btn_clicked)
+nhInputArea = Textarea(layout= Layout(height = "300px",width = '100%'))
+nhInputBox = Box([nhInputdd, nhCbox, nhInput, nhUpInputBtn, nhInputArea], 
+                  layout = Layout(flex_flow = 'column', align_items = 'center'))
+
+##################################### Funwave-tvd Input tab end ###############################
 
 
 
@@ -376,21 +338,59 @@ delft3dBox = Box(delft3d_items, layout= Layout(flex_flow = 'column', align_items
 ##################################### OpenFoam Input tab ######################################
 
 ofCaseName = Dropdown()
+ofOwnCaseName = Dropdown(options=["Select Input Case of Own"])
+ofCbox = Checkbox(value = False, description = "Use Own Input")
+casesTutorials = ["Select Input Case of Tutorials"]
+casesOwn = ["Select Input Case of Own"]
 
 with logStash:
-    cmd("tar -zxvf input_openfoam.tgz")
-    with open("input_openfoam/cases.txt", 'r') as fw:
-        ofCaseName.options = fw
+    cmd("tar -xvf input_openfoam.tgz")
+    with open("input_openfoam/tutorials/cases.txt", 'r') as fr:
+        lines = fr.readlines()
+        for line in lines:
+            casesTutorials.append(line)
+        ofCaseName.options = casesTutorials 
         
-ofInputBox = Box([Label(value = 'Case:') , ofCaseName], 
-                 layout = Layout(flex_flow = 'row', align_items = 'center'))
+def ofCbox_change(change):
+    if change['type'] == 'change' and change['name'] == 'value':
+        if(change['new'] == True):
+            ownfiles = os.listdir("input_openfoam/foam_run/")
+            ofOwnCaseName.options = ownfiles
+        if(change['new'] == False):
+            ofOwnCaseName.options = ["Select Input Case of Own"]
+            
+ofCbox.observe(ofCbox_change)
+            
+def ofUpInput_btn_clicked(a):
+    if (ofCbox.value == True):
+        with logOp:
+            cmd("rm -f input.tgz")
+            cmd("rm -fr input")
+            cmd("cp -f input_openfoam/foam_run/" + ofOwnCaseName.value + " input.tgz")
+            return
+        
+    if not ofCaseName.value == "Select Input Case":
+        with open("input_openfoam/tutorials/" + ofCaseName.value[:-1] + "/system/decomposeParDict", "r") as fd:
+            contents = fd.read()
+            ofInputArea.value = contents
+            sp = r'(?:\s|//.*)'
+            pat = re.sub(r'\\s',sp,r'coeffs\s*{\s*n\s+\(\s*(\d+)\s+(\d+)\s+(\d+)\s*\)\s*;\s*}')
+            g = re.search(pat, contents)
+            if g:
+                numXSlider.value = g.group(1)
+                numYSlider.value = g.group(2)
+                numZSlider.value = g.group(3)
+        fd.close()
+
+ofUpInputBtn = Button(description='Update OpenFoam Input File',button_style='primary', layout=Layout(width='100%'))
+ofUpInputBtn.on_click(ofUpInput_btn_clicked)
+
+ofInputArea = Textarea(layout= Layout(height = "300px",width = '100%'))
+   
+ofInputBox = Box([ofCaseName, ofCbox, ofOwnCaseName, ofUpInputBtn, ofInputArea], 
+                 layout = Layout(flex_flow = 'column', align_items = 'center'))
 
 ##################################### OpenFoam Input tab end ###############################
-
-
-
-
-
 
 
 
@@ -408,19 +408,45 @@ jobNameText = Text(value = 'myjob')
 machines = Dropdown()
 queues = Dropdown()
 
-all_apps = systemdata.load()
+machines_options = []
+all_apps = {}
 exec_to_app = {}
 
-machines_options = []
-app0 = None
-for app in all_apps:
-    # If app0 is not assigned and the current
-    # app is one we have permission to use
-    if app0 is None and all_apps[app]["perm"] in ["RWX", "RX"]:
-        app0 = app
-    exec_sys = all_apps[app]["exec_sys"]
-    exec_to_app[exec_sys] = app
-    machines_options += [exec_sys]
+for m in uv.get_meta('system-config-*'):
+    val = m["value"]
+
+    uv2 = Universal()
+    uv2.init(
+        backend=uv.values["backend"],
+        email=uv.values["email"],
+        **val)
+
+    perm_data_str = ''
+    pems_data = uv2.get_app_pems()
+    if 'read' in pems_data and pems_data['read'] == True:
+        perm_data_str += 'R'
+    if 'write' in pems_data and pems_data['write'] == True:
+        perm_data_str += 'W'
+    if 'execute' in pems_data and pems_data['execute'] == True:
+        perm_data_str += 'X'
+
+    machine = uv2.values["execm_id"]
+
+    machines_options += [machine]
+
+    app_entry = {
+        'exec_sys' : machine,
+        'storage_sys' : uv2.values["storage_id"],
+        'perm' : perm_data_str,
+        'queues' : [
+            { "name": val["queue"],
+              "ppn" : val["max_procs_per_node"] }
+        ],
+        'uv':uv2
+    }
+    app0 = uv2.fill(uv2.values["app_name"]+"-"+uv2.values["app_version"])
+    all_apps[app0] = app_entry
+    exec_to_app[machine] = app0
 
 machines.options = machines_options
 
@@ -436,8 +462,14 @@ def on_machine_value_set(_):
     queues.value = queues_options[0]
 
 machines.observe(on_machine_value_set)
-machines.value = all_apps[app0]["exec_sys"]
+exec_sys = all_apps[app0]["exec_sys"]
+machines.value = exec_sys
 on_machine_value_set(None)
+
+def get_uv():
+    app = exec_to_app[exec_sys]
+    app_data = all_apps[app]
+    return app_data["uv"]
 
 numXSlider = IntSlider(value=0, min=1, max=16, step=1)
 numYSlider = IntSlider(value=0, min=1, max=16, step=1)
@@ -456,10 +488,12 @@ run_items = [
 ]
 
 def modify_openfoam(case):
+    with logOp:
+        print("openfoam:",case)
     sp = case.split('/')
-    caseName = sp[len(sp)-1]
+    caseName = sp[len(sp)-1].strip()
     tmp = ""
-    with open("input/system/decomposeParDict", "r") as fd:
+    with open("run_dir/tutorials/%s/system/decomposeParDict" % case.strip(), "r") as fd:
         contents = fd.read()
         procs = get_procs()
         pat1 = r'numberOfSubdomains\s+(\d+)\s*;'
@@ -472,9 +506,6 @@ def modify_openfoam(case):
         for line in tmp:
             fd.write(line)
         fd.close()
-        
-    
-
 
 def get_procs():
     nx = numXSlider.value
@@ -487,10 +518,11 @@ def runfun_btn_clicked(a):
     app = exec_to_app[exec_sys]
     app_data = all_apps[app]
     queue = queues.value
-    setvar("APP_NAME=%s" % app)
-    setvar("STORAGE_MACHINE=%s" % app_data["storage_sys"])
-    setvar("EXEC_MACHINE=%s" % exec_sys)
-    setvar("QUEUE=%s" % queue)
+    with logOp:
+        setvar("APP_NAME=%s" % app)
+        setvar("STORAGE_MACHINE=%s" % app_data["storage_sys"])
+        setvar("EXEC_MACHINE=%s" % exec_sys)
+        setvar("QUEUE=%s" % queue)
     ppn = 1
     for i in range(len(app_data["queues"])):
         if app_data["queues"][i]["name"] == queue:
@@ -500,63 +532,44 @@ def runfun_btn_clicked(a):
     nodes = procs[0]//ppn
     if procs[0] % ppn != 0:
         nodes += 1
-
-    if (modelTitle.value == "Funwave-tvd"): 
-        with logOp:
-            cmd("mv input_funwave/input_tmp.txt input_funwave/input.txt")
-            modInput(procs[0], "input_funwave/input.txt")
-            cmd("rm -fr input")
-            cmd("mkdir input")
-            cmd("cp input_funwave/input.txt input")
-            cmd("cp input_funwave/depth.txt input")
-            cmd("tar cvzf input.tgz input")
-            setvar("INPUT_DIR=${AGAVE_USERNAME}_$(date +%Y-%m-%d_%H-%M-%S)")
-            cmd("files-mkdir -S ${STORAGE_MACHINE} -N inputs/${INPUT_DIR}")
-            cmd("files-upload -F input.tgz -S ${STORAGE_MACHINE} inputs/${INPUT_DIR}/")
-
-            submitJob(nodes, procs[0], "funwave", jobNameText.value, machines.value, queues.value)
-
-    elif (modelTitle.value == "Cactus"): 
-        with logOp:
-            cmd("mv input_cactus/input_tmp.txt input_cactus/input.txt")
-            modInput(procs[0], "input_funwave/input.txt")
-            cmd("rm -fr input")
-            cmd("mkdir input")
-            cmd("cp input_cactus/input.txt input")
-            cmd("cp input_cactus/depth.txt input")
-            cmd("tar cvzf input.tgz input")
-            setvar("INPUT_DIR=${AGAVE_USERNAME}_$(date +%Y-%m-%d_%H-%M-%S)")
-            cmd("files-mkdir -S ${STORAGE_MACHINE} -N inputs/${INPUT_DIR}")
-            cmd("files-upload -F input.tgz -S ${STORAGE_MACHINE} inputs/${INPUT_DIR}/")
-
-            submitJob(nodes, procs[0], "cactus", jobNameText.value, machines.value, queues.value)
-
         
-    elif (modelTitle.value == "SWAN"): 
-        with logOp:
-            if not os.path.exists("input_swan"):
-                cmd("tar -zxvf input_swan.tgz")
-            cmd("rm -fr input")
-            cmd("cp -r input_swan input")
-            cmd("tar cvzf input.tgz input")
-            setvar("INPUT_DIR=${AGAVE_USERNAME}_$(date +%Y-%m-%d_%H-%M-%S)")
-            cmd("files-mkdir -S ${STORAGE_MACHINE} -N inputs/${INPUT_DIR}")
-            cmd("files-upload -F input.tgz -S ${STORAGE_MACHINE} inputs/${INPUT_DIR}/")
-            submitJob(nodes, procs[0], "swan", jobNameText.value, machines.value, queues.value) 
-            
-    elif (modelTitle.value == "OpenFoam"): 
-        with logOp:
-            cmd("rm -fr input")
-            cmd("mkdir input")
-            cmd("cp -a input_openfoam/"+ofCaseName.value[:-1]+"/. input")
-            modify_openfoam(ofCaseName.value)
-            cmd("tar cvzf input.tgz input")
-            setvar("INPUT_DIR=${AGAVE_USERNAME}_$(date +%Y-%m-%d_%H-%M-%S)")
-            cmd("files-mkdir -S ${STORAGE_MACHINE} -N inputs/${INPUT_DIR}")
-            cmd("files-upload -F input.tgz -S ${STORAGE_MACHINE} inputs/${INPUT_DIR}/")
-            #submitJob(nodes, procs[0], "openfoam", jobNameText.value, machines.value, queues.value)
+    with logOp:
+        if (tab_nest.children[0].children[1].value == False):
+            cmd("rm -fr run_dir") 
+            cmd("mkdir run_dir")
+            in_dir = "input_" + cur_model
+            for fn in os.listdir(in_dir):
+                cmd("cp -a '%s/%s' ./run_dir/" % (in_dir,fn))
+            if (cur_model == "openfoam"):
+                modify_openfoam(ofCaseName.value)
+                
+            cmd("tar cvzf input.tgz run_dir")
+                
+        setvar("INPUT_DIR=${AGAVE_USERNAME}_$(date +%Y-%m-%d_%H-%M-%S)")
+        #cmd("files-mkdir -S ${STORAGE_MACHINE} -N inputs/${INPUT_DIR}")
+        #cmd("files-upload -F input.tgz -S ${STORAGE_MACHINE} inputs/${INPUT_DIR}/")
+        #cmd("files-mkdir agave://${STORAGE_MACHINE}/inputs/${INPUT_DIR}")
+        #cmd("files-cp input.tgz agave://${STORAGE_MACHINE}/inputs/${INPUT_DIR}/")
+        #submitJob(nodes, procs[0], cur_model, jobNameText.value, machines.value, queues.value)
+        uv = app_data["uv"]
+        ###
+        jetlag_app = cur_model
+        call(["rm", "-fr", "run_dir"])
+        os.makedirs('run_dir')
+        with open("run_dir/runapp.sh","w") as fd:
+            print("singularity exec $SING_OPTS --pwd $PWD $IMAGE bash ./%s-app.sh" % jetlag_app,file=fd)
+            #print("bash ./%s-app.sh" % jetlag_app)
+        call(["cp", "%s-app.sh" % jetlag_app, "run_dir/."])
+        #for fname in os.listdir("input_%s" % jetlag_app):
+        #    call(["ln","input_%s/%s" % (jetlag_app, fname),"run_dir/"])
+        relink("input_%s" % jetlag_app, "run_dir")
+        call(["tar", "czf", "input.tgz", "run_dir"])
+        ###
+        nx = numXSlider.value
+        ny = numYSlider.value
+        nz = numZSlider.value
+        uv.run_job(jobNameText.value, nx=nx, ny=ny, nz=nz, jtype="queue", run_time="1:00:00")
         
-    
 runBtn.on_click(runfun_btn_clicked)
 
 runBox = VBox(run_items)
@@ -585,8 +598,10 @@ jobHisSelect = Select(layout = Layout(height = '336px', width='100%'))
 
 def jobList_btn_clicked(a):
     with logOp:
-        cout = cmd("jobs-list -l 10")
-        out1 = cout["stdout"]
+        out1 = []
+        uv = get_uv()
+        for j in uv.job_list(10):
+            out1 += [j["id"]+" "+j["status"]]
         jobSelect.options = out1
     
 jobListBtn.on_click(jobList_btn_clicked)
@@ -607,10 +622,17 @@ def jobOutput_btn_clicked(a):
     with logOp:
         if g:
             jobid = g.group(0)
-            rcmd = "jobs-output-list "+ jobid
-            cout = cmd(rcmd)
-            out1 = cout["stdout"]
+            #rcmd = "jobs-output-list "+ jobid
+            #cout = cmd(rcmd)
+            #out1 = cout["stdout"]
+            uv = get_uv()
+            outputSelect.options = ["loading..."]
+            out1 = uv.show_job(jobid,verbose=False)
             outputSelect.options = out1
+            if len(out1)==0:
+                outputSelect.options = ["empty"]
+        else:
+            print("pattern did not match:",jobSelect.value)
     
 jobOutputBtn.on_click(jobOutput_btn_clicked)
 
@@ -619,26 +641,29 @@ def download_btn_clicked(a):
         try:
             g = re.match(r'^\S+',jobSelect.value)
             jobid = g.group(0)
-            if(outputSelect.value.find('.')==-1):
-                rcmd = "jobs-output-get -r "+ jobid +" "+ outputSelect.value
-            else:
-                rcmd = "jobs-output-get "+ jobid +" "+ outputSelect.value
+            uv = get_uv()
+            #if(outputSelect.value.find('.')==-1):
+            #    rcmd = "jobs-output-get -r "+ jobid +" "+ outputSelect.value
+            #else:
+            #    rcmd = "jobs-output-get "+ jobid +" "+ outputSelect.value
+
         
-            print (rcmd)
-            os.system(rcmd)
-        
-            if(outputSelect.value == 'output.tar.gz'):
-                cmd("rm -fr output")
-                rcmd = 'tar -zxvf output.tar.gz'
-                cmd(rcmd)
-            elif(re.match(r'.*\.(txt|out|err|ipcexe)',outputSelect.value)):
-                with open(outputSelect.value,'r') as fd:
-                    for line in fd.readlines():
-                        print(line,end='')
+            if outputSelect.value == '/output.tgz':
+                with logOp:
+                    print("Downloading output tarball to jobdata-"+jobid)
+                job = RemoteJobWatcher(uv, jobid)
+                job.get_result()
+            elif re.match(r'.*\.(txt|out|err|ipcexe)',outputSelect.value):
+                rcmd = uv.get_file(jobid,outputSelect.value)
+                print(decode_bytes(rcmd))
             else:
-                print('value=(',outputSelect.value,')',sep='')
+                with logOp:
+                    print("Download:",outputSelect.value)
+                rcmd = uv.get_file(jobid,outputSelect.value)
         except Exception as ex:
-            print("DIED!",ex)
+            with logOp:
+                print("DIED!",ex)
+                traceback.print_exc(file=sys.stdout)
 
 downloadOpBtn.on_click(download_btn_clicked)
 
@@ -647,9 +672,18 @@ def jobHis_btn_clicked(a):
     with logOp:
         if g:
             jobid = g.group(0)
-            rcmd = "jobs-history -V " + jobid
-            cout = cmd(rcmd)
-            out1 = cout["stdout"]
+            #rcmd = "jobs-history -V " + jobid
+            #cout = cmd(rcmd)
+            #out1 = cout["stdout"]
+            uv = get_uv()
+            hist = uv.job_history(jobid)
+            out1 = []
+            for item in hist:
+                out1 += [
+                    item["status"]+" "+
+                    item["created"]+"\n"+
+                    item["description"]
+                ]
             jobHisSelect.options = out1
     
 jobHisBtn.on_click(jobHis_btn_clicked)
@@ -676,214 +710,178 @@ outputBox = HBox([VBox(output_items_left, layout = Layout(width='50%')), VBox(ou
 ################################# Output tab end ###################################
 
 
+################################# building tab  ###################################
+build_item_layout = Layout(
+    display = 'flex',
+    flex_flow = 'row',
+    justify_content = 'flex-start',
+    width = '50%'
+)
 
-################################## SWAN Visualization tab #####################################
+modelDd = Dropdown(options=['Swan','Funwave_tvd','OpenFoam', 'NHWAVE'])
+modelVersionDd = Dropdown(options = ['4120','4110AB'])
+mpiDd = Dropdown(options = ['None','3.3','3.2', '3.1.4'])
+h5Dd = Dropdown(options = ['None','1.10.5','1.10.4', '1.8.21'])
+hypreDd = Dropdown(options = ['None','2.11.2', '2.10.1'])
 
-Yoption = Dropdown(options=['Choose one','Hsig','RTpeak','PkDir','X_Windv','Y_Windv'])
-plotsInter = interactive(oneDPlots, Y_axis = Yoption )
-oneDBox = Box([plotsInter])
+buildBtn = Button(description = "Build", button_style='primary', layout= Layout(width = '50px'))
+build_model = Label(value=modelTitle.value + " VERSION", layout = Layout(width = '350px'))
+msgOut = Output()
 
-hsPreprocessBtn = Button(description='HS preprocess',button_style='primary', layout=Layout(width='auto'))
-hsPreprocessBtn.on_click(hsPreprocess_btn_clicked)
+build_items = [
+    Box([build_model, modelVersionDd], layout = build_item_layout),
+    Box([Label(value="Build Machine", layout = Layout(width = '350px')), machines], layout = build_item_layout),
+    Box([Label(value="Queue", layout = Layout(width = '350px')), queues], layout = build_item_layout),
+    ipywidgets.HTML(value="<b><font color='OrangeRed'><font size='2.5'>Select Dependent Software</b>"), 
+    #Box([Label(value="MODEL", layout = Layout(width = '350px')), modelDd], layout = build_item_layout),
+    Box([Label(value="MPICH", layout = Layout(width = '350px')), mpiDd], layout = build_item_layout),
+    Box([Label(value="HDF5", layout = Layout(width = '350px')), h5Dd], layout = build_item_layout),
+    Box([Label(value="HYPRE", layout = Layout(width = '350px')), hypreDd], layout = build_item_layout),
+    Box([buildBtn]),
+    Box([msgOut])
+]
 
-hsIndex = IntSlider(value=0, min=0, max=120)
-hsInter = interactive(twoDAnimate, Time_Step = hsIndex)
+# def model_change(change):
+#     if change['type'] == 'change' and change['name'] == 'value':
+#         if(change['new'] == 'Swan'):
+#             modelVersionDd.options = ['41.20','40.85']
+#         if(change['new'] == 'Funwave-tvd'):
+#             modelVersionDd.options = ['3.3','3.2', '3.1', '3.0']
+#         if(change['new'] == 'OpenFoam'):
+#             modelVersionDd.options = ['1812','1806', '1712']
+#         if(change['new'] == 'NHWAVE'):
+#             modelVersionDd.options = ['3.0']
+def isjobexist():
+    query_terms = 'model='+modelTitle.value+'&model_ver='+modelVersionDd.value+'&mpich='+mpiDd.value+'&hdf5='+h5Dd.value+'&hypre='+hypreDd.value
+    query_cmd = "jobs-search 'status=FINISHED' 'parameters.like={*\"versions\":\""+query_terms+"\"*}'"
+    with logOp:
+        print (query_cmd)
+    
+    out = cmd(query_cmd,show=False,trace=False)
+    result = out['stdout'][0]
+    if not result:
+        return False
+    return True
+        
+         
+def buildBtn_clicked(a):
+    model_ver = modelTitle.value.upper() + "_VER"
+    mpi_ver = '' if mpiDd.value is "None" else mpiDd.value
+    h5_ver = '' if h5Dd.value is "None" else h5Dd.value
+    hypre_ver = '' if hypreDd.value is "None" else hypreDd.value
+    
+    with logOp:
+        setvar("MPICH_VER=" + mpiDd.value)
+        setvar("HDF5_VER=" + h5Dd.value)
+        setvar("HYPRE_VER=" + hypreDd.value)
+        setvar("MODEL_VER=" + modelVersionDd.value)
+        writefile("env_setting.txt","""
+#!/bin/bash
+export """+model_ver+"""="""+modelVersionDd.value+"""
+export MPICH_VER="""+mpi_ver+"""
+export H5_VER="""+h5_ver+"""
+export HYPRE_VER="""+hypre_ver+"""
+    """)
+    
+#     cmd("rm -fr build_input") 
+#     cmd("mkdir build_input")
+#     cmd("cp env_setting build_input/")
+        exist = isjobexist()
+        if exist is True:
+            with msgOut:
+                print ("The job exist, no build job would be submitted!")
+        else:
+            setvar("INPUT_DIR=${AGAVE_USERNAME}_$(date +%Y-%m-%d_%H-%M-%S)")
+            cmd("files-mkdir -S ${STORAGE_MACHINE} -N inputs/${INPUT_DIR}")
+            cmd("files-upload -F env_setting.txt -S ${STORAGE_MACHINE} inputs/${INPUT_DIR}/")
+            submitBuildJob(machines.value, queues.value)
+            
+            # set job permissions to users
+            #users = ['ysboss','tg457049','lzhu','nanw','reza']
+            #for user in users:
+            #    cmd('jobs-pems-update -u '+user+' -p READ ${JOB_ID}')
+            
+    
+buildBtn.on_click(buildBtn_clicked)
+            
+#modelDd.observe(model_change)
 
-twoDBox = Box([hsPreprocessBtn, hsInter], layout = Layout(flex_flow = 'column', align_items='stretch'))
-
-swanVisuAcd =Accordion(children = [oneDBox,twoDBox])
-swanVisuAcd.set_title(0,'1D ')
-swanVisuAcd.set_title(1,'2D ')
-
-################################## SWAN Visualization tab end #####################################
-
-
-
-############################### Funwave Visualization tab ##########################################
-
-
-fwYoption = Dropdown(options=['Choose one','eta','u','v'])
-fwplotsInter = interactive(fwOneD, Y_in_plots = fwYoption)
-fwoneDBox = Box([fwplotsInter])
-caconeDBox = Box([fwplotsInter])
-
-depthBtn = Button(description='display',button_style='primary', layout=Layout(width='auto'))
-depthOutput = Output()
-
-def depth_Btn_clicked(a):
-    with depthOutput:
-        display(waterDepth(fw_para_pairs['Mglob'],fw_para_pairs['Nglob']))
-
-depthBtn.on_click(depth_Btn_clicked)
-depthBox = Box([Label(value='Water Depth'),depthBtn],layout = Layout(width = '80%'))
-
-depProfileN = IntSlider(value=0, min=0, max=200)
-depProfileInter = interactive(depProfile, N = depProfileN)
-depProfileBox = Box([Label(value='Depth Profile Snapshot'), depProfileInter])
-
-depProfileAnimaRange = FloatRangeSlider(value=[5,7], min=0.0, max=30, step=0.2,
-                                 description='Time period (s):',readout=True,readout_format='.2f', layout = Layout(width ="60%"))
-depProfileAnimBtn = Button(description='display',button_style='primary', layout=Layout(width='auto'))
-depProfileAnimOutput = Output()
-
-def depProfileAnim_Btn_clicked(a):
-    anim = depProfileWithEta(depProfileAnimaRange.value[0], depProfileAnimaRange.value[1], 
-                             fw_para_pairs['TOTAL_TIME'], fw_para_pairs['PLOT_INTV'], fw_para_pairs['Mglob'])
-    depProfileAnimOutput.clear_output()
-    with depProfileAnimOutput:
-        display(HTML(anim.to_html5_video()))
-depProfileAnimBtn.on_click(depProfileAnim_Btn_clicked)
-depProfileAnimBox = Box([Label(value='Cross-shore profile animation'), depProfileAnimaRange, depProfileAnimBtn], 
-                  layout = Layout(width = '80%', justify_content = 'space-between'))
-
-
-twoDsnapFrame = IntSlider(value=0, min=0, max=151)
-twoDsnapInter = interactive(twoDsnapPlot, frame = twoDsnapFrame)
-twoDsnapBox = Box([Label(value='Surface Elevation snapshot'),twoDsnapInter])
-
-twoDanimRange = FloatRangeSlider(value=[5,7], min=0.0, max=30, step=0.2,
-                                 description='Time period (s):',readout=True,readout_format='.2f', layout = Layout(width ="60%"))
-twoDanimBtn = Button(description='display',button_style='primary', layout=Layout(width='auto'))
-twoDanimOutput = Output()
-def twoDanim_Btn_clicked(a):
-    anim = twoDsnapAnim(twoDanimRange.value[0],twoDanimRange.value[1], fw_para_pairs['PLOT_INTV'])
-    twoDanimOutput.clear_output()
-    with twoDanimOutput:
-        display(HTML(anim.to_html5_video()))
-twoDanimBtn.on_click(twoDanim_Btn_clicked)
-twoDanimBox = Box([Label(value='Surface Elevation animation'), twoDanimRange, twoDanimBtn], 
-                  layout = Layout(width = '80%', justify_content = 'space-between'))
-
-basicBtn = Button(description='display',button_style='primary', layout=Layout(width='auto'))
-basicOutput = Output()
-
-def basic_Btn_clicked(a):
-    frames = []
-    for i in range(1,surfaceFrame.max):
-        frames += [np.genfromtxt("output/output/eta_%05d" % i)]
-    anim = basicAnimation(frames)
-    with basicOutput:
-        display(HTML(anim.to_html5_video()))
-
-basicBtn.on_click(basic_Btn_clicked)
-basicBox = Box([Label(value='Surface Elevation animation 2'),basicBtn], layout = Layout(width = '80%'))
-
-
-basicAnimBox = Box([depthBox, depthOutput,depProfileBox, depProfileAnimBox, depProfileAnimOutput, 
-                    twoDsnapBox, twoDanimBox, twoDanimOutput],
-                   layout = Layout(flex_flow = 'column', align_items='stretch',))
-
-surfaceFrame = IntSlider(value=0, min=0, max=31)
-surfaceInter = interactive(surfacePlot, frame = surfaceFrame)
-surfaceBox = Box([Label(value='Surface Elevation snapshot'),surfaceInter])
-
-rotatingBtn = Button(description='display',button_style='primary', layout=Layout(width='auto'))
-rotatingOutput = Output()
-
-def rotating_Btn_clicked(a):
-    frames = []
-    for i in range(1,surfaceFrame.max):
-        frames += [np.genfromtxt("output/output/eta_%05d" % i)]
-    anim = rotatingAnimation(frames)
-    with rotatingOutput:
-        display(HTML(anim.to_html5_video()))
-
-rotatingBtn.on_click(rotating_Btn_clicked)
-rotatingBox = Box([Label(value='Surface Elevation animation'),rotatingBtn], layout = Layout(width = '80%'))
-rotatingAnimBox = Box([surfaceBox, rotatingBox, rotatingOutput], layout = Layout(flex_flow = 'column', align_items='stretch'))
-
-fwVisuAcd = Accordion([fwoneDBox, basicAnimBox,rotatingAnimBox])
-fwVisuAcd.set_title(0,'1D')
-fwVisuAcd.set_title(1,'2D')
-fwVisuAcd.set_title(2,'3D')
-
-cacVisuAcd = Accordion([caconeDBox, basicAnimBox,rotatingAnimBox])
-cacVisuAcd.set_title(0,'1D')
-cacVisuAcd.set_title(1,'2D')
-cacVisuAcd.set_title(2,'3D')
-
-############################### Funwave Visualization tab end ##########################################
+buildTab = VBox(build_items)
 
 
-
-
-
-
-############################### Delft3D Visualization tab    ##########################################
-
-delft3d_visu=[Label(value='Coming soon', layout = Layout(width = '200px'))]   
-delft3dVisuBox = Box(delft3d_items, layout= Layout(flex_flow = 'column', align_items='stretch', disabled=False))
-
-
-
-############################### Delft3D Visualization tab end ##########################################
-
-
-
-
-
-
-
-############################### OpenFoam Visualization tab    ##########################################
-
-openfoam_visu=[Label(value='Coming soon', layout = Layout(width = '200px'))]   
-openfoamVisuBox = Box(delft3d_items, layout= Layout(flex_flow = 'column', align_items='stretch', disabled=False))
-
-
-############################### OpenFoam Visualization tab end ##########################################
-
-
-
-
-
+################################# image tab end ###################################
 
 
 
 ################################ Finally ##########################################################
         
 tab_nest = Tab()
-tab_nest.children = [SwanInputBox, runBox, outputBox, swanVisuAcd]
+tab_nest.children = [swanInputBox, runBox, outputBox, buildTab]
 tab_nest.set_title(0, 'Input')
 tab_nest.set_title(1, 'Run')
 tab_nest.set_title(2, 'Output')
-tab_nest.set_title(3, 'Visualization')
+tab_nest.set_title(3, 'Build')
 
-setvar("""PATH=$HOME/agave-model/bin:$PATH""")
-cmd("auth-tokens-refresh")
+#uv.refresh_token()
 clear_output()
 
 def on_change(change):
-    setvar("MODEL_TITLE="+modelTitle.value)
+    global cur_model
     if change['type'] == 'change' and change['name'] == 'value':
-        if(change['new'] == 'SWAN'):
-            out.clear_output()
-            with out:
-                tab_nest.children = [SwanInputBox, runBox, outputBox, swanVisuAcd]
-                display(tab_nest)
-        if(change['new'] == 'Funwave-tvd'):
-            out.clear_output()
-            with out:
-                tab_nest.children = [fwInputBox, runBox, outputBox, fwVisuAcd]
-                display(tab_nest)
-        if(change['new'] == 'Cactus'):
-            out.clear_output()
-            with out:
-                tab_nest.children = [cacInputBox, runBox, outputBox, cacVisuAcd]
-                display(tab_nest)
-        if(change['new'] == 'Delft3D'):
-            out.clear_output()
-            with out:
-                tab_nest.children = [delft3dBox, runBox, outputBox, delft3dVisuBox]
-                display(tab_nest)
-        if(change['new'] == 'OpenFoam'):
-            out.clear_output()
-            with out:
-                tab_nest.children = [ofInputBox, runBox, outputBox, openfoamVisuBox]
-                display(tab_nest)
-           
+        with logOp:
+            setvar("MODEL_TITLE="+modelTitle.value)
+        cur_model = modelTitle.value.lower()
+    
+        build_model.value = modelTitle.value + " VERSION"
+        set_tabs()
+
+#        if(change['new'] == 'SWAN'):
+#            modelVersionDd.options = ['4120','4110AB']
+#            cur_model = 'swan'
+#            out.clear_output()
+#            with out:
+#                tab_nest.children = [swanInputBox, runBox, outputBox, buildTab]
+#                display(tab_nest)
+#                
+#        if(change['new'] == 'Funwave_tvd'):
+#            modelVersionDd.options = ['3.3']
+#            cur_model = 'funwave'
+#            out.clear_output()
+#            with out:
+#                tab_nest.children = [fwInputBox, runBox, outputBox, buildTab]
+#                display(tab_nest)
+#        if(change['new'] == 'Cactus'):
+#            modelVersionDd.options = []
+#            cur_model = 'cactus'
+#            out.clear_output()
+#            with out:
+#                tab_nest.children = [cacInputBox, runBox, outputBox, buildTab]
+#                display(tab_nest)
+#        if(change['new'] == 'Delft3D'):
+#            modelVersionDd.options = []
+#            cur_model = 'delft3d'
+#            out.clear_output()
+#            with out:
+#                tab_nest.children = [delft3dBox, runBox, outputBox, buildTab]
+#                display(tab_nest)
+#        if(change['new'] == 'OpenFoam'):
+#            modelVersionDd.options = ['1812','1806', '1712']
+#            cur_model = 'openfoam'
+#            out.clear_output()
+#            with out:
+#                tab_nest.children = [ofInputBox, runBox, outputBox, buildTab]
+#                display(tab_nest)
+#        if(change['new'] == 'NHWAVE'):
+#            modelVersionDd.options = ['3.0']
+#            cur_model = 'nhwave'
+#            out.clear_output()
+#            with out:
+#                tab_nest.children = [nhInputBox, runBox, outputBox, buildTab]
+#                display(tab_nest)
+                
 modelTitle.observe(on_change)
 
-display(modelBox)
+display(globalBox)
 
 out = Output()
 
@@ -896,5 +894,5 @@ display(logOp)
 
 if "MODEL_TITLE" in os.environ:
     modelTitle.value = os.environ["MODEL_TITLE"]
-
+    
 ################################ Finally end ##########################################################

@@ -10,6 +10,5 @@ USER jovyan
 
 WORKDIR /model
 RUN git clone https://github.com/fengyanshi/FUNWAVE-TVD
-WORKDIR /model/FUNWAVE-TVD/src
-RUN perl -p -i -e 's/FLAG_8 = -DCOUPLING/#$&/' Makefile 
+WORKDIR /model/FUNWAVE-TVD
 RUN make 

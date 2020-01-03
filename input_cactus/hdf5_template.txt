@@ -9,7 +9,7 @@ ActiveThorns = "CoordBase FunWave FunwaveCoord CartGrid3D Carpet CarpetIOASCII C
 # flesh
 Cactus::cctk_run_title = "Test Run"
 Cactus::cctk_show_schedule = "yes"
-Cactus::cctk_itlast = ${value=100}
+Cactus::cctk_itlast = ${label=Cactus::cctk_itlast, value=100}
 Cactus::allow_mixeddim_gfs = "yes"
 
 # CartGrid3D
@@ -17,14 +17,14 @@ CartGrid3D::type = "coordbase"
 CartGrid3D::avoid_origin = "no"
 CoordBase::domainsize = "minmax"
 CoordBase::spacing    = "gridspacing"
-CoordBase::xmin =  ${value=0}
-CoordBase::xmax =  ${value=30}
-CoordBase::ymin =  ${value=0}
-CoordBase::ymax =  ${value=30}
+CoordBase::xmin =  ${label=CoordBase::xmin, value=0}
+CoordBase::xmax =  ${label=CoordBase::xmax, value=30}
+CoordBase::ymin =  ${label=CoordBase::ymin, value=0}
+CoordBase::ymax =  ${label=CoordBase::ymax, value=30}
 CoordBase::zmin =  0.0
 CoordBase::zmax =  0.0
-CoordBase::dx   =  ${value=0.5}
-CoordBase::dy   =  ${value=0.5}
+CoordBase::dx   =  ${label=CoordBase::dx, value=0.5}
+CoordBase::dy   =  ${label=CoordBase::dy, value=0.5}
 
 CoordBase::boundary_size_x_lower     = 3
 CoordBase::boundary_size_x_upper     = 3
@@ -78,7 +78,7 @@ FunWave::depth_file_offset_y = 3
 FunWave::depth_type = "flat"
 FunWave::depth_format = "ele"
 FunWave::depth_file = "/tmp/__depth__.txt"
-FunWave::depth_flat = ${value=0.8}
+FunWave::depth_flat = ${label=FunWave::depth_flat, value=0.8}
 #Funwave::test_depth_shore_x = 80
 #Funwave::test_depth_island_x = 40
 #Funwave::test_depth_island_y = 40
@@ -121,10 +121,10 @@ Funwave::boundary = funwave
 
 # Funwave wave maker
 FunWave::wavemaker_type = "ini_gau"
-FunWave::xc = ${value=26.5}
-FunWave::yc = ${value=26.9}
-FunWave::amp =  ${value=2.0}
-FunWave::wid =  ${value=1}
+FunWave::xc = ${label=FunWave::xc, value=26.5}
+FunWave::yc = ${label=FunWave::yc, value=26.9}
+FunWave::amp =  ${label=FunWave::amp, value=2.0}
+FunWave::wid =  ${label=FunWave::wid, value=1}
 Funwave::wdep = 0.78
 Funwave::xwavemaker = 25.0
 
@@ -164,7 +164,7 @@ FunwaveCoord::spherical_coordinates = false
 
 ActiveThorns = "CarpetIOHDF5"
 IOHDF5::out2D_xyplane_z = 0
-IOHDF5::out2D_every = ${value=1}
+IOHDF5::out2D_every = ${label=IOHDF5::out2D_every, value=1}
 IOHDF5::out2D_vars = "
   FunWave::eta
   FunWave::u
