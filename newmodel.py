@@ -12,14 +12,9 @@ from command import cmd
 from modInput import modInput
 import logOp
 
-import imp
-if "jetlag" in globals():
-    imp.reload(jetlag)
-else:
-    import jetlag
-from jetlag import *
-from knownsystems import *
 from safe_reader import safe_reader
+
+import jetlag_conf
 
 if 'input_params' in globals():
     imp.reload(input_params)
@@ -39,14 +34,6 @@ def relink(dir_a, dir_b):
             relink(fa, fb)
         else:
             os.link(fa, fb)
-
-uv = Universal()
-uv.load(
-    backend_agave,
-    'sbrandt@cct.lsu.edu',
-    'shelob'
-)
-uv.refresh_token()
 
 ### Global Box
 
@@ -96,7 +83,7 @@ run_item_layout = Layout(
     width = '50%'
 )
 jobNameText = Text(value = 'myjob')
-machines = Dropdown()
+machines = Dropdown(options=jetlag_conf.machines_options)
 queues = Dropdown()
 numXSlider = IntSlider(value=0, min=1, max=16, step=1)
 numYSlider = IntSlider(value=0, min=1, max=16, step=1)
