@@ -16,6 +16,7 @@ from safe_reader import safe_reader
 
 import jetlag_conf
 
+import imp
 if 'input_params' in globals():
     imp.reload(input_params)
 else:
@@ -24,6 +25,15 @@ else:
 ######################## Previous ############################################################
 
 tab_nest = None
+
+def decode_bytes(c):
+    s = ''
+    if type(c) == bytes:
+        for k in c:
+            s += chr(k)
+        return s
+    else:
+        return c
 
 def relink(dir_a, dir_b):
     for f in os.listdir(dir_a):
@@ -80,26 +90,96 @@ run_item_layout = Layout(
     display = 'flex',
     flex_flow = 'row',
     justify_content = 'flex-start',
-    width = '50%'
+    width = '75%'
 )
-jobNameText = Text(value = 'myjob')
-machines = Dropdown(options=jetlag_conf.machines_options)
-queues = Dropdown()
-numXSlider = IntSlider(value=0, min=1, max=16, step=1)
-numYSlider = IntSlider(value=0, min=1, max=16, step=1)
-numZSlider = IntSlider(value=0, min=1, max=16, step=1)
+jobNameText = Text(value = input_params.get('jobname','myjob'))
+def observe_job_name(change):
+    if change["name"] == "value":
+        input_params.set('jobname',change["new"])
+jobNameText.observe(observe_job_name)
+
+proc_str = input_params.get('NPROCS','1*1*1')
+procs = []
+for m in re.findall(r'\d+',proc_str):
+    procs += [int(m)]
+while len(procs) < 3:
+    procs += [0]
+
+numProcsText = Text(value = proc_str)
+
+machines = Dropdown(options=jetlag_conf.machines_options, value=input_params.get('machine',jetlag_conf.machines_options[0]))
+def observe_machines(change):
+    if change["name"] == "value":
+        input_params.set('machine', change["new"])
+machines.observe(observe_machines)
+
+#queues = Dropdown()
+maxSlide = 128
+numXSlider = IntSlider(value=procs[0], min=1, max=maxSlide, step=1)
+numYSlider = IntSlider(value=procs[1], min=1, max=maxSlide, step=1)
+numZSlider = IntSlider(value=procs[2], min=1, max=maxSlide, step=1)
+
+disable_sliders = False
+def observe_num_procs(change):
+    global disable_sliders
+    if change["name"] == "value":
+        try:
+            disable_sliders = True
+            val = change["new"]
+            i = 0
+            changed = False
+            for m in re.findall(r'\d+',val):
+                i += 1
+                mv = int(m)
+                if i == 1:
+                    if mv != numXSlider.value:
+                        numXSlider.value = mv
+                        changed = True
+                elif i==2:
+                    if mv != numYSlider.value:
+                        numYSlider.value = mv
+                        changed = True
+                elif i==3:
+                    if mv != numZSlider.value:
+                        numZSlider.value = mv
+                        changed = True
+            if changed:
+                input_params.set('NPROCS',val)
+        finally:
+            disable_sliders = False
+
+def observe_n_change(change):
+    if disable_sliders:
+        return
+    if change["name"] == "value" and change["old"] != change["new"]:
+        val = "%d*%d*%d" % (numXSlider.value, numYSlider.value, numZSlider.value)
+        if numProcsText.value != val:
+            numProcsText.value = val
+            input_params.set('NPROCS',val)
+
+numProcsText.observe(observe_num_procs)
+numXSlider.observe(observe_n_change)
+numYSlider.observe(observe_n_change)
+numZSlider.observe(observe_n_change)
+
+if "run_tab" in globals():
+    imp.reload(run_tab)
+else:
+    import run_tab
 runBtn = Button(description='Run', button_style='primary', layout= Layout(width = '50px'))
-runWidth = '350px'
+runWidth = '150px'
 run_items = [
     Box([Label(value="Job Name", layout = Layout(width = runWidth)), jobNameText], layout = run_item_layout),
     Box([Label(value="Machine", layout = Layout(width = runWidth)), machines], layout = run_item_layout),
-    Box([Label(value="Queue", layout = Layout(width = runWidth)), queues], layout = run_item_layout),
+    #Box([Label(value="Queue", layout = Layout(width = runWidth)), queues], layout = run_item_layout),
     Box([Label(value="NX", layout = Layout(width = runWidth)), numXSlider], layout = run_item_layout),
     Box([Label(value="NY", layout=Layout(width = runWidth)), numYSlider], layout= run_item_layout),
     Box([Label(value="NZ", layout=Layout(width = runWidth)), numZSlider], layout= run_item_layout),
+    Box([Label(value="NX*NY*NZ", layout=Layout(width = runWidth)), numProcsText], layout= run_item_layout),
     Box([runBtn]),
 ]
 runBox = VBox(run_items)
+runBtn.on_click(run_tab.run)
 
 #=== Output Box
 jobListBtn = Button(description='List all jobs', button_style='primary', layout= Layout(width = '115px'))
@@ -136,6 +216,78 @@ build_item_layout = Layout(
 buildBtn = Button(description = "Build", button_style='primary', layout= Layout(width = '50px'))
 build_model = Label(value=modelTitle.value + " VERSION", layout = Layout(width = '350px'))
 
+def jobList_btn_clicked(a):
+    with logOp.logOp:
+        out1 = []
+        uv = jetlag_conf.get_uv()
+        for j in uv.job_list(10):
+            out1 += [j["status"]+" "+j["name"]+"  "+j["id"]]
+        jobSelect.options = out1
+    
+jobListBtn.on_click(jobList_btn_clicked)
+
+def jobOutput_btn_clicked(a):
+    g = re.match(r'^(\S+)\s+(\S+)\s+(\S+)',jobSelect.value)
+    with logOp.logOp:
+        if g:
+            jobid = g.group(3)
+            uv = jetlag_conf.get_uv()
+            outputSelect.options = ["loading..."]
+            out1 = uv.show_job(jobid,verbose=False)
+            outputSelect.options = out1
+            if len(out1)==0:
+                outputSelect.options = ["empty"]
+        else:
+            outputSelect.options = []
+            print("pattern did not match:",jobSelect.value)
+
+jobOutputBtn.on_click(jobOutput_btn_clicked)
+
+def jobHis_btn_clicked(a):
+    g = re.match(r'^(\S+)\s+(\S+)\s+(\S+)',jobSelect.value)
+    with logOp.logOp:
+        if g:
+            jobid = g.group(3)
+            print("History for job %s" % jobid)
+            uv = jetlag_conf.get_uv()
+            hist = uv.job_history(jobid)
+            out1 = []
+            for item in hist:
+                out1 += [
+                    item["status"]+" "+
+                    item["created"]+"\n"+
+                    item["description"]
+                ]
+            jobHisSelect.options = out1
+    
+jobHisBtn.on_click(jobHis_btn_clicked)
+
+def download_btn_clicked(a):
+    with logOp.logOp:
+        try:
+            g = re.match(r'^(\S+)\s+(\S+)\s+(\S+)',jobSelect.value)
+            jobid = g.group(3)
+            uv = jetlag_conf.get_uv()
+        
+            if outputSelect.value == '/output.tgz':
+                with logOp:
+                    print("Downloading output tarball to jobdata-"+jobid)
+                job = RemoteJobWatcher(uv, jobid)
+                job.get_result()
+            elif re.match(r'.*\.(txt|out|err|ipcexe|log)',outputSelect.value):
+                rcmd = uv.get_file(jobid,outputSelect.value)
+                print(decode_bytes(rcmd))
+            else:
+                with logOp:
+                    print("Download:",outputSelect.value)
+                rcmd = uv.get_file(jobid,outputSelect.value)
+        except Exception as ex:
+            with logOp:
+                print("DIED!",ex)
+                traceback.print_exc(file=sys.stdout)
+
+downloadOpBtn.on_click(download_btn_clicked)
+
 # TODO: Need a better way of specifying this.... maybe a yaml file?
 modelDd = Dropdown(options=['Swan','Funwave_tvd','OpenFoam', 'NHWAVE'])
 modelVersionDd = Dropdown(options = ['4120','4110AB'])
@@ -149,7 +301,7 @@ boxWidth = '350px'
 build_items = [
     Box([build_model, modelVersionDd], layout = build_item_layout),
     Box([Label(value="Build Machine", layout = Layout(width = boxWidth)), machines], layout = build_item_layout),
-    Box([Label(value="Queue", layout = Layout(width = boxWidth)), queues], layout = build_item_layout),
+    #Box([Label(value="Queue", layout = Layout(width = boxWidth)), queues], layout = build_item_layout),
     ipywidgets.HTML(value="<b><font color='OrangeRed'><font size='2.5'>Select Dependent Software</b>"), 
     Box([Label(value="MPICH", layout = Layout(width = boxWidth)), mpiDd], layout = build_item_layout),
     Box([Label(value="HDF5", layout = Layout(width = boxWidth)), h5Dd], layout = build_item_layout),
@@ -181,5 +333,6 @@ UpInputBtn.on_click(input_box.save_input_file(obj=ddo))
 
 display(tab_nest)
 display(logOp.logOp)
+logOp.clearLog()
 
 ### End Tab Nest Model

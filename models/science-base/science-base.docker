@@ -19,7 +19,6 @@ RUN make install -j 20
 ENV PATH /usr/local/mpich/bin:$PATH
 ENV LD_LIBRARY_PATH /usr/local/mpich/lib:$LD_LIBRARY_PATH
 
-# Build HDF5 to work with our MPI
 WORKDIR /
 ENV H5_MIN_VER 1.8
 ENV H5_MAJ_VER 1.8.21

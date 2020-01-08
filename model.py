@@ -5,8 +5,7 @@ import ipywidgets
 from ipywidgets import interactive, Layout, Button, Box, HBox, VBox, Text, Dropdown, Label, IntSlider, Textarea, Accordion, ToggleButton, ToggleButtons, Select, HTMLMath, FloatRangeSlider, Output, Tab, Checkbox, HTML
 from IPython.display import display, clear_output, HTML
 import json
-import traceback
-import sys
+import systemdata
 
 from agave import *
 from setvar import *
@@ -15,47 +14,7 @@ from swanPlots import *
 from command import cmd
 from modInput import modInput
 
-import imp
-if "jetlag" in globals():
-    imp.reload(jetlag)
-else:
-    import jetlag
-from jetlag import *
-from knownsystems import *
-
 ######################## Previous ############################################################
-
-def bread(fname):
-    fd = os.open(fname,os.O_RDONLY)
-    s = ''
-    while True:
-        contents = os.read(fd,1000)
-        if len(contents) == 0:
-            break
-        for k in contents:
-            s += chr(k)
-    os.close(fd)
-    return re.findall(r'.*\n?',s)
-
-tab_nest = None
-
-def relink(dir_a, dir_b):
-    for f in os.listdir(dir_a):
-        fa = dir_a+"/"+f
-        fb = dir_b+"/"+f
-        if os.path.isdir(fa):
-            os.makedirs(fb, exist_ok=True)
-            relink(fa, fb)
-        else:
-            os.link(fa, fb)
-
-uv = Universal()
-uv.load(
-    backend_agave,
-    'sbrandt@cct.lsu.edu',
-    'shelob'
-)
-uv.refresh_token()
 
 cur_model = 'swan'
 logOp = Output()
@@ -77,21 +36,15 @@ clearLogBtn.on_click(clearLog_btn_clicked)
 
 def generatePara(templateFile):
     items = []
-    if True: #with open(templateFile, 'r') as fd:
-        for line in bread(templateFile): #fd.readlines():
+    with open(templateFile, 'r') as fd:
+        for line in fd.readlines():
             g = re.search(r'[\w:]*\s*.*=*\s*\${(.*)}',line)
             if g:
                 label_value = ''
                 isTB = False
-                for match in re.findall(r'(\w+)=("[^"]*"|\'[^\']*\'|[^,\n]*)', g.group(1)):
+                for match in re.findall(r'(\w+)=("[^"]*"|\'[^\']*|[^,\n]*)', g.group(1)):
                     if match[0] == 'label':
-                        if match[1][0] == '"' and match[1][-1] == '"':
-                            val = match[1][1:-1]
-                        elif match[1][0] == "'" and match[1][-1] == "'":
-                            val = match[1][1:-1]
-                        else:
-                            val = match[1]
-                        lbs = val.split('/')
+                        lbs = match[1].split('/')
                         label_value = lbs[0]
                         if len(lbs) == 2:
                             isTB = True
@@ -117,13 +70,15 @@ def generatePara(templateFile):
                         text = Text(value = match[1])
                         box = Box([label, text], layout = Layout(width = '100%', justify_content = 'flex-start'))
                         items.append(box)
+    fd.close()
     return items
 
 def updatePara(templateFile, newInput, inputBox):
+    
     with open(newInput, "w") as fw:
-        if True: #with open(templateFile, "r") as fd:
+        with open(templateFile, "r") as fd:
             count = 0
-            for line in bread(templateFile): #fd.readlines():
+            for line in fd.readlines():
                 g = re.search(r'[\w:]*\s*.*=*\s*\${(.*)}' , line)
                 if g:
                     isTB = False
@@ -158,96 +113,46 @@ def updatePara(templateFile, newInput, inputBox):
                     fw.write(re.sub(r'\${.*}', newLine, line))
                 else:
                     fw.write(line)
-        #fd.close()
-    #fw.close()    
+        fd.close()
+    fw.close()    
     
-
-menus = {}
-def set_tabs():
-        global cur_model, menus
-        tabs = ["Choose Input Template"]
-        menus[cur_model] = {}
-        for f in os.listdir("input_"+cur_model):
-            if not re.search(r'_template',f):
-                continue
-            fn = "input_"+cur_model+"/"+f
-            #with open(fn,"r") as fr:
-            if True:
-                found = False
-                for line in bread(fn): #fr.readlines():
-                    g = re.search(r'\bmenu:\s*(.*\S)\s*->\s*(.*\S)',line)
-                    if g:
-                        label = g.group(1)
-                        menus[cur_model][label] = {}
-                        menus[cur_model][label]["outfile"] = g.group(2)
-                        menus[cur_model][label]["infile"] = f
-                        found = True
-            if not found:
-                label = f
-                menus[cur_model][label] = {}
-                menus[cur_model][label]["outfile"] = re.sub(r'_template','',f)
-                menus[cur_model][label]["infile"] = f
-            tabs += [label]
-        if tab_nest is not None:
-            item = tab_nest.children[0].children[0]
-            tabs = tuple(tabs)
-            if item.options == tabs:
-                return tabs
-            item.options = tabs
-            item.index = 0
-        return tabs
     
 def template_on_change(change):
-    set_tabs()
     inputTmp = ''
     if change['type'] == 'change' and change['name'] == 'value':
-#        if(change['new'] == 'Choose Input Template'):
-#            #tab_nest.children[0].children[2].children = []
-#            return
-#        if(change['new'] == 'Basic Template'):
-#            with logOp:
-#                cmd("tar -xvf input_" + cur_model + ".tgz")
-#            inputTmp = 'input_' + cur_model + '/basic_template.txt'
-#        if(change['new'] == 'HDF5 Template'):
-#            with logOp:
-#                cmd("tar -xvf input_" + cur_model + ".tgz")
-#            inputTmp = 'input_' + cur_model + '/hdf5_template.txt'
-#        
-         item = tab_nest.children[0].children[0]
-         if item.index is not None:
-            val = item.options[item.index]
-            if val not in menus[cur_model]:
-                return
-            inputTmp = 'input_' + cur_model + '/' + menus[cur_model][val]["infile"]
-            tab_nest.children[0].children[2].children = generatePara(inputTmp)
+        if(change['new'] == 'Choose Input Template'):
+            tab_nest.children[0].children[2].children = []
+            return
+        if(change['new'] == 'Basic Template'):
+            with logOp:
+                cmd("tar -xvf input_" + cur_model + ".tgz")
+            inputTmp = 'input_' + cur_model + '/basic_template.txt'
+        if(change['new'] == 'HDF5 Template'):
+            with logOp:
+                cmd("tar -xvf input_" + cur_model + ".tgz")
+            inputTmp = 'input_' + cur_model + '/hdf5_template.txt'
+        
+        tab_nest.children[0].children[2].children = generatePara(inputTmp)
         
         
 def update_btn_clicked(a):
-    set_tabs()
-    item = tab_nest.children[0].children[0]
-    itemValue = item.options[item.index]
-    if itemValue not in +menus[cur_model]:
-        return
-    inputFile = "input_"+cur_model+"/"+menus[cur_model][itemValue]["infile"]
-    outputFile = "input_"+cur_model+"/"+menus[cur_model][itemValue]["outfile"]
-    updatePara(inputFile, outputFile, tab_nest.children[0].children[2])
-#    if (tab_nest.children[0].children[1].value == True):
-#        with logOp:
-#            cmd("rm -f input.tgz")
-#            cmd("rm -fr input")
-#            cmd("cp -f ../input_" + cur_model + ".tgz input.tgz")
-#            return
-#        
-#    newInput = 'input_'+ cur_model + '/input_tmp.txt'
-#    inputTmp = ''
-#    if(tab_nest.children[0].children[0].value == 'Basic Template'):
-#        inputTmp = 'input_' + cur_model + '/basic_template.txt'
-#    if(tab_nest.children[0].children[0].value == 'HDF5 Template'):
-#        inputTmp = 'input_' + cur_model + '/basic_template.txt'
-#    
-#    updatePara(inputTmp, newInput, tab_nest.children[0].children[2])
-#    
-#    tab_nest.children[0].children[4].value = open(newInput, 'r').read()
+    if (tab_nest.children[0].children[1].value == True):
+        with logOp:
+            cmd("rm -f input.tgz")
+            cmd("rm -fr input")
+            cmd("cp -f ../input_" + cur_model + ".tgz input.tgz")
+            return
+        
+    newInput = 'input_'+ cur_model + '/input_tmp.txt'
+    inputTmp = ''
+    if(tab_nest.children[0].children[0].value == 'Basic Template'):
+        inputTmp = 'input_' + cur_model + '/basic_template.txt'
+    if(tab_nest.children[0].children[0].value == 'HDF5 Template'):
+        inputTmp = 'input_' + cur_model + '/basic_template.txt'
+    
+    updatePara(inputTmp, newInput, tab_nest.children[0].children[2])
+    
+    tab_nest.children[0].children[4].value = open(newInput, 'r').read()
   
              
     
@@ -258,7 +163,7 @@ def update_btn_clicked(a):
 
 ######################## SWAN Input tab ############################################################
 
-swanInputdd = Dropdown(options=set_tabs(), value='Choose Input Template')
+swanInputdd = Dropdown(options=['Choose Input Template','Basic Template'], value='Choose Input Template')
 swanCbox = Checkbox(value = False, description = "Use Own Input")
 swanInput = Box(layout = Layout(flex_flow = 'column'))
 swanInputdd.observe(template_on_change)
@@ -408,45 +313,19 @@ jobNameText = Text(value = 'myjob')
 machines = Dropdown()
 queues = Dropdown()
 
-machines_options = []
-all_apps = {}
+all_apps = systemdata.load()
 exec_to_app = {}
 
-for m in uv.get_meta('system-config-*'):
-    val = m["value"]
-
-    uv2 = Universal()
-    uv2.init(
-        backend=uv.values["backend"],
-        email=uv.values["email"],
-        **val)
-
-    perm_data_str = ''
-    pems_data = uv2.get_app_pems()
-    if 'read' in pems_data and pems_data['read'] == True:
-        perm_data_str += 'R'
-    if 'write' in pems_data and pems_data['write'] == True:
-        perm_data_str += 'W'
-    if 'execute' in pems_data and pems_data['execute'] == True:
-        perm_data_str += 'X'
-
-    machine = uv2.values["execm_id"]
-
-    machines_options += [machine]
-
-    app_entry = {
-        'exec_sys' : machine,
-        'storage_sys' : uv2.values["storage_id"],
-        'perm' : perm_data_str,
-        'queues' : [
-            { "name": val["queue"],
-              "ppn" : val["max_procs_per_node"] }
-        ],
-        'uv':uv2
-    }
-    app0 = uv2.fill(uv2.values["app_name"]+"-"+uv2.values["app_version"])
-    all_apps[app0] = app_entry
-    exec_to_app[machine] = app0
+machines_options = []
+app0 = None
+for app in all_apps:
+    # If app0 is not assigned and the current
+    # app is one we have permission to use
+    if app0 is None and all_apps[app]["perm"] in ["RWX", "RX"]:
+        app0 = app
+    exec_sys = all_apps[app]["exec_sys"]
+    exec_to_app[exec_sys] = app
+    machines_options += [exec_sys]
 
 machines.options = machines_options
 
@@ -462,14 +341,8 @@ def on_machine_value_set(_):
     queues.value = queues_options[0]
 
 machines.observe(on_machine_value_set)
-exec_sys = all_apps[app0]["exec_sys"]
-machines.value = exec_sys
+machines.value = all_apps[app0]["exec_sys"]
 on_machine_value_set(None)
-
-def get_uv():
-    app = exec_to_app[exec_sys]
-    app_data = all_apps[app]
-    return app_data["uv"]
 
 numXSlider = IntSlider(value=0, min=1, max=16, step=1)
 numYSlider = IntSlider(value=0, min=1, max=16, step=1)
@@ -488,12 +361,10 @@ run_items = [
 ]
 
 def modify_openfoam(case):
-    with logOp:
-        print("openfoam:",case)
     sp = case.split('/')
-    caseName = sp[len(sp)-1].strip()
+    caseName = sp[len(sp)-1]
     tmp = ""
-    with open("run_dir/tutorials/%s/system/decomposeParDict" % case.strip(), "r") as fd:
+    with open("input/system/decomposeParDict", "r") as fd:
         contents = fd.read()
         procs = get_procs()
         pat1 = r'numberOfSubdomains\s+(\d+)\s*;'
@@ -535,40 +406,28 @@ def runfun_btn_clicked(a):
         
     with logOp:
         if (tab_nest.children[0].children[1].value == False):
-            cmd("rm -fr run_dir") 
-            cmd("mkdir run_dir")
-            in_dir = "input_" + cur_model
-            for fn in os.listdir(in_dir):
-                cmd("cp -a '%s/%s' ./run_dir/" % (in_dir,fn))
+            cmd("rm -fr input") 
+            cmd("mkdir input")
+            if (cur_model == "swan"):
+                cmd("mv input_" + cur_model + "/input_tmp.txt input_" + cur_model + "/INPUT")
+                cmd("cp -rT input_" + cur_model + " input")
+            if (cur_model == "funwave" or cur_model == "cactus"):
+                cmd("mv input_" + cur_model + "/input_tmp.txt input_" + cur_model + "/input.txt")
+                modInput(procs[0], "input_funwave/input.txt")
+                cmd("cp input_" + cur_model + "/input.txt input")
+                cmd("cp input_" + cur_model + "/depth.txt input")
             if (cur_model == "openfoam"):
+                cmd("cp -a input_" + cur_model + "/tutorials/"+ofCaseName.value[:-1]+"/. input")
                 modify_openfoam(ofCaseName.value)
                 
-            cmd("tar cvzf input.tgz run_dir")
+            cmd("tar cvzf input.tgz input")
                 
         setvar("INPUT_DIR=${AGAVE_USERNAME}_$(date +%Y-%m-%d_%H-%M-%S)")
         #cmd("files-mkdir -S ${STORAGE_MACHINE} -N inputs/${INPUT_DIR}")
         #cmd("files-upload -F input.tgz -S ${STORAGE_MACHINE} inputs/${INPUT_DIR}/")
-        #cmd("files-mkdir agave://${STORAGE_MACHINE}/inputs/${INPUT_DIR}")
-        #cmd("files-cp input.tgz agave://${STORAGE_MACHINE}/inputs/${INPUT_DIR}/")
-        #submitJob(nodes, procs[0], cur_model, jobNameText.value, machines.value, queues.value)
-        uv = app_data["uv"]
-        ###
-        jetlag_app = cur_model
-        call(["rm", "-fr", "run_dir"])
-        os.makedirs('run_dir')
-        with open("run_dir/runapp.sh","w") as fd:
-            print("singularity exec $SING_OPTS --pwd $PWD $IMAGE bash ./%s-app.sh" % jetlag_app,file=fd)
-            #print("bash ./%s-app.sh" % jetlag_app)
-        call(["cp", "%s-app.sh" % jetlag_app, "run_dir/."])
-        #for fname in os.listdir("input_%s" % jetlag_app):
-        #    call(["ln","input_%s/%s" % (jetlag_app, fname),"run_dir/"])
-        relink("input_%s" % jetlag_app, "run_dir")
-        call(["tar", "czf", "input.tgz", "run_dir"])
-        ###
-        nx = numXSlider.value
-        ny = numYSlider.value
-        nz = numZSlider.value
-        uv.run_job(jobNameText.value, nx=nx, ny=ny, nz=nz, jtype="queue", run_time="1:00:00")
+        cmd("files-mkdir agave://${STORAGE_MACHINE}/inputs/${INPUT_DIR}")
+        cmd("files-cp input.tgz agave://${STORAGE_MACHINE}/inputs/${INPUT_DIR}/")
+        submitJob(nodes, procs[0], cur_model, jobNameText.value, machines.value, queues.value)
         
 runBtn.on_click(runfun_btn_clicked)
 
@@ -598,10 +457,8 @@ jobHisSelect = Select(layout = Layout(height = '336px', width='100%'))
 
 def jobList_btn_clicked(a):
     with logOp:
-        out1 = []
-        uv = get_uv()
-        for j in uv.job_list(10):
-            out1 += [j["id"]+" "+j["status"]]
+        cout = cmd("jobs-list -l 10")
+        out1 = cout["stdout"]
         jobSelect.options = out1
     
 jobListBtn.on_click(jobList_btn_clicked)
@@ -622,17 +479,10 @@ def jobOutput_btn_clicked(a):
     with logOp:
         if g:
             jobid = g.group(0)
-            #rcmd = "jobs-output-list "+ jobid
-            #cout = cmd(rcmd)
-            #out1 = cout["stdout"]
-            uv = get_uv()
-            outputSelect.options = ["loading..."]
-            out1 = uv.show_job(jobid,verbose=False)
+            rcmd = "jobs-output-list "+ jobid
+            cout = cmd(rcmd)
+            out1 = cout["stdout"]
             outputSelect.options = out1
-            if len(out1)==0:
-                outputSelect.options = ["empty"]
-        else:
-            print("pattern did not match:",jobSelect.value)
     
 jobOutputBtn.on_click(jobOutput_btn_clicked)
 
@@ -641,29 +491,26 @@ def download_btn_clicked(a):
         try:
             g = re.match(r'^\S+',jobSelect.value)
             jobid = g.group(0)
-            uv = get_uv()
-            #if(outputSelect.value.find('.')==-1):
-            #    rcmd = "jobs-output-get -r "+ jobid +" "+ outputSelect.value
-            #else:
-            #    rcmd = "jobs-output-get "+ jobid +" "+ outputSelect.value
-
-        
-            if outputSelect.value == '/output.tgz':
-                with logOp:
-                    print("Downloading output tarball to jobdata-"+jobid)
-                job = RemoteJobWatcher(uv, jobid)
-                job.get_result()
-            elif re.match(r'.*\.(txt|out|err|ipcexe)',outputSelect.value):
-                rcmd = uv.get_file(jobid,outputSelect.value)
-                print(decode_bytes(rcmd))
+            if(outputSelect.value.find('.')==-1):
+                rcmd = "jobs-output-get -r "+ jobid +" "+ outputSelect.value
             else:
-                with logOp:
-                    print("Download:",outputSelect.value)
-                rcmd = uv.get_file(jobid,outputSelect.value)
+                rcmd = "jobs-output-get "+ jobid +" "+ outputSelect.value
+        
+            print (rcmd)
+            os.system(rcmd)
+        
+            if(outputSelect.value == 'output.tar.gz'):
+                cmd("rm -fr output")
+                cmd("mkdir -p output_" + jobid)
+                cmd('tar -xvf output.tar.gz -C ' + jobid)
+            elif(re.match(r'.*\.(txt|out|err|ipcexe)',outputSelect.value)):
+                with open(outputSelect.value,'r') as fd:
+                    for line in fd.readlines():
+                        print(line,end='')
+            else:
+                print('value=(',outputSelect.value,')',sep='')
         except Exception as ex:
-            with logOp:
-                print("DIED!",ex)
-                traceback.print_exc(file=sys.stdout)
+            print("DIED!",ex)
 
 downloadOpBtn.on_click(download_btn_clicked)
 
@@ -672,18 +519,9 @@ def jobHis_btn_clicked(a):
     with logOp:
         if g:
             jobid = g.group(0)
-            #rcmd = "jobs-history -V " + jobid
-            #cout = cmd(rcmd)
-            #out1 = cout["stdout"]
-            uv = get_uv()
-            hist = uv.job_history(jobid)
-            out1 = []
-            for item in hist:
-                out1 += [
-                    item["status"]+" "+
-                    item["created"]+"\n"+
-                    item["description"]
-                ]
+            rcmd = "jobs-history -V " + jobid
+            cout = cmd(rcmd)
+            out1 = cout["stdout"]
             jobHisSelect.options = out1
     
 jobHisBtn.on_click(jobHis_btn_clicked)
@@ -754,8 +592,7 @@ build_items = [
 def isjobexist():
     query_terms = 'model='+modelTitle.value+'&model_ver='+modelVersionDd.value+'&mpich='+mpiDd.value+'&hdf5='+h5Dd.value+'&hypre='+hypreDd.value
     query_cmd = "jobs-search 'status=FINISHED' 'parameters.like={*\"versions\":\""+query_terms+"\"*}'"
-    with logOp:
-        print (query_cmd)
+    print (query_cmd)
     
     out = cmd(query_cmd,show=False,trace=False)
     result = out['stdout'][0]
@@ -797,9 +634,9 @@ export HYPRE_VER="""+hypre_ver+"""
             submitBuildJob(machines.value, queues.value)
             
             # set job permissions to users
-            #users = ['ysboss','tg457049','lzhu','nanw','reza']
-            #for user in users:
-            #    cmd('jobs-pems-update -u '+user+' -p READ ${JOB_ID}')
+            users = ['ysboss','tg457049','lzhu','nanw','reza']
+            for user in users:
+                cmd('jobs-pems-update -u '+user+' -p READ ${JOB_ID}')
             
     
 buildBtn.on_click(buildBtn_clicked)
@@ -822,7 +659,8 @@ tab_nest.set_title(1, 'Run')
 tab_nest.set_title(2, 'Output')
 tab_nest.set_title(3, 'Build')
 
-#uv.refresh_token()
+setvar("""PATH=$HOME/agave-model/bin:$PATH""")
+cmd("auth-tokens-refresh")
 clear_output()
 
 def on_change(change):
@@ -830,54 +668,51 @@ def on_change(change):
     if change['type'] == 'change' and change['name'] == 'value':
         with logOp:
             setvar("MODEL_TITLE="+modelTitle.value)
-        cur_model = modelTitle.value.lower()
     
         build_model.value = modelTitle.value + " VERSION"
-        set_tabs()
-
-#        if(change['new'] == 'SWAN'):
-#            modelVersionDd.options = ['4120','4110AB']
-#            cur_model = 'swan'
-#            out.clear_output()
-#            with out:
-#                tab_nest.children = [swanInputBox, runBox, outputBox, buildTab]
-#                display(tab_nest)
-#                
-#        if(change['new'] == 'Funwave_tvd'):
-#            modelVersionDd.options = ['3.3']
-#            cur_model = 'funwave'
-#            out.clear_output()
-#            with out:
-#                tab_nest.children = [fwInputBox, runBox, outputBox, buildTab]
-#                display(tab_nest)
-#        if(change['new'] == 'Cactus'):
-#            modelVersionDd.options = []
-#            cur_model = 'cactus'
-#            out.clear_output()
-#            with out:
-#                tab_nest.children = [cacInputBox, runBox, outputBox, buildTab]
-#                display(tab_nest)
-#        if(change['new'] == 'Delft3D'):
-#            modelVersionDd.options = []
-#            cur_model = 'delft3d'
-#            out.clear_output()
-#            with out:
-#                tab_nest.children = [delft3dBox, runBox, outputBox, buildTab]
-#                display(tab_nest)
-#        if(change['new'] == 'OpenFoam'):
-#            modelVersionDd.options = ['1812','1806', '1712']
-#            cur_model = 'openfoam'
-#            out.clear_output()
-#            with out:
-#                tab_nest.children = [ofInputBox, runBox, outputBox, buildTab]
-#                display(tab_nest)
-#        if(change['new'] == 'NHWAVE'):
-#            modelVersionDd.options = ['3.0']
-#            cur_model = 'nhwave'
-#            out.clear_output()
-#            with out:
-#                tab_nest.children = [nhInputBox, runBox, outputBox, buildTab]
-#                display(tab_nest)
+        if(change['new'] == 'SWAN'):
+            modelVersionDd.options = ['4120','4110AB']
+            cur_model = 'swan'
+            out.clear_output()
+            with out:
+                tab_nest.children = [swanInputBox, runBox, outputBox, buildTab]
+                display(tab_nest)
+                
+        if(change['new'] == 'Funwave_tvd'):
+            modelVersionDd.options = ['3.3']
+            cur_model = 'funwave'
+            out.clear_output()
+            with out:
+                tab_nest.children = [fwInputBox, runBox, outputBox, buildTab]
+                display(tab_nest)
+        if(change['new'] == 'Cactus'):
+            modelVersionDd.options = []
+            cur_model = 'cactus'
+            out.clear_output()
+            with out:
+                tab_nest.children = [cacInputBox, runBox, outputBox, buildTab]
+                display(tab_nest)
+        if(change['new'] == 'Delft3D'):
+            modelVersionDd.options = []
+            cur_model = 'delft3d'
+            out.clear_output()
+            with out:
+                tab_nest.children = [delft3dBox, runBox, outputBox, buildTab]
+                display(tab_nest)
+        if(change['new'] == 'OpenFoam'):
+            modelVersionDd.options = ['1812','1806', '1712']
+            cur_model = 'openfoam'
+            out.clear_output()
+            with out:
+                tab_nest.children = [ofInputBox, runBox, outputBox, buildTab]
+                display(tab_nest)
+        if(change['new'] == 'NHWAVE'):
+            modelVersionDd.options = ['3.0']
+            cur_model = 'nhwave'
+            out.clear_output()
+            with out:
+                tab_nest.children = [nhInputBox, runBox, outputBox, buildTab]
+                display(tab_nest)
                 
 modelTitle.observe(on_change)
 
