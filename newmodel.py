@@ -10,17 +10,11 @@ import sys
 from setvar import *
 from command import cmd
 from modInput import modInput
-import logOp
 
-from safe_reader import safe_reader
-
+import input_params
 import jetlag_conf
-
-import imp
-if 'input_params' in globals():
-    imp.reload(input_params)
-else:
-    import input_params
+from safe_reader import safe_reader
+import logOp
 
 ######################## Previous ############################################################
 
@@ -47,17 +41,13 @@ def relink(dir_a, dir_b):
 
 ### Global Box
 
-if 'global_box' in globals():
-    imp.reload(global_box)
-else:
-    import global_box
+import global_box
 
 modelTitle = Dropdown(
     options=['SWAN', 'Funwave_tvd','Delft3D', 'OpenFoam', 'Cactus', 'NHWAVE'],
     value=input_params.get('title','SWAN'))
 modelTitle.observe(global_box.observe_title)
 middleware = Dropdown(options=['Tapis', 'Agave'],value=input_params.get('middleware','Tapis'))
-middleware.observe(global_box.observe_middleware)
 modelVersion = Dropdown()
 globalWidth = '80px'
 modelBox = VBox([Box([Label(value="Model", layout = Layout(width = globalWidth)), modelTitle]), 
@@ -74,10 +64,7 @@ display(globalBox)
 
 #=== Input Box
 
-if 'input_box' in globals():
-    imp.reload(input_box)
-else:
-    import input_box
+import input_box
 
 templateDD = Dropdown(options=input_box.get_tabs(), value='Choose Input Template')
 templateInputBox = Box(layout = Layout(flex_flow = 'column'))
@@ -107,11 +94,17 @@ while len(procs) < 3:
 
 numProcsText = Text(value = proc_str)
 
-machines = Dropdown(options=jetlag_conf.machines_options, value=input_params.get('machine',jetlag_conf.machines_options[0]))
+middleware_value=input_params.get('middleware','Tapis')
+machinesValue = input_params.get('machine_'+middleware_value,jetlag_conf.machines_options[0])
+if machinesValue not in jetlag_conf.machines_options:
+    machinesValue = jetlag_conf.machines_options[0]
+machines = Dropdown(options=jetlag_conf.machines_options,value=machinesValue) 
 def observe_machines(change):
     if change["name"] == "value":
-        input_params.set('machine', change["new"])
+        middleware_value=input_params.get('middleware')
+        input_params.set('machine_'+middleware_value, change["new"])
 machines.observe(observe_machines)
+middleware.observe(global_box.observe_middleware(machines))
 
 #queues = Dropdown()
 maxSlide = 128
@@ -162,10 +155,7 @@ numXSlider.observe(observe_n_change)
 numYSlider.observe(observe_n_change)
 numZSlider.observe(observe_n_change)
 
-if "run_tab" in globals():
-    imp.reload(run_tab)
-else:
-    import run_tab
+import run_tab
 runBtn = Button(description='Run', button_style='primary', layout= Layout(width = '50px'))
 runWidth = '150px'
 run_items = [
@@ -184,6 +174,7 @@ runBtn.on_click(run_tab.run)
 #=== Output Box
 jobListBtn = Button(description='List all jobs', button_style='primary', layout= Layout(width = '115px'))
 jobSelect = Select(layout = Layout(height = '150px', width='100%'))
+
 jobOutputBtn = Button(description='List job output', button_style='primary', layout= Layout(width = '115px'))
 abortBtn = Button(description='Abort', button_style='danger', layout= Layout(width = 'auto'))
 outputSelect = Select(layout = Layout(height = '150px', width='100%'))
@@ -216,13 +207,33 @@ build_item_layout = Layout(
 buildBtn = Button(description = "Build", button_style='primary', layout= Layout(width = '50px'))
 build_model = Label(value=modelTitle.value + " VERSION", layout = Layout(width = '350px'))
 
+def abort_btn_clicked(a):
+    g = re.match(r'^(\S+)\s+(\S+)\s+(\S+)',jobSelect.value)
+    jobid = g.group(3)
+    with logOp.logOp:
+        if g:
+            jobid = g.group(3)
+            uv = jetlag_conf.get_uv()
+            uv.job_stop(jobid)
+            print("Job stopped:",jobid)
+
+abortBtn.on_click(abort_btn_clicked)
+
 def jobList_btn_clicked(a):
     with logOp.logOp:
-        out1 = []
-        uv = jetlag_conf.get_uv()
-        for j in uv.job_list(10):
-            out1 += [j["status"]+" "+j["name"]+"  "+j["id"]]
-        jobSelect.options = out1
+        try:
+            jobSelect.options = ["loading..."]
+            out1 = []
+            uv = jetlag_conf.get_uv()
+            for j in uv.job_list(10):
+                out1 += [j["status"]+" "+j["name"]+"  "+j["id"]]
+            jobSelect.options = out1
+            # Need to set to None first, otherwise it doesn't take
+            jobSelect.index = None
+            jobSelect.index = 0
+        except Exception as e:
+            jobSelect.options = ["error: "+str(e)]
+            traceback.print_exc(file=sys.stdout)
     
 jobListBtn.on_click(jobList_btn_clicked)
 
@@ -270,17 +281,17 @@ def download_btn_clicked(a):
             uv = jetlag_conf.get_uv()
         
             if outputSelect.value == '/output.tgz':
-                with logOp:
-                    print("Downloading output tarball to jobdata-"+jobid)
+                print("Downloading output tarball to jobdata-"+jobid)
                 job = RemoteJobWatcher(uv, jobid)
                 job.get_result()
             elif re.match(r'.*\.(txt|out|err|ipcexe|log)',outputSelect.value):
                 rcmd = uv.get_file(jobid,outputSelect.value)
                 print(decode_bytes(rcmd))
             else:
-                with logOp:
-                    print("Download:",outputSelect.value)
-                rcmd = uv.get_file(jobid,outputSelect.value)
+                f1 = outputSelect.value
+                f2 = re.sub(r'.*/','',f1)
+                print("Download:",f1,"->",f2)
+                rcmd = uv.get_file(jobid,f1,as_file=f2)
         except Exception as ex:
             with logOp:
                 print("DIED!",ex)
@@ -291,9 +302,12 @@ downloadOpBtn.on_click(download_btn_clicked)
 # TODO: Need a better way of specifying this.... maybe a yaml file?
 modelDd = Dropdown(options=['Swan','Funwave_tvd','OpenFoam', 'NHWAVE'])
 modelVersionDd = Dropdown(options = ['4120','4110AB'])
-mpiDd = Dropdown(options = ['None','3.3','3.2', '3.1.4'])
-h5Dd = Dropdown(options = ['None','1.10.5','1.10.4', '1.8.21'])
-hypreDd = Dropdown(options = ['None','2.11.2', '2.10.1'])
+mpiDd = Dropdown(options = ['3.3','3.2', '3.1.4'],
+    value=input_params.get('mpich-ver','3.1.4'))
+h5Dd = Dropdown(options = ['1.10.5','1.10.4', '1.8.21'],
+    value=input_params.get('hdf5-ver','1.10.5'))
+hypreDd = Dropdown(options = ['2.11.2', '2.10.1'],
+    value=input_params.get('hypre-ver','2.11.2'))
 
 #=== Build box
 msgOut = Output()
@@ -310,6 +324,35 @@ build_items = [
     Box([msgOut])
 ]
 
+def versions_observe(change):
+    if change["name"] == "value":
+        input_params.set('mpich-ver',mpiDd.value)
+        input_params.set('hdf5-ver',h5Dd.value)
+        input_params.set('hypre-ver',hypreDd.value)
+
+mpiDd.observe(versions_observe)
+
+def do_build(btn):
+    with logOp.logOp:
+        cmd("rm -fr run_dir input.tgz")
+        cmd("mkdir -p run_dir")
+        with open("run_dir/runapp.sh","w") as fd:
+            print("singularity exec $SING_OPTS --pwd $PWD $IMAGE bash ./build.sh",file=fd)
+        with open("run_dir/env.sh","w") as fd:
+            print("export MPICH_VER=%s" % mpiDd.value,file=fd)
+        files = ["build.sh", "env.sh"]
+        for fn in os.listdir("."):
+            if re.match(r'^build-.*\.sh$',fn):
+                files += [fn]
+        cmd("cp %s run_dir/" % " ".join(files))
+        cmd("tar czf input.tgz run_dir")
+        uv = jetlag_conf.get_uv()
+        uv.run_job('build',jtype='fork',nodes=1)
+        #cmd(uv.fill("scp -i uapp-key env.sh build.sh runbuild.sh {machine_user}@{machine}.{domain}:."))
+        #cmd(uv.fill("ssh -i uapp-key {machine_user}@{machine}.{domain} bash ./runbuild.sh"))
+
+buildBtn.on_click(do_build)
+
 buildTab = VBox(build_items)
 
 tab_nest = Tab()
@@ -318,7 +361,15 @@ tab_nest.set_title(0, 'Input')
 tab_nest.set_title(1, 'Run')
 tab_nest.set_title(2, 'Output')
 tab_nest.set_title(3, 'Build')
+tab_nest.selected_index = input_params.get('tabindex',0)
 ##### End Model
+
+# Keep tab selection the same when the model is reloaded
+def tab_observer(c):
+    if c["name"] == "selected_index":
+        input_params.set('tabindex',c["new"])
+
+tab_nest.observe(tab_observer)
 
 form = tab_nest.children[0].children[1]
 

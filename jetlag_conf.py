@@ -1,6 +1,7 @@
+import nput_params
 from jetlag import *
 from knownsystems import *
-import input_params
+import logOp
 
 app0 = None
 machines_options = []
@@ -60,13 +61,17 @@ def gen_data():
             'uv':uv2
         }
         app0 = uv2.fill(uv2.values["app_name"]+"-"+uv2.values["app_version"])
-        all_apps[app0] = app_entry
         exec_to_app[machine] = app0
+        all_apps[app0] = app_entry
 
 gen_data()
 
 def get_uv():
-    exec_sys = input_params.get('machine',app0)
+    global app0, machines_options, exec_to_app, all_apps
+    middleware = input_params.get('middleware','Tapis')
+    exec_sys = input_params.get('machine_'+middleware,app0)
+    with logOp.logOp:
+        print(exec_to_app)
     app = exec_to_app[exec_sys]
     app_data = all_apps[app]
     uv = app_data["uv"]
