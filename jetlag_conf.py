@@ -1,4 +1,4 @@
-import nput_params
+import input_params
 from jetlag import *
 from knownsystems import *
 import logOp
