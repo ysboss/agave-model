@@ -1,7 +1,7 @@
 import os, re
 import numpy as np
 import ipywidgets
-from ipywidgets import interactive, Layout, Button, Box, HBox, VBox, Text, Dropdown, Label, IntSlider, Textarea, Accordion, ToggleButton, ToggleButtons, Select, HTMLMath, FloatRangeSlider, Tab, Checkbox, HTML, Output
+from ipywidgets import interactive, Layout, Button, Box, HBox, VBox, Text, Dropdown, Label, IntSlider, Textarea, Accordion, ToggleButton, ToggleButtons, Select, HTMLMath, FloatRangeSlider, Tab, Checkbox, HTML, Output, FileUpload
 from IPython.display import display, clear_output, HTML
 import json
 import traceback
@@ -47,7 +47,8 @@ modelTitle = Dropdown(
     options=['SWAN', 'Funwave_tvd','Delft3D', 'OpenFoam', 'Cactus', 'NHWAVE'],
     value=input_params.get('title','SWAN'))
 modelTitle.observe(global_box.observe_title)
-middleware = Dropdown(options=['Tapis', 'Agave'],value=input_params.get('middleware','Tapis'))
+middleware_value=input_params.get('middleware','Tapis')
+middleware = Dropdown(options=['Tapis', 'Agave'],value=middleware_value)
 modelVersion = Dropdown()
 globalWidth = '80px'
 modelBox = VBox([Box([Label(value="Model", layout = Layout(width = globalWidth)), modelTitle]), 
@@ -69,7 +70,14 @@ import input_box
 templateDD = Dropdown(options=input_box.get_tabs(), value='Choose Input Template')
 templateInputBox = Box(layout = Layout(flex_flow = 'column'))
 UpInputBtn = Button(description='Update Input File',button_style='primary', layout=Layout(width='100%'))
-InputBox = Box([templateDD, templateInputBox, UpInputBtn], 
+UploadBtn = FileUpload()
+
+def get_dname():
+    model = value=input_params.get('title').lower()
+    dname = os.environ["HOME"]+"/agave-model/input_"+model
+    return dname
+UploadLabel = Label(value='To upload via command line: docker cp [file] cmr:%s/' % get_dname())
+InputBox = Box([templateDD, templateInputBox, UpInputBtn, UploadBtn, UploadLabel], 
                  layout = Layout(flex_flow = 'column', align_items = 'center'))
 
 #=== Run Box
@@ -94,9 +102,13 @@ while len(procs) < 3:
 
 numProcsText = Text(value = proc_str)
 
-middleware_value=input_params.get('middleware','Tapis')
-machinesValue = input_params.get('machine_'+middleware_value,jetlag_conf.machines_options[0])
-if machinesValue not in jetlag_conf.machines_options:
+if len(jetlag_conf.machines_options) == 0:
+    machinesValue = None
+else:
+    machinesValue = input_params.get('machine_'+middleware_value,jetlag_conf.machines_options[0])
+if machinesValue is None:
+    pass
+elif machinesValue not in jetlag_conf.machines_options:
     machinesValue = jetlag_conf.machines_options[0]
 machines = Dropdown(options=jetlag_conf.machines_options,value=machinesValue) 
 def observe_machines(change):
@@ -385,5 +397,36 @@ UpInputBtn.on_click(input_box.save_input_file(obj=ddo))
 display(tab_nest)
 display(logOp.logOp)
 logOp.clearLog()
+
+from ipywidgets import FileUpload
+import os
+upload = FileUpload()
+class observe_file_upload:
+    def __init__(self):
+        self.metadata = None
+        self.name = None
+    def __call__(self,change):
+        n = change["name"]
+        v = change["new"]
+        if n == "metadata":
+            self.metadata = v[0]
+            self.name = metadata["name"]
+        elif n == "data":
+            d = v[0]
+            assert type(d) == bytes
+            if re.match(r'^.*\.(zip|tgz|tar.gz)',self.name):
+                dname = os.environ["HOME"]+"/Download"
+            else:
+                model = value=input_params.get('title').lower()
+                dname = os.environ["HOME"]+"/agave-model/input_"+model
+            os.makedirs(dname,exist_ok=True)
+            fname = dname + "/" + self.name
+            with open(fname,"wb") as fd:
+                fd.write(d)
+            if os.path.exists(fname):
+                print("upload of '",fname,"' was successful.",sep='')
+            else:
+                print("upload of '",fname,"' failed.",sep='')
+UploadBtn.observe(observe_file_upload())
 
 ### End Tab Nest Model

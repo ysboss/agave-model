@@ -9,8 +9,8 @@ exec_to_app = {}
 all_apps = {}
 
 def gen_data():
-    global app0, machines_options, exec_to_app, all_apps
-    w = input_params.get('middleware')
+    global app0, exec0, machines_options, exec_to_app, all_apps
+    w = input_params.get('middleware','Tapis')
     email = input_params.get('email','sbrandt@cct.lsu.edu')
     if w == "Agave":
         backend = backend_agave
@@ -19,8 +19,7 @@ def gen_data():
     uv = Universal()
     uv.load(
         backend,
-        email,
-        'shelob'
+        email
     )
     uv.refresh_token()
     
@@ -28,14 +27,14 @@ def gen_data():
     all_apps = {}
     exec_to_app = {}
     
-    for m in uv.get_meta('system-config-*'):
+    for m in uv.get_meta('machine-config-.*'):
         val = m["value"]
     
         uv2 = Universal()
-        uv2.init(
+        uv2.load(
             backend=uv.values["backend"],
             email=email,
-            **val)
+            machine=val["machine"])
     
         perm_data_str = ''
         pems_data = uv2.get_app_pems()
@@ -62,16 +61,21 @@ def gen_data():
         }
         app0 = uv2.fill(uv2.values["app_name"]+"-"+uv2.values["app_version"])
         exec_to_app[machine] = app0
+        exec0 = machine
         all_apps[app0] = app_entry
 
 gen_data()
 
 def get_uv():
-    global app0, machines_options, exec_to_app, all_apps
+    global app0, exec0, machines_options, exec_to_app, all_apps
     middleware = input_params.get('middleware','Tapis')
-    exec_sys = input_params.get('machine_'+middleware,app0)
+    machine_key = 'machine_'+middleware
+    exec_sys = input_params.get(machine_key, app0)
     with logOp.logOp:
         print(exec_to_app)
+    if exec_sys not in exec_to_app:
+        exec_sys = exec0
+        input_params.set(machine_key, exec_sys)
     app = exec_to_app[exec_sys]
     app_data = all_apps[app]
     uv = app_data["uv"]
