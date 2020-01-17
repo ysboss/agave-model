@@ -2,11 +2,31 @@ import input_params
 from jetlag import *
 from knownsystems import *
 import logOp
+import os, re, sys
+import traceback
 
 app0 = None
 machines_options = []
 exec_to_app = {}
 all_apps = {}
+
+def clear_entry(entry):
+    print("clear_entry:",entry)
+    home = os.environ["HOME"]
+    fname = home+"/."+entry
+    print("remove",fname)
+    if os.path.exists(fname):
+        os.remove(fname)
+    if entry in os.environ:
+        del os.environ[entry]
+
+def clear_backend(backend):
+    g = re.match(r'{(.*_USER)}', backend["user"])
+    if g:
+        clear_entry(g.group(1))
+    g = re.match(r'{(.*_PASSWORD)}', backend["pass"])
+    if g:
+        clear_entry(g.group(1))
 
 def gen_data():
     global app0, exec0, machines_options, exec_to_app, all_apps
@@ -20,12 +40,19 @@ def gen_data():
         backend = backend_agave
     else:
         backend = backend_tapis
-    uv = Universal()
-    uv.load(
-        backend,
-        email
-    )
-    uv.refresh_token()
+
+    while True:
+        try:
+            uv = Universal()
+            uv.load(
+                backend,
+                email
+            )
+            uv.refresh_token()
+            break
+        except AssertionError as ae:
+            print(ae)
+            clear_backend(backend)
     
     machines_options = []
     all_apps = {}
