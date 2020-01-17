@@ -481,8 +481,14 @@ class observe_file_upload:
         n = change["name"]
         v = change["new"]
         if n == "metadata":
-            self.metadata = v[0]
-            self.name = metadata["name"]
+            # Not sure why this sometimes
+            # comes in as a list and sometimes
+            # not.
+            if type(v) == list:
+                self.metadata = v[0]
+            else:
+                self.metadata = v
+            self.name = self.metadata["name"]
         elif n == "data":
             d = v[0]
             assert type(d) == bytes
