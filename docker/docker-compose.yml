@@ -7,13 +7,15 @@ services:
 
   agave-model:
     # Uncomment the next lines if you want to build
-    #build:
-    #    context: .
-    #    dockerfile: Dockerfile
-    image: lsucrc/agave-model
+    build:
+        context: ../docker
+        dockerfile: Dockerfile
+    image: stevenrbrandt/agave-model
+    environment:
+      - PORT=8002
     container_name: cmr
     user: jovyan
     ports:
-      - '8003:8003'
+      - '8002:8002'
     volumes:
       - homefs-agave-model:/home/jovyan
