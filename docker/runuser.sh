@@ -6,7 +6,15 @@ then
   git config --global user.email "syuan@lsu.edu"
   git config --global user.name "Shuai Yuan"
 fi
-cd agave-model
+cd ~/agave-model
+for fn in input_*.tgz
+do
+   dir=${fn%.tgz}
+   if [ ! -d $dir ]
+   then
+       tar xzf $fn
+   fi
+done
 
 sudo tzupdate
 
