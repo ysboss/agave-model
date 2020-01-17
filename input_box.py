@@ -20,6 +20,7 @@ def get_tabs():
         menus[cur_model] = {}
         dir = "input_"+cur_model
         if not os.path.exists(dir):
+            print("Path does not exist:",dir)
             return tuple(tabs)
         for f in os.listdir(dir):
             if not re.search(r'_template',f):
@@ -142,6 +143,7 @@ class observe_title:
         self.clr = clr
     def __call__(self, change):
         if change["name"] == "value":
+            print("Observe title")
             tabs = get_tabs()
             dd = self.template_dropdown
             if tabs != dd.options:

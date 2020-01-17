@@ -3,6 +3,7 @@
 # Save the current directory
 HERE=$PWD
 source ../.env
+source ./env.sh
 export NO_BUILD=yes
 
 export BUILD_DIR=/build-dir/$OS_VER
@@ -23,6 +24,7 @@ cd $HERE
 echo "Job is: $PBS_JOBID"
 echo "Mom is: $(hostname)"
 echo "Running from $(pwd)"
+echo "Running version $FUNWAVE_VER"
 
 NP=$((${nx}*${ny}))
 perl -p -i -e "s/^[ \t]*PX[ \t]*=[ \t]*\d+[ \t]*$/PX=$nx/" input.txt

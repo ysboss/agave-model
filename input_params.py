@@ -24,5 +24,6 @@ def get(name,default=None):
             value = fd.read().strip()
     else:
         value = default
+        set(name, value)
     pglobals[name] = value
     return value

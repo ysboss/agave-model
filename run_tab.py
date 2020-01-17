@@ -4,6 +4,7 @@ from command import cmd
 import re
 import os
 from jetlag_conf import get_uv
+from write_env import write_env
 
 def relink(dir_a, dir_b):
     for f in os.listdir(dir_a):
@@ -30,6 +31,7 @@ def run(b):
     with logOp.logOp:
         cmd("rm -fr input.tgz run_dir")
         cmd("mkdir -p run_dir")
+        write_env()
         with open("run_dir/runapp.sh","w") as fd:
             print("singularity exec $SING_OPTS --pwd $PWD $IMAGE bash ./%s-app.sh" % t,file=fd)
         cmd("cp %s-app.sh run_dir/" % t)

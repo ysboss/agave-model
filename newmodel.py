@@ -1,3 +1,4 @@
+from jetlag import RemoteJobWatcher
 import os, re
 import numpy as np
 import ipywidgets
@@ -6,6 +7,7 @@ from IPython.display import display, clear_output, HTML
 import json
 import traceback
 import sys
+from write_env import write_env
 
 from setvar import *
 from command import cmd
@@ -15,6 +17,9 @@ import input_params
 import jetlag_conf
 from safe_reader import safe_reader
 import logOp
+
+import pprint
+pp = pprint.PrettyPrinter()
 
 ######################## Previous ############################################################
 
@@ -296,6 +301,9 @@ def download_btn_clicked(a):
                 print("Downloading output tarball to jobdata-"+jobid)
                 job = RemoteJobWatcher(uv, jobid)
                 job.get_result()
+                cmd("cp jobdata-%s/output.tgz ." % jobid)
+                cmd("rm -fr run_dir")
+                cmd("tar xzf output.tgz")
             elif re.match(r'.*\.(txt|out|err|ipcexe|log)',outputSelect.value):
                 rcmd = uv.get_file(jobid,outputSelect.value)
                 print(decode_bytes(rcmd))
@@ -320,6 +328,63 @@ h5Dd = Dropdown(options = ['1.10.5','1.10.4', '1.8.21'],
     value=input_params.get('hdf5-ver','1.10.5'))
 hypreDd = Dropdown(options = ['2.11.2', '2.10.1'],
     value=input_params.get('hypre-ver','2.11.2'))
+
+def save_mpich(change):
+    if change['name'] == 'value':
+        input_params.set('mpich-ver',change['new'])
+mpiDd.observe(save_mpich)
+
+def save_hdf5(change):
+    if change['name'] == 'value':
+        input_params.set('hdf5-ver',change['new'])
+h5Dd.observe(save_mpich)
+
+def save_hypre(change):
+    if change['name'] == 'value':
+        input_params.set('hypre-ver',change['new'])
+hypreDd.observe(save_mpich)
+
+enable_model_change = True
+def save_model_change(change):
+    if change['name'] == 'value' and enable_model_change:
+        model = value=input_params.get('title').lower()
+        model_key="modelversion_"+model
+        input_params.set(model_key, change['new'])
+
+modelVersionDd.observe(save_model_change)
+
+def model_change(change):
+    global enable_model_change
+    if change['type'] == 'change' and change['name'] == 'value':
+        if(change['new'] == 'SWAN'):
+            options = ['4120','4085']
+        elif(change['new'] == 'Funwave_tvd'):
+            options = ["2019-08-21","2020-01-01"]
+        elif(change['new'] == 'OpenFoam'):
+            options = ['1812','1806', '1712']
+        elif(change['new'] == 'NHWAVE'):
+            options = ['2019-08-21','2020-01-01']
+        else:
+            print("change:",change["new"])
+        try:
+            enable_model_change = False
+            modelVersionDd.options = options
+            model_key="modelversion_"+change["new"].lower()
+            ver = input_params.get(model_key)
+            if ver is None:
+                ver = options[0]
+            input_params.set(model_key,ver)
+            modelVersionDd.value = None
+            modelVersionDd.value = ver
+        finally:
+            enable_model_change = True
+
+model_change({
+    "name":"value",
+    "type":"change",
+    "new":input_params.get('title')
+})
+modelTitle.observe(model_change)
 
 #=== Build box
 msgOut = Output()
@@ -350,12 +415,12 @@ def do_build(btn):
         cmd("mkdir -p run_dir")
         with open("run_dir/runapp.sh","w") as fd:
             print("singularity exec $SING_OPTS --pwd $PWD $IMAGE bash ./build.sh",file=fd)
-        with open("run_dir/env.sh","w") as fd:
-            print("export MPICH_VER=%s" % mpiDd.value,file=fd)
-        files = ["build.sh", "env.sh"]
+
+        files = ["build.sh"]
         for fn in os.listdir("."):
             if re.match(r'^build-.*\.sh$',fn):
                 files += [fn]
+        write_env()
         cmd("cp %s run_dir/" % " ".join(files))
         cmd("tar czf input.tgz run_dir")
         uv = jetlag_conf.get_uv()

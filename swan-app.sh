@@ -3,6 +3,7 @@
 # Save the current directory
 HERE=$PWD
 source ../.env
+source ./env.sh
 export NO_BUILD=yes
 
 export BUILD_DIR=/build-dir/$OS_VER
