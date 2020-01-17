@@ -23,6 +23,8 @@ def get_tabs():
             print("Path does not exist:",dir)
             return tuple(tabs)
         for f in os.listdir(dir):
+            if re.match(r'\.',f):
+                continue
             if not re.search(r'_template',f):
                 continue
             fn = "input_"+cur_model+"/"+f
