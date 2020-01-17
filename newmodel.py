@@ -52,7 +52,7 @@ modelTitle = Dropdown(
     options=['SWAN', 'Funwave_tvd','Delft3D', 'OpenFoam', 'Cactus', 'NHWAVE'],
     value=input_params.get('title','SWAN'))
 modelTitle.observe(global_box.observe_title)
-middleware_value=input_params.get('middleware','Tapis')
+middleware_value=input_params.get('middleware')
 middleware = Dropdown(options=['Tapis', 'Agave'],value=middleware_value)
 modelVersion = Dropdown()
 globalWidth = '80px'

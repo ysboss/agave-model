@@ -14,7 +14,7 @@ class observe_middleware:
     def __call__(self,change):
         if change["name"] == "value":
             input_params.set('middleware',change['new'])
-            middleware_value=input_params.get('middleware','Tapis')
+            middleware_value=input_params.get('middleware')
             machinesValue = input_params.get('machine_'+middleware_value)
             jetlag_conf.gen_data()
             self.machines.options = jetlag_conf.machines_options

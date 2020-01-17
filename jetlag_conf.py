@@ -10,9 +10,13 @@ all_apps = {}
 
 def gen_data():
     global app0, exec0, machines_options, exec_to_app, all_apps
-    w = input_params.get('middleware','Tapis')
+    mid = input_params.get('middleware')
+    if mid is None:
+        while mid not in ['Agave', 'Tapis']:
+            mid = input("Middleware (Agave/Tapis): ")
+        input_params.set('middleware',mid)
     email = input_params.get('email','sbrandt@cct.lsu.edu')
-    if w == "Agave":
+    if mid == "Agave":
         backend = backend_agave
     else:
         backend = backend_tapis
@@ -68,7 +72,7 @@ gen_data()
 
 def get_uv():
     global app0, exec0, machines_options, exec_to_app, all_apps
-    middleware = input_params.get('middleware','Tapis')
+    middleware = input_params.get('middleware')
     machine_key = 'machine_'+middleware
     exec_sys = input_params.get(machine_key, app0)
     with logOp.logOp:
