@@ -80,8 +80,15 @@ UploadBtn = FileUpload()
 def get_dname():
     model = value=input_params.get('title').lower()
     dname = os.environ["HOME"]+"/agave-model/input_"+model
-    return dname
-UploadLabel = Label(value='To upload via command line: docker cp [file] cmr:%s/' % get_dname())
+    return 'To upload via command line: docker cp [file] cmr:%s/' % dname
+UploadLabel = Label(value=get_dname())
+
+def update_label(change):
+    global UploadLabel
+    if change["name"] == "value":
+        UploadLabel.value = get_dname()
+modelTitle.observe(update_label)
+
 InputBox = Box([templateDD, templateInputBox, UpInputBtn, UploadBtn, UploadLabel], 
                  layout = Layout(flex_flow = 'column', align_items = 'center'))
 
