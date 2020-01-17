@@ -13,9 +13,10 @@ fi
 if [ ! -d agave-model ]
 then
   git clone https://github.com/ysboss/agave-model.git
+  cd ~/agave-model
   git checkout newmodel
 fi
-cd agave-model
+cd ~/agave-model
 
 sudo tzupdate
 

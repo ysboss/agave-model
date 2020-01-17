@@ -1,5 +1,37 @@
 version: '2'
 
+# To use, first edit docker-compose.yml and change the
+# port from 8002 to whatever port you like. Or leave it
+# alone if you like port 8002. Next run this command:
+#
+#   docker-compose up
+# 
+# When you see the URL, copy it and paste it into
+# your browser tab. If you want a terminal inside
+# the docker image, you can either use the terminal
+# provided by Jupyter, or you can issue the following
+# command:
+#
+#   docker exec -it cmr bash
+#
+# This should log you into the image as the jovyan use.
+#
+# To transfer files to and from the image, you can use
+# the docker cp command as follows:
+#
+#   docker cp file-to-copy-in cmr:/tmp/
+#
+# or
+#
+#   docker cp cmr:/tmp/file-to-copy-out .
+#
+# To update the cmr image, type
+#
+#   docker-compose pull
+#
+
+# This volume allows you to preserve your work
+# between invocations of this image.
 volumes:
    homefs-agave-model:
 
@@ -7,9 +39,9 @@ services:
 
   agave-model:
     # Uncomment the next lines if you want to build
-    build:
-        context: ../docker
-        dockerfile: Dockerfile
+    #build:
+    #    context: .
+    #    dockerfile: Dockerfile
     image: stevenrbrandt/agave-model
     environment:
       - PORT=8002
