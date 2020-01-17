@@ -39,9 +39,9 @@ services:
 
   agave-model:
     # Uncomment the next lines if you want to build
-    #build:
-    #    context: .
-    #    dockerfile: Dockerfile
+    build:
+        context: .
+        dockerfile: Dockerfile
     image: stevenrbrandt/agave-model
     environment:
       - PORT=8002

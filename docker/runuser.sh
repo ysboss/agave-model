@@ -31,7 +31,7 @@ do
     if [ $? = 0 ]
     then
         # if it's not, then fetch the newest version from master.
-        git checkout origin/master -- $i
+        git checkout origin/newmodel -- $i
     fi
 done
 
