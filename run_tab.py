@@ -23,6 +23,8 @@ def run(b):
     procs = []
     for pv in re.findall(r'\d+',p):
         procs += [int(pv)]
+    while len(procs) < 3:
+        procs += [1]
     t = input_params.get('title').lower()
     w = input_params.get('middleware')
     j = input_params.get('jobname')
@@ -37,4 +39,5 @@ def run(b):
         cmd("cp %s-app.sh run_dir/" % t)
         relink("input_%s" % t, "run_dir")
         cmd("tar czvf input.tgz run_dir")
+        print("Procs:",procs,"=>",procs[0]*procs[1]*procs[2])
         jobid = uv.run_job(j, nx=procs[0], ny=procs[1], nz=procs[2], jtype="queue", run_time="1:00:00")
