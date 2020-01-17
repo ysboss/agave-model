@@ -29,4 +29,4 @@ echo "Running version $FUNWAVE_VER"
 NP=$((${nx}*${ny}))
 perl -p -i -e "s/^[ \t]*PX[ \t]*=[ \t]*\d+[ \t]*$/PX=$nx/" input.txt
 perl -p -i -e "s/^[ \t]*PY[ \t]*=[ \t]*\d+[ \t]*$/PY=$ny/" input.txt
-mpirun -np "${NP}" -machinefile "$PBS_NODEFILE" $FUNWAVE_DIR/funwave-work/funwave--gnu-parallel-single
+mpirun -np "${NP}" -machinefile "$PBS_NODEFILE" $FUNWAVE_DIR/funwave-work/funwave-*-gnu-parallel-single
