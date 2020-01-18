@@ -1,4 +1,5 @@
 #!/bin/bash
+
 set -x
 cd /usr/local/python/JetLag
 git pull
@@ -14,8 +15,7 @@ fi
 if [ ! -d agave-model ]
 then
   git clone https://github.com/ysboss/agave-model.git
-  git config --global user.email "syuan@lsu.edu"
-  git config --global user.name "Shuai Yuan"
+  git checkout newmodel
 fi
 cd ~/agave-model
 for fn in input_*.tgz
@@ -39,8 +39,8 @@ do
     git diff --quiet $i
     if [ $? = 0 ]
     then
-        # if it's not, then fetch the newest version from master.
-        git checkout origin/master -- $i
+        # if it's not, then fetch the newest version.
+        git checkout origin/newmodel -- $i
     fi
 done
 
@@ -50,7 +50,7 @@ echo "To access the notebook, open this file in a browser copy and paste this UR
 echo
 echo " http://localhost:8003/?token=${SECRET_TOKEN}"
 echo
-jupyter notebook --ip=0.0.0.0 --port=8003 --no-browser --NotebookApp.token="${SECRET_TOKEN}"
+jupyter notebook --ip=0.0.0.0 --port=$PORT --no-browser --NotebookApp.token="${SECRET_TOKEN}"
 
 # One can also create a custom URL
 # jupyter notebook --ip=0.0.0.0 --port=8003 --no-browser --NotebookApp.custom_display_url="http://localhost:8003"
