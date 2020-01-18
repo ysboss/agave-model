@@ -364,7 +364,7 @@ def model_change(change):
     global enable_model_change
     if change['type'] == 'change' and change['name'] == 'value':
         if(change['new'] == 'SWAN'):
-            options = ['4120','4085']
+            options = ['4131']
         elif(change['new'] == 'Funwave_tvd'):
             options = ["2019-08-21","2020-01-01"]
         elif(change['new'] == 'OpenFoam'):

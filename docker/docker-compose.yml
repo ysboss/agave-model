@@ -40,9 +40,9 @@ services:
   agave-model:
     # Download the full git repo and
     # uncomment the next lines if you want to build
-    #build:
-    #    context: .
-    #    dockerfile: Dockerfile
+    build:
+        context: .
+        dockerfile: Dockerfile
     image: stevenrbrandt/agave-model
     container_name: cmr
     user: jovyan
