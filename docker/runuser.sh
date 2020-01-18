@@ -1,6 +1,5 @@
 #!/bin/bash
 
-set -x
 cd /usr/local/python/JetLag
 git pull
 
@@ -14,16 +13,17 @@ fi
 
 if [ ! -d agave-model ]
 then
-  git clone https://github.com/ysboss/agave-model.git
-  cd ~/agave-model
-  git checkout newmodel
+  git clone -b newmodel https://github.com/ysboss/agave-model.git
 fi
 cd ~/agave-model
+echo "GIT BRANCHES"
+git branch
 for fn in input_*.tgz
 do
    dir=${fn%.tgz}
    if [ ! -d $dir ]
    then
+       echo "Unpacking $fn"
        tar xzf $fn
    fi
 done
@@ -41,6 +41,7 @@ do
     if [ $? = 0 ]
     then
         # if it's not, then fetch the newest version.
+        echo "Updating $i"
         git checkout origin/newmodel -- $i
     fi
 done
