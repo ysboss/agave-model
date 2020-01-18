@@ -328,7 +328,7 @@ downloadOpBtn.on_click(download_btn_clicked)
 
 # TODO: Need a better way of specifying this.... maybe a yaml file?
 modelDd = Dropdown(options=['Swan','Funwave_tvd','OpenFoam', 'NHWAVE'])
-modelVersionDd = Dropdown(options = ['4120','4110AB'])
+modelVersionDd = Dropdown(options = ['4131'])
 mpiDd = Dropdown(options = ['3.3','3.2', '3.1.4'],
     value=input_params.get('mpich-ver','3.1.4'))
 h5Dd = Dropdown(options = ['1.10.5','1.10.4', '1.8.21'],
