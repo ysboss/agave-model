@@ -1,4 +1,15 @@
 #!/bin/bash
+set -x
+cd /usr/local/python/JetLag
+git pull
+
+cd
+
+if [ -r .gitconfig ]
+then
+    git config --global user.email "sbrandt@cct.lsu.edu"
+    git config --global user.name "Steven Brandt"
+fi
 
 if [ ! -d agave-model ]
 then
