@@ -145,7 +145,6 @@ class observe_title:
         self.clr = clr
     def __call__(self, change):
         if change["name"] == "value":
-            print("Observe title")
             tabs = get_tabs()
             dd = self.template_dropdown
             if tabs != dd.options:
