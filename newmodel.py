@@ -231,6 +231,12 @@ build_item_layout = Layout(
 buildBtn = Button(description = "Build", button_style='primary', layout= Layout(width = '50px'))
 build_model = Label(value=modelTitle.value + " VERSION", layout = Layout(width = '350px'))
 
+def build_model_observer(change):
+    global build_model
+    if change["name"] == "value":
+        build_model.value = modelTitle.value + " VERSION"
+modelTitle.observe(build_model_observer)
+
 def abort_btn_clicked(a):
     g = re.match(r'^(\S+)\s+(\S+)\s+(\S+)',jobSelect.value)
     jobid = g.group(3)
