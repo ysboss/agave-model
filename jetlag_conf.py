@@ -60,12 +60,14 @@ def gen_data():
     
     for m in uv.get_meta('machine-config-.*'):
         val = m["value"]
+        if "jetlag_id" not in val:
+            continue
     
         uv2 = Universal()
         uv2.load(
             backend=uv.values["backend"],
             email=email,
-            machine=val["machine"])
+            jetlag_id=val["jetlag_id"])
     
         perm_data_str = ''
         pems_data = uv2.get_app_pems()
@@ -102,8 +104,6 @@ def get_uv():
     middleware = input_params.get('middleware')
     machine_key = 'machine_'+middleware
     exec_sys = input_params.get(machine_key, app0)
-    with logOp.logOp:
-        print(exec_to_app)
     if exec_sys not in exec_to_app:
         exec_sys = exec0
         input_params.set(machine_key, exec_sys)
@@ -112,3 +112,7 @@ def get_uv():
     uv = app_data["uv"]
     uv.refresh_token()
     return uv
+
+def get_user():
+    uv = get_uv()
+    return uv.fill(uv.values["sys_user"])

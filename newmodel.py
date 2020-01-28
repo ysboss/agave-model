@@ -48,6 +48,7 @@ def relink(dir_a, dir_b):
 
 import global_box
 
+userName = Label(value=jetlag_conf.get_user())
 modelTitle = Dropdown(
     options=['SWAN', 'Funwave_tvd','Delft3D', 'OpenFoam', 'Cactus', 'NHWAVE'],
     value=input_params.get('title','SWAN'))
@@ -56,7 +57,8 @@ middleware_value=input_params.get('middleware')
 middleware = Dropdown(options=['Tapis', 'Agave'],value=middleware_value)
 modelVersion = Dropdown()
 globalWidth = '80px'
-modelBox = VBox([Box([Label(value="Model", layout = Layout(width = globalWidth)), modelTitle]), 
+modelBox = VBox([Box([Label(value="User", layout = Layout(width = globalWidth)), userName]),
+                 Box([Label(value="Model", layout = Layout(width = globalWidth)), modelTitle]), 
                  Box([Label(value="Version", layout = Layout(width = globalWidth)),modelVersion]),
                  Box([Label(value="Middleware", layout = Layout(width = globalWidth)),middleware]),
                  ])
@@ -88,6 +90,11 @@ def update_label(change):
     if change["name"] == "value":
         UploadLabel.value = get_dname()
 modelTitle.observe(update_label)
+
+def update_name(change):
+    global userName
+    userName.value = jetlag_conf.get_user()
+middleware.observe(update_name)
 
 InputBox = Box([templateDD, templateInputBox, UpInputBtn, UploadBtn, UploadLabel], 
                  layout = Layout(flex_flow = 'column', align_items = 'center'))
