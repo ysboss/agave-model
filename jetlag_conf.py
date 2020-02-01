@@ -35,7 +35,7 @@ def gen_data():
         while mid not in ['Agave', 'Tapis']:
             mid = input("Middleware (Agave/Tapis): ")
         input_params.set('middleware',mid)
-    email = input_params.get('email','sbrandt@cct.lsu.edu')
+    notify = input_params.get('notify','sbrandt@cct.lsu.edu')
     if mid == "Agave":
         backend = backend_agave
     else:
@@ -46,7 +46,7 @@ def gen_data():
             uv = Universal()
             uv.load(
                 backend,
-                email
+                notify
             )
             uv.refresh_token()
             break
@@ -66,7 +66,7 @@ def gen_data():
         uv2 = Universal()
         uv2.load(
             backend=uv.values["backend"],
-            email=email,
+            notify=notify,
             jetlag_id=val["jetlag_id"])
     
         perm_data_str = ''
