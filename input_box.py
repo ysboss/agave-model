@@ -118,7 +118,7 @@ class observe_template:
             if tabs != dd.options:
                 dd.options = tabs
                 dd.index = 0
-            inputTmp = ''
+            self.inputTmp = ''
             item = change["owner"]
             if item.index is not None:
                 cur_model = input_params.get('title').lower()
