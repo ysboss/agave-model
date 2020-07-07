@@ -4,6 +4,7 @@ from knownsystems import *
 import logOp
 import os, re, sys
 import traceback
+import jetlag_setup
 
 app0 = None
 machines_options = []
@@ -41,61 +42,42 @@ def gen_data():
     else:
         backend = backend_tapis
 
-    while True:
-        try:
-            uv = Universal()
-            uv.load(
-                backend,
-                notify
-            )
-            uv.refresh_token()
-            break
-        except AssertionError as ae:
-            print(ae)
-            clear_backend(backend)
+    uv = jetlag_setup.uv
     
     machines_options = []
     all_apps = {}
     exec_to_app = {}
     
-    for m in uv.get_meta('machine-config-.*'):
-        val = m["value"]
-        if "jetlag_id" not in val:
-            continue
-    
-        uv2 = Universal()
-        uv2.load(
-            backend=uv.values["backend"],
-            notify=notify,
-            jetlag_id=val["jetlag_id"])
-    
-        perm_data_str = ''
-        pems_data = uv2.get_app_pems()
-        if 'read' in pems_data and pems_data['read'] == True:
-            perm_data_str += 'R'
-        if 'write' in pems_data and pems_data['write'] == True:
-            perm_data_str += 'W'
-        if 'execute' in pems_data and pems_data['execute'] == True:
-            perm_data_str += 'X'
-    
-        machine = uv2.values["execm_id"]
-    
-        machines_options += [machine]
-    
-        app_entry = {
-            'exec_sys' : machine,
-            'storage_sys' : uv2.values["storage_id"],
-            'perm' : perm_data_str,
-            'queues' : [
-                { "name": val["queue"],
-                  "ppn" : val["max_procs_per_node"] }
-            ],
-            'uv':uv2
-        }
-        app0 = uv2.fill(uv2.values["app_name"]+"-"+uv2.values["app_version"])
-        exec_to_app[machine] = app0
-        exec0 = machine
-        all_apps[app0] = app_entry
+    jid = uv.values["jetlag_id"]
+    val = uv.get_exec()
+
+    perm_data_str = ''
+    pems_data = uv.get_app_pems()
+    if 'read' in pems_data and pems_data['read'] == True:
+        perm_data_str += 'R'
+    if 'write' in pems_data and pems_data['write'] == True:
+        perm_data_str += 'W'
+    if 'execute' in pems_data and pems_data['execute'] == True:
+        perm_data_str += 'X'
+
+    machine = uv.values["execm_id"]
+
+    machines_options += [machine]
+
+    app_entry = {
+        'exec_sys' : machine,
+        'storage_sys' : uv.values["storage_id"],
+        'perm' : perm_data_str,
+        'queues' : [
+            { "name": val["queues"][0]["name"],
+              "ppn" : val["queues"][0]["maxProcessorsPerNode"] }
+        ],
+        'uv':uv
+    }
+    app0 = uv.fill(uv.values["app_name"]+"-"+uv.values["app_version"])
+    exec_to_app[machine] = app0
+    exec0 = machine
+    all_apps[app0] = app_entry
 
 gen_data()
 

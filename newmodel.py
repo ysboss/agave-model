@@ -53,14 +53,14 @@ modelTitle = Dropdown(
     options=['SWAN', 'Funwave_tvd','Delft3D', 'OpenFoam', 'Cactus', 'NHWAVE'],
     value=input_params.get('title','SWAN'))
 modelTitle.observe(global_box.observe_title)
-middleware_value=input_params.get('middleware')
-middleware = Dropdown(options=['Tapis', 'Agave'],value=middleware_value)
+
+middleware_value=jetlag_conf.get_uv().values["utype"]
+#middleware = Label(value=middleware_value)
 modelVersion = Dropdown()
 globalWidth = '80px'
 modelBox = VBox([Box([Label(value="User", layout = Layout(width = globalWidth)), userName]),
                  Box([Label(value="Model", layout = Layout(width = globalWidth)), modelTitle]), 
                  Box([Label(value="Version", layout = Layout(width = globalWidth)),modelVersion]),
-                 Box([Label(value="Middleware", layout = Layout(width = globalWidth)),middleware]),
                  ])
 globalBox = Box([modelBox], 
                layout = Layout(display = 'flex', flex_flow = 'row', justify_content = 'space-between', width = '100%'))
@@ -94,7 +94,6 @@ modelTitle.observe(update_label)
 def update_name(change):
     global userName
     userName.value = jetlag_conf.get_user()
-middleware.observe(update_name)
 
 InputBox = Box([templateDD, templateInputBox, UpInputBtn, UploadBtn, UploadLabel], 
                  layout = Layout(flex_flow = 'column', align_items = 'center'))
@@ -135,9 +134,7 @@ def observe_machines(change):
         middleware_value=input_params.get('middleware')
         input_params.set('machine_'+middleware_value, change["new"])
 machines.observe(observe_machines)
-middleware.observe(global_box.observe_middleware(machines))
 
-#queues = Dropdown()
 maxSlide = 128
 numXSlider = IntSlider(value=procs[0], min=1, max=maxSlide, step=1)
 numYSlider = IntSlider(value=procs[1], min=1, max=maxSlide, step=1)
