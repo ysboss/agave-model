@@ -25,12 +25,12 @@ COPY swan-package.py /packages/swan/package.py
 COPY swan-4.1.3.1.tgz /tarballs
 
 COPY spack-init.sh /usr/local/bin
-RUN  chmod +x /usr/local/bin/spack-init.sh
+COPY build.sh /usr/local/bin
+RUN  chmod +x /usr/local/bin/spack-init.sh /usr/local/bin/build.sh
 COPY packages.yaml /usr/local/
 
 USER jovyan
 WORKDIR /home/jovyan
-COPY funwave-package.py .
 
 ENV SPACK_ROOT=/home/jovyan/spack
 ENV PATH ${SPACK_ROOT}/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin

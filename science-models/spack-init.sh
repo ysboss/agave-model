@@ -4,6 +4,7 @@ then
   echo SPACK_ROOT is not set >&2
   exit 1
 fi
+mkdir -p $SPACK_ROOT
 if [ ! -w "$SPACK_ROOT" ]
 then
   echo "'$SPACK_ROOT' is not writable" >&2
