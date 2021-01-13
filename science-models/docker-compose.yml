@@ -1,0 +1,16 @@
+version: '3'
+
+volumes:
+    alt_home:
+
+services:
+    presync-service:
+        privileged: true
+        build:
+            context: .
+            dockerfile: Dockerfile
+        image: stevenrbrandt/spack-cmr
+        entrypoint: sleep infinity
+        container_name: alt
+        volumes:
+            - alt_home:/home

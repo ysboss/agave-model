@@ -1,0 +1,6 @@
+packages:
+   mpi:
+      buildable: True
+   all:
+      providers:
+         mpi: [mpich]
