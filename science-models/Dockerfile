@@ -24,6 +24,7 @@ COPY nhwave-package.py /packages/nhwave/package.py
 
 COPY swan-package.py /packages/swan/package.py
 COPY swan-4.1.3.1.tgz /tarballs
+COPY swan-4.1.2.1AB.tgz /tarballs
 
 COPY spack-init.sh /usr/local/bin
 COPY build.sh /usr/local/bin
