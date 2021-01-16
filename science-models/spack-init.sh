@@ -10,17 +10,9 @@ then
   echo "'$SPACK_ROOT' is not writable" >&2
   exit 2
 fi
-export SPACK_DIR=$(dirname $SPACK_ROOT)
-if [ "$SPACK_DIR" = "" ]
-then
-  export SPACK_DIR=$HOME
-fi
-cd $SPACK_DIR
-export SPACK_NAME=$(basename $SPACK_ROOT)
-
 if [ ! -d $SPACK_ROOT/.git ]
 then
-  git clone https://github.com/spack/spack.git ${SPACK_NAME}
+  git clone https://github.com/spack/spack.git ${SPACK_ROOT}
 fi
 
 grep spack/setup-env.sh ~/.bashrc > /dev/null 2>&1
