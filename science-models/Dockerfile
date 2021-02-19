@@ -28,6 +28,7 @@ COPY spack-init.sh /usr/local/bin
 COPY build.sh /usr/local/bin
 RUN  chmod +x /usr/local/bin/spack-init.sh /usr/local/bin/build.sh
 COPY packages.yaml /usr/local/
+RUN mkdir -p /work
 
 USER jovyan
 WORKDIR /home/jovyan

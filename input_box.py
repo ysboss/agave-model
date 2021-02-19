@@ -131,13 +131,15 @@ class observe_template:
                 self.btn.description = 'Update Input File: '+self.outFile
                 #updatePara(inputTmp,"/tmp/x.txt",self.form)
             else:
+                self.inputTmp = None
                 self.btn.description = 'Update Input File'
 
 class save_input_file:
     def __init__(self,obj):
         self.obj = obj
     def __call__(self,button):
-        updatePara(self.obj.inputTmp,self.obj.outFile,self.obj.form)
+        if self.obj.inputTmp is not None:
+            updatePara(self.obj.inputTmp,self.obj.outFile,self.obj.form)
 
 class observe_title:
     def __init__(self, template_dropdown,clr):
