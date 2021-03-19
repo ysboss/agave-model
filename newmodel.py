@@ -77,7 +77,7 @@ import input_box
 templateDD = Dropdown(options=input_box.get_tabs(), value='Choose Input Template')
 templateInputBox = Box(layout = Layout(flex_flow = 'column'))
 UpInputBtn = Button(description='Update Input File',button_style='primary', layout=Layout(width='100%'))
-UploadBtn = FileUpload()
+UploadBtn = FileUpload(multiple=True)
 
 def get_dname():
     model = value=input_params.get('title').lower()
@@ -338,8 +338,8 @@ downloadOpBtn.on_click(download_btn_clicked)
 
 # TODO: Need a better way of specifying this.... maybe a yaml file?
 modelDd = Dropdown(options=['Swan','Funwave_tvd','OpenFoam', 'NHWAVE'])
-modelVersionDd = Dropdown(options = ['4131'])
-mpiDd = Dropdown(options = ['3.3','3.2', '3.1.4'],
+modelVersionDd = Dropdown(options = ['4.1.3.1'])
+mpiDd = Dropdown(options = ['3.3.2', '3.3','3.2', '3.1.4'],
     value=input_params.get('mpich-ver','3.1.4'))
 h5Dd = Dropdown(options = ['1.10.5','1.10.4', '1.8.21'],
     value=input_params.get('hdf5-ver','1.10.5'))
@@ -374,7 +374,7 @@ def model_change(change):
     global enable_model_change
     if change['type'] == 'change' and change['name'] == 'value':
         if(change['new'] == 'SWAN'):
-            options = ['4131']
+            options = ['4.1.3.1']
         elif(change['new'] == 'Funwave_tvd'):
             options = ["2019-08-21","2020-01-01"]
         elif(change['new'] == 'OpenFoam'):
@@ -482,11 +482,11 @@ logOp.clearLog()
 
 from ipywidgets import FileUpload
 import os
-upload = FileUpload()
+#upload = FileUpload(multiple=True)
 class observe_file_upload:
     def __init__(self):
         self.metadata = None
-        self.name = None
+        self.name = []
     def __call__(self,change):
         n = change["name"]
         v = change["new"]
@@ -494,27 +494,32 @@ class observe_file_upload:
             # Not sure why this sometimes
             # comes in as a list and sometimes
             # not.
-            if type(v) == list:
-                self.metadata = v[0]
-            else:
-                self.metadata = v
-            self.name = self.metadata["name"]
+            for i in range(len(v)):
+                if type(v) == list:
+                    self.metadata = v[i]
+                else:
+                    self.metadata = v
+                self.name.append(self.metadata["name"])
         elif n == "data":
-            d = v[0]
-            assert type(d) == bytes
-            if re.match(r'^.*\.(zip|tgz|tar.gz)',self.name):
-                dname = os.environ["HOME"]+"/Download"
-            else:
-                model = value=input_params.get('title').lower()
-                dname = os.environ["HOME"]+"/agave-model/input_"+model
-            os.makedirs(dname,exist_ok=True)
-            fname = dname + "/" + self.name
-            with open(fname,"wb") as fd:
-                fd.write(d)
-            if os.path.exists(fname):
-                print("upload of '",fname,"' was successful.",sep='')
-            else:
-                print("upload of '",fname,"' failed.",sep='')
+            for j in range(len(v)):
+                d = v[j]
+                assert type(d) == bytes
+                if re.match(r'^.*\.(zip|tgz|tar.gz)',self.name[j]):
+                    dname = os.environ["HOME"]+"/Download"
+                else:
+                    model = value=input_params.get('title').lower()
+                    dname = os.environ["HOME"]+"/agave-model/input_"+model
+                os.makedirs(dname,exist_ok=True)
+                fname = dname + "/" + self.name[j]
+                with open(fname,"wb") as fd:
+                    fd.write(d)
+                if os.path.exists(fname):
+                    print("upload of '",fname,"' was successful.",sep='')
+                else:
+                    print("upload of '",fname,"' failed.",sep='')
+            self.metadata = None
+            self.name = []
+
 UploadBtn.observe(observe_file_upload())
 
 ### End Tab Nest Model
