@@ -28,6 +28,8 @@ def run(b):
     t = input_params.get('title').lower()
     w = input_params.get('middleware')
     j = input_params.get('jobname')
+    j = j.replace(' ', '_')
+    
     logOp.log('run:',m,p,t,w)
     uv = get_uv()
     with logOp.logOp:

@@ -21,6 +21,8 @@ import logOp
 import pprint
 pp = pprint.PrettyPrinter()
 
+from model_versions import get_versions, gen_spack_pack_list
+
 ######################## Previous ############################################################
 
 tab_nest = None
@@ -44,6 +46,13 @@ def relink(dir_a, dir_b):
         else:
             os.link(fa, fb)
 
+            
+if not os.path.isfile("spack-info.txt"):
+    print("Retrieving Spack Package List...")
+    gen_spack_pack_list()
+    print("Done!\n\n")
+    
+    
 ### Global Box
 
 import global_box
@@ -55,6 +64,7 @@ modelTitle = Dropdown(
 modelTitle.observe(global_box.observe_title)
 
 middleware_value=jetlag_conf.get_uv().values["utype"]
+input_params.set('middleware', middleware_value)
 #middleware = Label(value=middleware_value)
 modelVersion = Dropdown()
 globalWidth = '80px'
@@ -232,7 +242,11 @@ build_item_layout = Layout(
     width = '50%'
 )
 
+if not os.path.isfile("spack-info.txt"):
+    gen_spack_pack_list()
+
 buildBtn = Button(description = "Build", button_style='primary', layout= Layout(width = '50px'))
+updateBtn = Button(description = "Update Version Options", button_style ='danger', layout=Layout(width = '200px'))
 build_model = Label(value=modelTitle.value + " VERSION", layout = Layout(width = '350px'))
 
 def build_model_observer(change):
@@ -338,12 +352,12 @@ downloadOpBtn.on_click(download_btn_clicked)
 
 # TODO: Need a better way of specifying this.... maybe a yaml file?
 modelDd = Dropdown(options=['Swan','Funwave_tvd','OpenFoam', 'NHWAVE'])
-modelVersionDd = Dropdown(options = ['4.1.3.1'])
-mpiDd = Dropdown(options = ['3.3.2', '3.3','3.2', '3.1.4'],
+modelVersionDd = Dropdown(options = get_versions("swan"))
+mpiDd = Dropdown(options = ['3.3.2', '3.1.4'],
     value=input_params.get('mpich-ver','3.1.4'))
-h5Dd = Dropdown(options = ['1.10.5','1.10.4', '1.8.21'],
+h5Dd = Dropdown(options = ['1.10.5','2.20.0', '1.10.4', '1.8.21'],
     value=input_params.get('hdf5-ver','1.10.5'))
-hypreDd = Dropdown(options = ['2.11.2', '2.10.1'],
+hypreDd = Dropdown(options = ['2.20.0', '2.11.2'],
     value=input_params.get('hypre-ver','2.11.2'))
 
 def save_mpich(change):
@@ -370,11 +384,12 @@ def save_model_change(change):
 
 modelVersionDd.observe(save_model_change)
 
+
 def model_change(change):
     global enable_model_change
     if change['type'] == 'change' and change['name'] == 'value':
         if(change['new'] == 'SWAN'):
-            options = ['4.1.3.1']
+            options = get_versions("swan")
         elif(change['new'] == 'Funwave_tvd'):
             options = ["2019-08-21","2020-01-01"]
         elif(change['new'] == 'OpenFoam'):
@@ -414,7 +429,7 @@ build_items = [
     Box([Label(value="MPICH", layout = Layout(width = boxWidth)), mpiDd], layout = build_item_layout),
     Box([Label(value="HDF5", layout = Layout(width = boxWidth)), h5Dd], layout = build_item_layout),
     Box([Label(value="HYPRE", layout = Layout(width = boxWidth)), hypreDd], layout = build_item_layout),
-    Box([buildBtn]),
+    HBox([buildBtn, updateBtn], layout = Layout(justify_content="space-between")),
     Box([msgOut])
 ]
 
@@ -445,7 +460,37 @@ def do_build(btn):
         #cmd(uv.fill("scp -i uapp-key env.sh build.sh runbuild.sh {machine_user}@{machine}.{domain}:."))
         #cmd(uv.fill("ssh -i uapp-key {machine_user}@{machine}.{domain} bash ./runbuild.sh"))
 
+def update_vers(btn):
+    global modelVersionDd
+    global mpiDd
+    global h5Dd
+    global hypreDd
+    
+    print("Retrieving Latest List of Spack Packages...")
+    gen_spack_pack_list()
+    print("Done!")
+
+    # Need to add support for other packages!!!
+    
+    if(modelDd.value == 'SWAN'):
+        options = get_versions("swan")
+    elif(modelDd.value == 'Funwave_tvd'):
+        options = ["2019-08-21","2020-01-01"]
+    elif(modelDd.value == 'OpenFoam'):
+        options = ['1812','1806', '1712']
+    elif(modelDd.value == 'NHWAVE'):
+        options = ['2019-08-21','2020-01-01']
+      
+    mpiDd.options = ['3.3.2', '3.1.4']
+    h5Dd.options = ['1.10.5','2.20.0', '1.10.4', '1.8.21']
+    hypreDd.options = ['2.20.0', '2.11.2']
+    
+    # Need to add support for other packages!!!
+    
+    print("Update Complete!")
+        
 buildBtn.on_click(do_build)
+updateBtn.on_click(update_vers)
 
 buildTab = VBox(build_items)
 
@@ -491,21 +536,18 @@ class observe_file_upload:
         n = change["name"]
         v = change["new"]
         if n == "metadata":
-            # Not sure why this sometimes
-            # comes in as a list and sometimes
-            # not.
+            # Loops through each user uploaded
+            # file in list "v" and appends its
+            # file name as a string to list "name"
             for i in range(len(v)):
-                if type(v) == list:
-                    self.metadata = v[i]
-                else:
-                    self.metadata = v
+                self.metadata = v[i]
                 self.name.append(self.metadata["name"])
         elif n == "data":
             for j in range(len(v)):
                 d = v[j]
                 assert type(d) == bytes
                 if re.match(r'^.*\.(zip|tgz|tar.gz)',self.name[j]):
-                    dname = os.environ["HOME"]+"/Download"
+                    dname = os.path.join(os.environ["HOME"], "Download")
                 else:
                     model = value=input_params.get('title').lower()
                     dname = os.environ["HOME"]+"/agave-model/input_"+model

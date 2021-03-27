@@ -1,7 +1,6 @@
 #!/bin/bash
 
 # Save the current directory
-HERE=$PWD
 echo $PWD
 source ../.env
 source ./env.sh #Contains: versions of software
@@ -18,9 +17,6 @@ source mpich.sh
 # Apps
 source swan.sh
 
-# Restore the current directory
-cd $HERE
-
 echo "Job is: $PBS_JOBID" 
 echo "Mom is: $(hostname)"
 echo "Running from $(pwd)"
@@ -29,6 +25,3 @@ echo "Running from $(pwd)"
 NP=$((${nx}*${ny}))
 set -x
 mpirun -np "$NP" -machinefile "$PBS_NODEFILE" swan
-
-spack unload swan@${SWAN_VER}
-spack unload mpich@${MPICH_VER}
