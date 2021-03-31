@@ -111,6 +111,8 @@ class observe_template:
     def __init__(self,form,btn):
         self.form = form
         self.btn = btn
+        self.inputTmp = None
+        self.outFile = None
     def __call__(self,change):
         if change["name"] == "value":
             tabs = get_tabs()
