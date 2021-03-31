@@ -48,7 +48,8 @@ def relink(dir_a, dir_b):
 
             
 if not os.path.isfile("spack-info.txt"):
-    print("Retrieving Spack Package List...")
+    print("Retrieving Model Versions List...")
+    print("This may take a few minutes")
     gen_spack_pack_list()
     print("Done!\n\n")
     
@@ -466,7 +467,8 @@ def update_vers(btn):
     global h5Dd
     global hypreDd
     
-    print("Retrieving Latest List of Spack Packages...")
+    print("Retrieving Latest List of Model Versions...")
+    print("This may take a few minutes")
     gen_spack_pack_list()
     print("Done!")
 
