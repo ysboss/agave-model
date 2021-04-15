@@ -21,7 +21,7 @@ import logOp
 import pprint
 pp = pprint.PrettyPrinter()
 
-from model_versions import get_versions, gen_spack_pack_list
+from model_versions import *
 
 ######################## Previous ############################################################
 
@@ -53,14 +53,18 @@ if not os.path.isfile("spack-info.txt"):
     gen_spack_pack_list()
     print("Done!\n\n")
     
-    
+
+models, packages = getModels()
+
+modelsToBuild = findNewModels(packages) # List of new models we need to build
+
 ### Global Box
 
 import global_box
 
 userName = Label(value=jetlag_conf.get_user())
 modelTitle = Dropdown(
-    options=['SWAN', 'Funwave_tvd','Delft3D', 'OpenFoam', 'Cactus', 'NHWAVE'],
+    options=models,
     value=input_params.get('title','SWAN'))
 modelTitle.observe(global_box.observe_title)
 
@@ -352,7 +356,7 @@ def download_btn_clicked(a):
 downloadOpBtn.on_click(download_btn_clicked)
 
 # TODO: Need a better way of specifying this.... maybe a yaml file?
-modelDd = Dropdown(options=['Swan','Funwave_tvd','OpenFoam', 'NHWAVE'])
+modelDd = Dropdown(options=models)
 modelVersionDd = Dropdown(options = get_versions("swan"))
 mpiDd = Dropdown(options = ['3.3.2', '3.1.4'],
     value=input_params.get('mpich-ver','3.1.4'))
@@ -389,14 +393,9 @@ modelVersionDd.observe(save_model_change)
 def model_change(change):
     global enable_model_change
     if change['type'] == 'change' and change['name'] == 'value':
-        if(change['new'] == 'SWAN'):
-            options = get_versions("swan")
-        elif(change['new'] == 'Funwave_tvd'):
-            options = ["2019-08-21","2020-01-01"]
-        elif(change['new'] == 'OpenFoam'):
-            options = ['1812','1806', '1712']
-        elif(change['new'] == 'NHWAVE'):
-            options = ['2019-08-21','2020-01-01']
+        if(change['new'] in models):
+            index = models.index(change['new'])
+            options = get_versions(packages[index])
         else:
             print("change:",change["new"])
         try:
@@ -407,8 +406,9 @@ def model_change(change):
             if ver is None:
                 ver = options[0]
             input_params.set(model_key,ver)
-            modelVersionDd.value = None
             modelVersionDd.value = ver
+        except:
+            modelVersionDd.value = None
         finally:
             enable_model_change = True
 
@@ -462,6 +462,7 @@ def do_build(btn):
         #cmd(uv.fill("ssh -i uapp-key {machine_user}@{machine}.{domain} bash ./runbuild.sh"))
 
 def update_vers(btn):
+    global modelDd
     global modelVersionDd
     global mpiDd
     global h5Dd
@@ -471,23 +472,16 @@ def update_vers(btn):
     print("This may take a few minutes")
     gen_spack_pack_list()
     print("Done!")
-
-    # Need to add support for other packages!!!
     
-    if(modelDd.value == 'SWAN'):
-        options = get_versions("swan")
-    elif(modelDd.value == 'Funwave_tvd'):
-        options = ["2019-08-21","2020-01-01"]
-    elif(modelDd.value == 'OpenFoam'):
-        options = ['1812','1806', '1712']
-    elif(modelDd.value == 'NHWAVE'):
-        options = ['2019-08-21','2020-01-01']
+    if(modelDd.value in models):
+        index = models.index(modelDd.value)
+        modelVersionDd.options = get_versions(packages[index])
+    else:
+        print("change:",change["new"])
       
     mpiDd.options = ['3.3.2', '3.1.4']
     h5Dd.options = ['1.10.5','2.20.0', '1.10.4', '1.8.21']
     hypreDd.options = ['2.20.0', '2.11.2']
-    
-    # Need to add support for other packages!!!
     
     print("Update Complete!")
         

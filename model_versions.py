@@ -1,6 +1,8 @@
 from jetlag import RemoteJobWatcher
 from subprocess import Popen, PIPE
 import re
+import glob
+import json
 from command import cmd
 from write_env import write_env
 import jetlag_conf
@@ -15,11 +17,20 @@ class HiddenPrint:
         sys.stdout.close()
         sys.stdout = self._original_stdout
     
-
-# Function to get the
-# different versions of
-# spack packages for
-# a given model
+    
+def getModels():
+    print("Getting List of Models...")
+    path = os.environ["HOME"]+"/agave-model/science-models/JsonFiles"
+    name_list = []
+    package_list = []
+    for filename in glob.glob(os.path.join(path, '*.json')):
+        with open(os.path.join(os.getcwd(), filename), 'r') as f:
+            data = json.loads(f.read())          
+            name_list.append(data['name'])
+            package_list.append(data['package'])
+    return tuple(name_list), tuple(package_list)
+# Get list of all models we need to have in the CMR    
+   
 
 def get_versions(model):
 
@@ -34,6 +45,22 @@ def get_versions(model):
             VERSIONS.append(version)
 
     return VERSIONS
+# Function to get the
+# different versions of
+# spack packages for
+# a given model
+
+
+def findNewModels(packs):
+    
+    packs_list = list(packs)
+    p = open("spack-info.txt").read()
+    for g in re.finditer(r'(\w+)@([\d.]+)', p):
+        knownPack = g.group(1)
+        if knownPack in packs_list:
+            packs_list.remove(knownPack)
+    return packs_list
+        
 
 def gen_spack_pack_list():
     uv = jetlag_conf.get_uv()
