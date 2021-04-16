@@ -8,6 +8,6 @@ spack-init.sh
 source $SPACK_ROOT/share/spack/setup-env.sh
 for p in funwave nhwave swan openfoam
 do
-  spack install $p target=x86_64
+  spack install $p $*
 done
 spack gc -y
