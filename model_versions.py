@@ -23,14 +23,15 @@ def getModels():
     path = os.environ["HOME"]+"/agave-model/science-models/JsonFiles"
     name_list = []
     package_list = []
+    ver_list = []
     for filename in glob.glob(os.path.join(path, '*.json')):
         with open(os.path.join(os.getcwd(), filename), 'r') as f:
             data = json.loads(f.read())          
             name_list.append(data['name'])
-            package_list.append(data['package'])
+            package_list.append(data['package'] + '@' + data['version'])
     return tuple(name_list), tuple(package_list)
 # Get list of all models we need to have in the CMR    
-   
+
 
 def get_versions(model):
 
@@ -51,26 +52,59 @@ def get_versions(model):
 # a given model
 
 
+def get_pack_name(pack):
+    temp = pack.split('@')
+    return temp[0]
+
+
 def findNewModels(packs):
-    
+    print("Finding new models to Build...")
     packs_list = list(packs)
     p = open("spack-info.txt").read()
     for g in re.finditer(r'(\w+)@([\d.]+)', p):
-        knownPack = g.group(1)
+        knownPack = g.group(1) + '@' + g.group(2)
         if knownPack in packs_list:
             packs_list.remove(knownPack)
     return packs_list
+        
+def buildNewModels(packs_to_build):
+    uv = jetlag_conf.get_uv()
+    os.system("rm -fr input.tgz run_dir")
+    os.system("mkdir -p run_dir")
+    if not packs_to_build:
+        print("No new models found!")
+        
+    else:
+        print("New models are being installed. This may take a few minutes...")
+        with HiddenPrint():
+            write_env()
+            with open("run_dir/build-models.sh","w") as v:
+                print("#!/bin/bash", file=v)
+                print("source /build-dir/ubuntu_xenial/spack/share/spack/setup-env.sh", file=v)
+                for pack in range(len(packs_to_build)):
+                    buildCommand = "spack install " + packs_to_build[pack]
+                    print(buildCommand, file=v)
+            os.system("chmod 755 run_dir/get-versions.sh")
+            with open("run_dir/runapp.sh","w") as fd:
+                print("singularity exec $SING_OPTS --pwd $PWD $IMAGE bash ./build-models.sh", file=fd)
+            os.system("tar czvf input.tgz run_dir")
+            jobid = uv.run_job("build-models", nx=4, ny=4, nz=1, jtype="queue", run_time="1:00:00")
+            uv.wait_for_job(jobid)
+            print("Done!")
+        gen_spack_pack_list()
         
 
 def gen_spack_pack_list():
     uv = jetlag_conf.get_uv()
     os.system("rm -fr input.tgz run_dir")
     os.system("mkdir -p run_dir")
+    print("Retrieving Model Versions List...")
+    print("This may take a few minutes")
     with HiddenPrint():
         write_env()
         with open("run_dir/get-versions.sh","w") as v:
             print("#!/bin/bash", file=v)
-            print("source /spack/share/spack/setup-env.sh", file=v)
+            print("source /build-dir/ubuntu_xenial/spack/share/spack/setup-env.sh", file=v)
             print("spack find > spack-info.txt", file=v)
         os.system("chmod 755 run_dir/get-versions.sh")
         with open("run_dir/runapp.sh","w") as fd:
@@ -79,4 +113,5 @@ def gen_spack_pack_list():
         jobid = uv.run_job("get_model_versions", nx=4, ny=4, nz=1, jtype="queue", run_time="1:00:00")
         uv.wait_for_job(jobid)
         uv.get_file(jobid, "run_dir/spack-info.txt",as_file="spack-info.txt")
+    print("Done!\n\n")
     

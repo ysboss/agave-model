@@ -48,15 +48,13 @@ def relink(dir_a, dir_b):
 
             
 if not os.path.isfile("spack-info.txt"):
-    print("Retrieving Model Versions List...")
-    print("This may take a few minutes")
     gen_spack_pack_list()
-    print("Done!\n\n")
+
     
 
 models, packages = getModels()
-
-modelsToBuild = findNewModels(packages) # List of new models we need to build
+modelsToBuild = findNewModels(packages) # List of new models (their package names) we need to build
+buildNewModels(modelsToBuild)
 
 ### Global Box
 
@@ -355,6 +353,7 @@ def download_btn_clicked(a):
 
 downloadOpBtn.on_click(download_btn_clicked)
 
+
 # TODO: Need a better way of specifying this.... maybe a yaml file?
 modelDd = Dropdown(options=models)
 modelVersionDd = Dropdown(options = get_versions("swan"))
@@ -395,7 +394,7 @@ def model_change(change):
     if change['type'] == 'change' and change['name'] == 'value':
         if(change['new'] in models):
             index = models.index(change['new'])
-            options = get_versions(packages[index])
+            options = get_versions(get_pack_name(packages[index]))
         else:
             print("change:",change["new"])
         try:
@@ -407,8 +406,6 @@ def model_change(change):
                 ver = options[0]
             input_params.set(model_key,ver)
             modelVersionDd.value = ver
-        except:
-            modelVersionDd.value = None
         finally:
             enable_model_change = True
 

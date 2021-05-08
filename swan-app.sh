@@ -5,7 +5,7 @@ echo $PWD
 source ../.env
 source ./env.sh #Contains: versions of software
 
-export SPACK_ROOT=/spack
+export SPACK_ROOT=/build-dir/ubuntu_xenial/spack
 source $SPACK_ROOT/share/spack/setup-env.sh
 
 spack load swan@${SWAN_VER}
