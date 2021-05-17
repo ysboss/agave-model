@@ -9,13 +9,6 @@ export SPACK_ROOT=/build-dir/ubuntu_xenial/spack
 source $SPACK_ROOT/share/spack/setup-env.sh
 
 spack load swan@${SWAN_VER}
-spack load mpich@${MPICH_VER}
-
-# Foundation
-source mpich.sh
-
-# Apps
-source swan.sh
 
 echo "Job is: $PBS_JOBID" 
 echo "Mom is: $(hostname)"

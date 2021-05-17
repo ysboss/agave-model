@@ -37,8 +37,8 @@ def run(b):
         cmd("mkdir -p run_dir")
         write_env()
         with open("run_dir/runapp.sh","w") as fd:
-            print("singularity exec $SING_OPTS --pwd $PWD $IMAGE bash ./%s-app.sh" % t,file=fd)
-        cmd("cp %s-app.sh run_dir/" % t)
+            print("singularity exec $SING_OPTS --pwd $PWD $IMAGE bash ./model-app.sh",file=fd)
+        cmd("cp model-app.sh run_dir/")
         relink("input_%s" % t, "run_dir")
         cmd("tar czvf input.tgz run_dir")
         print("Procs:",procs,"=>",procs[0]*procs[1]*procs[2])
