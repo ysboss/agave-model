@@ -13,8 +13,12 @@ RUN update-alternatives --install /usr/bin/python python /usr/bin/python3 2
 RUN update-alternatives --install /usr/bin/pip pip /usr/bin/pip3 2
 RUN pip3 install --upgrade pip==19.3.1
 RUN pip3 install jupyter jupyterhub==1.0.0 matplotlib==3.1.2 numpy==1.18.1 notebook==6.0.2 ipywidgets==7.5.1 setvar h5py==2.10.0 tzupdate==2.0.0 gui_fun
-#RUN npm install -g npm@3.5.2
+RUN npm install -g npm@3.5.2
 RUN npm install -g configurable-http-proxy@4.2.0
+#RUN pip install --upgrade pip
+#RUN pip install jupyter jupyterhub matplotlib numpy notebook ipywidgets setvar h5py tzupdate gui_fun
+#RUN npm install -g npm@5.3.0
+#RUN npm install -g configurable-http-proxy
 
 RUN jupyter nbextension enable --py widgetsnbextension
 
