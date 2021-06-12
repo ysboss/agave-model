@@ -4,7 +4,7 @@ volumes:
     alt_home:
 
 services:
-    presync-service:
+    spack-cmr-service:
         privileged: true
         build:
             context: .
