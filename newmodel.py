@@ -46,16 +46,21 @@ def relink(dir_a, dir_b):
         else:
             os.link(fa, fb)
 
-            
-if not os.path.isfile("spack-info.txt"):
-    gen_spack_pack_list()
+#############################################          
+#if not os.path.isfile("spack-info.txt"):
+#    gen_spack_pack_list()
 
+installNewModels()
+
+models, packages = getModelsAndPacks()
+
+if not models:
+    models = ["None"]
+    packages = ["None"]
     
+input_params.set('title', models[0])
 
-models, packages = getModels()
-modelsToBuild = findNewModels(packages) # List of new models (their package names) we need to build
-buildNewModels(modelsToBuild)
-
+##############################################
 ### Global Box
 
 import global_box
@@ -63,13 +68,15 @@ import global_box
 userName = Label(value=jetlag_conf.get_user())
 modelTitle = Dropdown(
     options=models,
-    value=input_params.get('title','SWAN'))
+    #options=['SWAN', 'Funwave_tvd','Delft3D', 'OpenFoam', 'Cactus', 'NHWAVE'],
+    value=input_params.get('title'))
+    #value=input_params.get('title','SWAN'))
 modelTitle.observe(global_box.observe_title)
 
 middleware_value=jetlag_conf.get_uv().values["utype"]
 input_params.set('middleware', middleware_value)
-#middleware = Label(value=middleware_value)
-modelVersion = Dropdown()
+middleware = Label(value=middleware_value)
+modelVersion = Dropdown(options=emptyListOptions(get_versions(input_params.get('title'))), value=emptyListValue(get_versions(input_params.get('title'))))
 globalWidth = '80px'
 modelBox = VBox([Box([Label(value="User", layout = Layout(width = globalWidth)), userName]),
                  Box([Label(value="Model", layout = Layout(width = globalWidth)), modelTitle]), 
@@ -94,7 +101,8 @@ UploadBtn = FileUpload(multiple=True)
 
 def get_dname():
     model = value=input_params.get('title').lower()
-    dname = os.environ["HOME"]+"/agave-model/input_"+model
+    if model != "None":
+        dname = os.environ["HOME"]+"/agave-model/input_"+model
     return 'To upload via command line: docker cp [file] cmr:%s/' % dname
 UploadLabel = Label(value=get_dname())
 
@@ -356,7 +364,7 @@ downloadOpBtn.on_click(download_btn_clicked)
 
 # TODO: Need a better way of specifying this.... maybe a yaml file?
 modelDd = Dropdown(options=models)
-modelVersionDd = Dropdown(options = get_versions("swan"))
+modelVersionDd = Dropdown(options = get_versions(input_params.get('title')))
 mpiDd = Dropdown(options = ['3.3.2', '3.1.4'],
     value=input_params.get('mpich-ver','3.1.4'))
 h5Dd = Dropdown(options = ['1.10.5','2.20.0', '1.10.4', '1.8.21'],
@@ -394,7 +402,7 @@ def model_change(change):
     if change['type'] == 'change' and change['name'] == 'value':
         if(change['new'] in models):
             index = models.index(change['new'])
-            options = get_versions(get_pack_name(packages[index]))
+            options = emptyListOptions(get_versions(packSplit(packages[index])))
         else:
             print("change:",change["new"])
         try:
@@ -556,5 +564,3 @@ class observe_file_upload:
             self.name = []
 
 UploadBtn.observe(observe_file_upload())
-
-### End Tab Nest Model
