@@ -21,7 +21,7 @@ import logOp
 import pprint
 pp = pprint.PrettyPrinter()
 
-from model_versions import get_versions, gen_spack_pack_list
+from model_versions import *
 
 ######################## Previous ############################################################
 
@@ -46,28 +46,37 @@ def relink(dir_a, dir_b):
         else:
             os.link(fa, fb)
 
-            
-if not os.path.isfile("spack-info.txt"):
-    print("Retrieving Model Versions List...")
-    print("This may take a few minutes")
-    gen_spack_pack_list()
-    print("Done!\n\n")
+#############################################          
+#if not os.path.isfile("spack-info.txt"):
+#    gen_spack_pack_list()
+
+installNewModels()
+
+models, packages = getModelsAndPacks()
+
+if not models:
+    models = ["None"]
+    packages = ["None"]
     
-    
+input_params.set('title', models[0])
+
+##############################################
 ### Global Box
 
 import global_box
 
 userName = Label(value=jetlag_conf.get_user())
 modelTitle = Dropdown(
-    options=['SWAN', 'Funwave_tvd','Delft3D', 'OpenFoam', 'Cactus', 'NHWAVE'],
-    value=input_params.get('title','SWAN'))
+    options=models,
+    #options=['SWAN', 'Funwave_tvd','Delft3D', 'OpenFoam', 'Cactus', 'NHWAVE'],
+    value=input_params.get('title'))
+    #value=input_params.get('title','SWAN'))
 modelTitle.observe(global_box.observe_title)
 
 middleware_value=jetlag_conf.get_uv().values["utype"]
 input_params.set('middleware', middleware_value)
-#middleware = Label(value=middleware_value)
-modelVersion = Dropdown()
+middleware = Label(value=middleware_value)
+modelVersion = Dropdown(options=emptyListOptions(get_versions(input_params.get('title'))), value=emptyListValue(get_versions(input_params.get('title'))))
 globalWidth = '80px'
 modelBox = VBox([Box([Label(value="User", layout = Layout(width = globalWidth)), userName]),
                  Box([Label(value="Model", layout = Layout(width = globalWidth)), modelTitle]), 
@@ -92,7 +101,8 @@ UploadBtn = FileUpload(multiple=True)
 
 def get_dname():
     model = value=input_params.get('title').lower()
-    dname = os.environ["HOME"]+"/agave-model/input_"+model
+    if model != "None":
+        dname = os.environ["HOME"]+"/agave-model/input_"+model
     return 'To upload via command line: docker cp [file] cmr:%s/' % dname
 UploadLabel = Label(value=get_dname())
 
@@ -351,9 +361,10 @@ def download_btn_clicked(a):
 
 downloadOpBtn.on_click(download_btn_clicked)
 
+
 # TODO: Need a better way of specifying this.... maybe a yaml file?
-modelDd = Dropdown(options=['Swan','Funwave_tvd','OpenFoam', 'NHWAVE'])
-modelVersionDd = Dropdown(options = get_versions("swan"))
+modelDd = Dropdown(options=models)
+modelVersionDd = Dropdown(options = get_versions(input_params.get('title')))
 mpiDd = Dropdown(options = ['3.3.2', '3.1.4'],
     value=input_params.get('mpich-ver','3.1.4'))
 h5Dd = Dropdown(options = ['1.10.5','2.20.0', '1.10.4', '1.8.21'],
@@ -389,14 +400,9 @@ modelVersionDd.observe(save_model_change)
 def model_change(change):
     global enable_model_change
     if change['type'] == 'change' and change['name'] == 'value':
-        if(change['new'] == 'SWAN'):
-            options = get_versions("swan")
-        elif(change['new'] == 'Funwave_tvd'):
-            options = ["2019-08-21","2020-01-01"]
-        elif(change['new'] == 'OpenFoam'):
-            options = ['1812','1806', '1712']
-        elif(change['new'] == 'NHWAVE'):
-            options = ['2019-08-21','2020-01-01']
+        if(change['new'] in models):
+            index = models.index(change['new'])
+            options = emptyListOptions(get_versions(packSplit(packages[index])))
         else:
             print("change:",change["new"])
         try:
@@ -407,7 +413,6 @@ def model_change(change):
             if ver is None:
                 ver = options[0]
             input_params.set(model_key,ver)
-            modelVersionDd.value = None
             modelVersionDd.value = ver
         finally:
             enable_model_change = True
@@ -462,6 +467,7 @@ def do_build(btn):
         #cmd(uv.fill("ssh -i uapp-key {machine_user}@{machine}.{domain} bash ./runbuild.sh"))
 
 def update_vers(btn):
+    global modelDd
     global modelVersionDd
     global mpiDd
     global h5Dd
@@ -471,23 +477,16 @@ def update_vers(btn):
     print("This may take a few minutes")
     gen_spack_pack_list()
     print("Done!")
-
-    # Need to add support for other packages!!!
     
-    if(modelDd.value == 'SWAN'):
-        options = get_versions("swan")
-    elif(modelDd.value == 'Funwave_tvd'):
-        options = ["2019-08-21","2020-01-01"]
-    elif(modelDd.value == 'OpenFoam'):
-        options = ['1812','1806', '1712']
-    elif(modelDd.value == 'NHWAVE'):
-        options = ['2019-08-21','2020-01-01']
+    if(modelDd.value in models):
+        index = models.index(modelDd.value)
+        modelVersionDd.options = get_versions(packages[index])
+    else:
+        print("change:",change["new"])
       
     mpiDd.options = ['3.3.2', '3.1.4']
     h5Dd.options = ['1.10.5','2.20.0', '1.10.4', '1.8.21']
     hypreDd.options = ['2.20.0', '2.11.2']
-    
-    # Need to add support for other packages!!!
     
     print("Update Complete!")
         
@@ -565,5 +564,3 @@ class observe_file_upload:
             self.name = []
 
 UploadBtn.observe(observe_file_upload())
-
-### End Tab Nest Model
