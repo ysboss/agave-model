@@ -77,6 +77,7 @@ middleware_value=jetlag_conf.get_uv().values["utype"]
 input_params.set('middleware', middleware_value)
 middleware = Label(value=middleware_value)
 modelVersion = Dropdown(options=emptyListOptions(get_versions(input_params.get('title'))), value=emptyListValue(get_versions(input_params.get('title'))))
+input_params.set('modelversion', modelVersion)
 globalWidth = '80px'
 modelBox = VBox([Box([Label(value="User", layout = Layout(width = globalWidth)), userName]),
                  Box([Label(value="Model", layout = Layout(width = globalWidth)), modelTitle]), 
@@ -365,8 +366,8 @@ downloadOpBtn.on_click(download_btn_clicked)
 # TODO: Need a better way of specifying this.... maybe a yaml file?
 modelDd = Dropdown(options=models)
 modelVersionDd = Dropdown(options = get_versions(input_params.get('title')))
-mpiDd = Dropdown(options = ['3.3.2', '3.1.4'],
-    value=input_params.get('mpich-ver','3.1.4'))
+mpiDd = Dropdown(options = ['3.3.2', '3.4.1'],
+    value=input_params.get('mpich-ver','3.4.1'))
 h5Dd = Dropdown(options = ['1.10.5','2.20.0', '1.10.4', '1.8.21'],
     value=input_params.get('hdf5-ver','1.10.5'))
 hypreDd = Dropdown(options = ['2.20.0', '2.11.2'],
@@ -408,12 +409,14 @@ def model_change(change):
         try:
             enable_model_change = False
             modelVersionDd.options = options
+            modelVersion.options = options
             model_key="modelversion_"+change["new"].lower()
             ver = input_params.get(model_key)
             if ver is None:
                 ver = options[0]
             input_params.set(model_key,ver)
             modelVersionDd.value = ver
+            modelVersion.value = ver
         finally:
             enable_model_change = True
 
