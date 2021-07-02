@@ -126,6 +126,9 @@ def update_name(change):
 InputBox = Box([templateDD, templateInputBox, UpInputBtn, UploadBtn, UploadLabel], 
                  layout = Layout(flex_flow = 'column', align_items = 'center'))
 
+if os.path.exists("%s/agave-model/input_none" % os.environ["HOME"]):
+    os.system("rm -r %s/agave-model/input_none" % os.environ["HOME"])
+    
 #=== Run Box
 run_item_layout = Layout(
     display = 'flex',
@@ -259,6 +262,9 @@ build_item_layout = Layout(
     justify_content = 'flex-start',
     width = '50%'
 )
+
+if not os.path.isfile("spack-info.txt"):
+    gen_spack_pack_list()
 
 buildBtn = Button(description = "Build", button_style='primary', layout= Layout(width = '50px'))
 updateBtn = Button(description = "Update Version Options", button_style ='danger', layout=Layout(width = '200px'))
