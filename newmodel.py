@@ -47,8 +47,8 @@ def relink(dir_a, dir_b):
             os.link(fa, fb)
 
 #############################################          
-#if not os.path.isfile("spack-info.txt"):
-#    gen_spack_pack_list()
+if not os.path.isfile("spack-info.txt"):
+    gen_spack_pack_list()
 
 installNewModels()
 
@@ -60,6 +60,12 @@ if not models:
     
 input_params.set('title', models[0])
 
+mpichOptions = emptyListOptions(get_versions("mpich"))
+hypreOptions = emptyListOptions(get_versions("hypre"))
+hdf5Options = emptyListOptions(get_versions("hdf5"))
+input_params.set("mpich-ver", mpichOptions[0])
+input_params.set("hypre-ver", hypreOptions[0])
+input_params.set("hdf5-ver", hdf5Options[0])
 ##############################################
 ### Global Box
 
@@ -77,6 +83,7 @@ middleware_value=jetlag_conf.get_uv().values["utype"]
 input_params.set('middleware', middleware_value)
 middleware = Label(value=middleware_value)
 modelVersion = Dropdown(options=emptyListOptions(get_versions(input_params.get('title'))), value=emptyListValue(get_versions(input_params.get('title'))))
+input_params.set('modelversion', modelVersion)
 globalWidth = '80px'
 modelBox = VBox([Box([Label(value="User", layout = Layout(width = globalWidth)), userName]),
                  Box([Label(value="Model", layout = Layout(width = globalWidth)), modelTitle]), 
@@ -253,9 +260,6 @@ build_item_layout = Layout(
     width = '50%'
 )
 
-if not os.path.isfile("spack-info.txt"):
-    gen_spack_pack_list()
-
 buildBtn = Button(description = "Build", button_style='primary', layout= Layout(width = '50px'))
 updateBtn = Button(description = "Update Version Options", button_style ='danger', layout=Layout(width = '200px'))
 build_model = Label(value=modelTitle.value + " VERSION", layout = Layout(width = '350px'))
@@ -365,12 +369,12 @@ downloadOpBtn.on_click(download_btn_clicked)
 # TODO: Need a better way of specifying this.... maybe a yaml file?
 modelDd = Dropdown(options=models)
 modelVersionDd = Dropdown(options = get_versions(input_params.get('title')))
-mpiDd = Dropdown(options = ['3.3.2', '3.1.4'],
-    value=input_params.get('mpich-ver','3.1.4'))
-h5Dd = Dropdown(options = ['1.10.5','2.20.0', '1.10.4', '1.8.21'],
-    value=input_params.get('hdf5-ver','1.10.5'))
-hypreDd = Dropdown(options = ['2.20.0', '2.11.2'],
-    value=input_params.get('hypre-ver','2.11.2'))
+mpiDd = Dropdown(options = mpichOptions,
+    value=input_params.get('mpich-ver',mpichOptions[0]))
+h5Dd = Dropdown(options = hdf5Options,
+    value=input_params.get('hdf5-ver', hdf5Options[0]))
+hypreDd = Dropdown(options = hypreOptions,
+    value=input_params.get('hypre-ver',hypreOptions[0]))
 
 def save_mpich(change):
     if change['name'] == 'value':
@@ -408,12 +412,14 @@ def model_change(change):
         try:
             enable_model_change = False
             modelVersionDd.options = options
+            modelVersion.options = options
             model_key="modelversion_"+change["new"].lower()
             ver = input_params.get(model_key)
             if ver is None:
                 ver = options[0]
             input_params.set(model_key,ver)
             modelVersionDd.value = ver
+            modelVersion.value = ver
         finally:
             enable_model_change = True
 

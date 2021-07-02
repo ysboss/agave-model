@@ -22,7 +22,7 @@ def get_tabs():
         ###########################
         if cur_model == "none":
             print("Please install models by dragging them into the \"model_to_install\" directory. Models should have their source code in a tar file and a JSON file. These two files should be within their own file titled model-title.tar/.tar.gz/.tgz")
-        if not os.path.exists(dir):
+        elif not os.path.exists(dir):
             print("Path does not exist: %s" % dir)
             print("Creating Directory for: %s" % cur_model.upper())
             os.system("mkdir -p %s" % dir)
