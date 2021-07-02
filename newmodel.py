@@ -57,6 +57,10 @@ models, packages = getModelsAndPacks()
 if not models:
     models = ["None"]
     packages = ["None"]
+
+else:
+    model_key="modelversion_"+models[0].lower()
+    input_params.set(model_key,get_versions(models[0])[0])
     
 input_params.set('title', models[0])
 
