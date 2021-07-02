@@ -263,9 +263,6 @@ build_item_layout = Layout(
     width = '50%'
 )
 
-if not os.path.isfile("spack-info.txt"):
-    gen_spack_pack_list()
-
 buildBtn = Button(description = "Build", button_style='primary', layout= Layout(width = '50px'))
 updateBtn = Button(description = "Update Version Options", button_style ='danger', layout=Layout(width = '200px'))
 build_model = Label(value=modelTitle.value + " VERSION", layout = Layout(width = '350px'))
