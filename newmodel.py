@@ -47,12 +47,15 @@ def relink(dir_a, dir_b):
             os.link(fa, fb)
 
 #############################################          
-models, packages = getModelsAndPacks()
+#models, packages = getModelsAndPacks()
+
+models = []
+packages = []
 
 if not models:
     models = ["None"]
     packages = ["None"]
-    print("No Models Found!")
+    print("No Models Found!\n")
     sendPlugInToServer()
 
 input_params.set('title', models[0])

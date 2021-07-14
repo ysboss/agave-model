@@ -30,24 +30,24 @@ def emptyListOptions(x):
         return x  
 
 def sendPlugInToServer():
-    print("To add models:\n\n1)ssh into the machine you want to use\n2)Install models following the README in the plug-in directory that we are currently sending to your home directory\n3)Rerun the CMR")
+    print("To add models:\n\n1)ssh into the machine you want to use\n2)Install models following the README in the plug-in directory that we are currently sending to your home directory\n3)Rerun the CMR\n")
     print("Sending Plug-In to Server...")
     uv = jetlag_conf.get_uv()
     os.system("rm -fr input.tgz run_dir")
     os.system("mkdir -p run_dir")
-    os.system("mv plug-in.tar.gz %s/agave-model/run_dir/" % os.environ["HOME"])
+    os.system("cp plug-in.tar.gz %s/agave-model/run_dir/" % os.environ["HOME"])
     with HiddenPrint():
         write_env()
         with open("run_dir/sendPlug.sh","w") as v:
             print("#!/bin/bash", file=v)
-            print("mv plug-in.tar.gz $HOME", file=v)
+            print("tar -xvf plug-in.tar.gz -C $HOME", file=v)
         os.system("chmod 755 run_dir/get-versions.sh")
         with open("run_dir/runapp.sh","w") as fd:
-            print("singularity exec $SING_OPTS --pwd $PWD $IMAGE bash ./sendPlug.sh", file=fd)
+            print("singularity exec $SING_OPTS --pwd $PWD $IMAGE bash -l ./sendPlug.sh", file=fd)
         os.system("tar czvf input.tgz run_dir")
         jobid = uv.run_job("sendingPlugIn", nx=4, ny=4, nz=1, jtype="queue", run_time="1:00:00")
         uv.wait_for_job(jobid)
-        print("Done!")
+    print("Done!")
     
 def getMachineFiles():
     uv = jetlag_conf.get_uv()
@@ -82,8 +82,7 @@ def getModelsAndPacks():
     
     machinePath = "%s/agave-model/machineFiles" % os.environ["HOME"]
     
-    if not os.path.isdir(machinePath):
-        os.system("rm -rf %s/agave-model/machineFiles" % os.environ["HOME"])
+    os.system("rm -rf %s/agave-model/machineFiles" % os.environ["HOME"])
     
     os.system("tar -xvf %s/agave-model/machineFiles.tar.gz -C %s/agave-model/" % (os.environ["HOME"], os.environ["HOME"]))
     os.system("rm %s/agave-model/machineFiles.tar.gz" % os.environ["HOME"])
@@ -92,11 +91,14 @@ def getModelsAndPacks():
     name_list = []
     package_list = []
     
-    for filename in glob.glob(os.path.join(path, '*.json')):
-        with open(os.path.join(os.getcwd(), filename), 'r') as f:
-            data = json.loads(f.read())          
-            name_list.append(data['name'])
-            package_list.append(data['package'] + '@' + data['version'])
+    if os.path.isfile(os.environ["HOME"]+"/agave-model/machineFiles/*.json") or os.path.isfile(os.environ["HOME"]+"/agave-model/machineFiles/spack-info.txt"):
+    
+        for filename in glob.glob(os.path.join(path, '*.json')):
+            with open(os.path.join(os.getcwd(), filename), 'r') as f:
+                data = json.loads(f.read())          
+                name_list.append(data['name'])
+                package_list.append(data['package'] + '@' + data['version'])
+                
     return tuple(name_list), tuple(package_list)
 # Get list of all models we need to have in the CMR  
 
@@ -108,13 +110,14 @@ def get_versions(model):
 
     VERSIONS = []
 
-    p = open("%s/agave-model/machineFiles/spack-info.txt" % os.environ["HOME"]).read()
-    for g in re.finditer(r'(\w+)@([\d.]+)', p):
-        package = g.group(1)
-        version = g.group(2)
+    if os.path.isfile(os.environ["HOME"]+"/agave-model/machineFiles/spack-info.txt"):
+        p = open("%s/agave-model/machineFiles/spack-info.txt" % os.environ["HOME"]).read()
+        for g in re.finditer(r'(\w+)@([\d.]+)', p):
+            package = g.group(1)
+            version = g.group(2)
 
-        if package == model.lower():
-            VERSIONS.append(version)
+            if package == model.lower():
+                VERSIONS.append(version)
 
     return VERSIONS
 
