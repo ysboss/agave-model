@@ -47,22 +47,17 @@ def relink(dir_a, dir_b):
             os.link(fa, fb)
 
 #############################################          
-if not os.path.isfile("spack-info.txt"):
-    gen_spack_pack_list()
-
-installNewModels()
-
 models, packages = getModelsAndPacks()
 
 if not models:
     models = ["None"]
     packages = ["None"]
+    print("No Models Found!")
+    sendPlugInToServer()
 
-else:
-    model_key="modelversion_"+models[0].lower()
-    input_params.set(model_key,get_versions(models[0])[0])
-    
 input_params.set('title', models[0])
+
+#input_params.set('modelversion', emptyListOptions(get_versions(packages)[0]))
 
 mpichOptions = emptyListOptions(get_versions("mpich"))
 hypreOptions = emptyListOptions(get_versions("hypre"))
@@ -87,7 +82,7 @@ middleware_value=jetlag_conf.get_uv().values["utype"]
 input_params.set('middleware', middleware_value)
 middleware = Label(value=middleware_value)
 modelVersion = Dropdown(options=emptyListOptions(get_versions(input_params.get('title'))), value=emptyListValue(get_versions(input_params.get('title'))))
-input_params.set('modelversion', modelVersion)
+input_params.set('modelversion', modelVersion.value)
 globalWidth = '80px'
 modelBox = VBox([Box([Label(value="User", layout = Layout(width = globalWidth)), userName]),
                  Box([Label(value="Model", layout = Layout(width = globalWidth)), modelTitle]), 
