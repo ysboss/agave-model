@@ -62,6 +62,7 @@ def getMachineFiles():
             print("mkdir machineFiles", file=v)
             print("cp /build-dir/json/* machineFiles", file=v)
             print("cp /build-dir/spack-info.txt machineFiles", file=v)
+            #print("cp /JSON/* machineFiles")
             print("tar -czvf machineFiles.tar.gz machineFiles", file=v)
         os.system("chmod 755 run_dir/get-versions.sh")
         with open("run_dir/runapp.sh","w") as fd:
