@@ -21,11 +21,6 @@ def get_tabs():
         menus[cur_model] = {}
         dir = "input_"+cur_model
         ###########################
-        if cur_model == "none":
-            print("Please install models by dragging them into the \"model_to_install\" directory.")
-            print("Models should have their source code in a tar file and a JSON file.")
-            print("These two files should be within their own file titled \"model-title.tar/.tar.gz/.tgz\"")
-            print("Once you place your models in the directory, re-run the CMR to install the models.")
         if not os.path.exists(dir):
             if cur_model == "none":
                 os.system("mkdir -p %s" % dir)
