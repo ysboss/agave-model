@@ -55,8 +55,7 @@ packages = []
 if not models:
     models = ["None"]
     packages = ["None"]
-    print("No Models Found!\n")
-    sendPlugInToServer()
+    getModelsAndPacks()
 
 input_params.set('title', models[0])
 
@@ -81,7 +80,7 @@ modelTitle = Dropdown(
     #value=input_params.get('title','SWAN'))
 modelTitle.observe(global_box.observe_title)
 
-middleware_value=jetlag_conf.get_uv().values["utype"]
+middleware_value=jetlag_conf.get_uv().utype
 input_params.set('middleware', middleware_value)
 middleware = Label(value=middleware_value)
 modelVersion = Dropdown(options=emptyListOptions(get_versions(input_params.get('title'))), value=emptyListValue(get_versions(input_params.get('title'))))

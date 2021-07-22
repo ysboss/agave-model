@@ -54,7 +54,7 @@ def getMachineFiles():
     os.system("mkdir -p run_dir")
     print("Getting List of Models...")
     print("This may take a few minutes...")
-    with HiddenPrint():
+    if True: #with HiddenPrint():
         write_env()
         with open("run_dir/get-versions.sh","w") as v:
             print("#!/bin/bash", file=v)
@@ -67,7 +67,7 @@ def getMachineFiles():
         with open("run_dir/runapp.sh","w") as fd:
             print("singularity exec $SING_OPTS --pwd $PWD $IMAGE bash ./get-versions.sh", file=fd)
         os.system("tar czvf input.tgz run_dir")
-        jobid = uv.run_job("get_models_and_packs", nx=4, ny=4, nz=1, jtype="queue", run_time="1:00:00")
+        jobid = uv.run_job("get_models_and_packs", nx=1, ny=1, nz=1, jtype="queue", run_time="1:00:00",script_name="get_models_and_packs")
         jobid.wait()
         uv.get_file(jobid, "run_dir/machineFiles.tar.gz",as_file="machineFiles.tar.gz")
         print("Done!")

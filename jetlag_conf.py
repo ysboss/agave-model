@@ -85,3 +85,6 @@ if "jetlag_loader" not in globals():
 
 def get_uv():
     return jetlag_loader.jlag
+
+def get_user():
+    get_uv().auth["username"]
