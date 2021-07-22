@@ -1,6 +1,6 @@
-FROM ubuntu:18.04
-#FROM stevenrbrandt/spack-cmr-built
-#USER root
+#FROM ubuntu:18.04
+FROM stevenrbrandt/spack-cmr-built
+USER root
 
 # Needed to install tzdata
 ENV DEBIAN_FRONTEND=noninteractive
@@ -32,9 +32,10 @@ WORKDIR /usr/local/python
 
 COPY runuser.sh /usr/local/bin/runuser.sh
 RUN chmod 755 /usr/local/bin/runuser.sh
-RUN useradd -m jovyan -u 1200
+# RUN useradd -m jovyan -u 1200
 RUN echo "ALL            ALL = (ALL) NOPASSWD: ALL" >> /etc/sudoers
 RUN chown jovyan /usr/local/python
+RUN find /home/jovyan | xargs chown jovyan
 USER jovyan
 WORKDIR /usr/local/python
 RUN git clone https://github.com/STEllAR-GROUP/JetLag.git

@@ -26,6 +26,7 @@ if [ ! -r ~/.spack/packages.yaml ]
 then
   cp /usr/local/packages.yaml ~/.spack/packages.yaml
 fi
+spack external find xz tar pkgconf findutils diffutils perl
 
 for p in funwave nhwave swan
 do

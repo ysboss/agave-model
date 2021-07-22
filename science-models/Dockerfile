@@ -1,5 +1,5 @@
-FROM ubuntu:xenial
-ENV OS_VER ubuntu_xenial
+FROM ubuntu:18.04
+ENV OS_VER ubuntu_bionicbeaver
 
 MAINTAINER Steven R. Brandt <sbrandt@cct.lsu.edu>
 
@@ -9,7 +9,7 @@ RUN apt-get update && \
     apt-get install -y --allow-unauthenticated make build-essential \
                        wget gcc g++ git gfortran git patch flex vim \
                        curl openssh-server python3 python3-pip \
-                       ruby uuid-dev && \
+                       ruby uuid-dev pkgconf && \
     apt-get purge
 
 
