@@ -79,22 +79,9 @@ def gen_data():
     exec0 = machine
     all_apps[app0] = app_entry
 
-gen_data()
+from jetlag_setup import Loader
+if "jetlag_loader" not in globals():
+    globals()["jetlag_loader"] = Loader()
 
 def get_uv():
-    global app0, exec0, machines_options, exec_to_app, all_apps
-    middleware = input_params.get('middleware')
-    machine_key = 'machine_'+middleware
-    exec_sys = input_params.get(machine_key, app0)
-    if exec_sys not in exec_to_app:
-        exec_sys = exec0
-        input_params.set(machine_key, exec_sys)
-    app = exec_to_app[exec_sys]
-    app_data = all_apps[app]
-    uv = app_data["uv"]
-    uv.refresh_token()
-    return uv
-
-def get_user():
-    uv = get_uv()
-    return uv.fill(uv.values["sys_user"])
+    return jetlag_loader.jlag

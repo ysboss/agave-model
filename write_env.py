@@ -6,7 +6,7 @@ def write_env():
         print("export MPICH_VER=%s" % input_params.get('mpich-ver'),file=fd)
         print("export HYPRE_VER=%s" % input_params.get('hypre-ver'),file=fd)
         print("export HDF5_VER=%s" % input_params.get('hdf5-ver'),file=fd)
-        model = value=input_params.get('title').lower()
+        model = value=input_params.get('title','swan').lower()
         MODEL = model.upper()
         print("export model="+model,file=fd)
         model_ver = input_params.get("modelversion_%s" % model)

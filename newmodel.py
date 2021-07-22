@@ -1,4 +1,4 @@
-from jetlag import RemoteJobWatcher
+from jetlag import RemoteJob
 import os, re
 import numpy as np
 import ipywidgets
@@ -350,7 +350,7 @@ def download_btn_clicked(a):
         
             if outputSelect.value == '/output.tgz':
                 print("Downloading output tarball to jobdata-"+jobid)
-                job = RemoteJobWatcher(uv, jobid)
+                job = RemoteJob(uv, jobid)
                 job.get_result()
                 cmd("cp jobdata-%s/output.tgz ." % jobid)
                 cmd("rm -fr run_dir")
