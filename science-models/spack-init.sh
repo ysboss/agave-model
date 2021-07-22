@@ -19,6 +19,7 @@ grep spack/setup-env.sh ~/.bashrc > /dev/null 2>&1
 if [ $? != 0 ]
 then
   echo "source ${SPACK_ROOT}/share/spack/setup-env.sh" >> ~/.bashrc
+  source ${SPACK_ROOT}/share/spack/setup-env.sh
 fi
 
 mkdir -p ~/.spack
