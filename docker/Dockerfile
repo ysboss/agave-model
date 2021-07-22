@@ -38,7 +38,7 @@ RUN chown jovyan /usr/local/python
 RUN find /home/jovyan | xargs chown jovyan
 USER jovyan
 WORKDIR /usr/local/python
-RUN git clone https://github.com/STEllAR-GROUP/JetLag.git
+RUN git clone -b jetlag2 https://github.com/STEllAR-GROUP/JetLag.git
 ENV HOME /home/jovyan
 ENV PYTHONPATH /usr/local/python/JetLag
 WORKDIR /home/jovyan
