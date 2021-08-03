@@ -47,23 +47,14 @@ def relink(dir_a, dir_b):
             os.link(fa, fb)
 
 #############################################          
-#models, packages = getModelsAndPacks()
 
-models = []
-packages = []
-
-if not models:
-    models = ["None"]
-    packages = ["None"]
-    getModelsAndPacks()
+models, packages = getModelsAndPacks()
 
 input_params.set('title', models[0])
-
-#input_params.set('modelversion', emptyListOptions(get_versions(packages)[0]))
-
-mpichOptions = emptyListOptions(get_versions("mpich"))
-hypreOptions = emptyListOptions(get_versions("hypre"))
-hdf5Options = emptyListOptions(get_versions("hdf5"))
+input_params.set('modelversion_%s' % models[0].lower(), get_versions(packSplit(packages[0]))[0])
+mpichOptions = get_versions("mpich")
+hypreOptions = get_versions("hypre")
+hdf5Options = get_versions("hdf5")
 input_params.set("mpich-ver", mpichOptions[0])
 input_params.set("hypre-ver", hypreOptions[0])
 input_params.set("hdf5-ver", hdf5Options[0])
@@ -83,7 +74,7 @@ modelTitle.observe(global_box.observe_title)
 middleware_value=jetlag_conf.get_uv().utype
 input_params.set('middleware', middleware_value)
 middleware = Label(value=middleware_value)
-modelVersion = Dropdown(options=emptyListOptions(get_versions(input_params.get('title'))), value=emptyListValue(get_versions(input_params.get('title'))))
+modelVersion = Dropdown(options=get_versions(input_params.get('title')), value=get_versions(input_params.get('title'))[0])
 input_params.set('modelversion', modelVersion.value)
 globalWidth = '80px'
 modelBox = VBox([Box([Label(value="User", layout = Layout(width = globalWidth)), userName]),
@@ -410,7 +401,7 @@ def model_change(change):
     if change['type'] == 'change' and change['name'] == 'value':
         if(change['new'] in models):
             index = models.index(change['new'])
-            options = emptyListOptions(get_versions(packSplit(packages[index])))
+            options = get_versions(packSplit(packages[index]))
         else:
             print("change:",change["new"])
         try:
