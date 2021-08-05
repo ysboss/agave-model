@@ -36,10 +36,10 @@ def run(b):
         cmd("rm -fr input.tgz run_dir")
         cmd("mkdir -p run_dir")
         write_env()
-        with open("run_dir/runapp.sh","w") as fd:
-            print("singularity exec $SING_OPTS --pwd $PWD $IMAGE bash ./model-app.sh",file=fd)
-        cmd("cp model-app.sh run_dir/")
+        #with open("run_dir/runapp.sh","w") as fd:
+        #    print("singularity exec $SING_OPTS --pwd $PWD $IMAGE bash ./model-app.sh",file=fd)
+        #cmd("cp model-app.sh run_dir/")
         relink("input_%s" % t, "run_dir")
         cmd("tar czvf input.tgz run_dir")
         print("Procs:",procs,"=>",procs[0]*procs[1]*procs[2])
-        jobid = uv.run_job(j, nx=procs[0], ny=procs[1], nz=procs[2], jtype="queue", run_time="1:00:00")
+        jobid = uv.run_job(j, nx=procs[0], ny=procs[1], nz=procs[2], jtype="queue", run_time="1:00:00", script_name="run-app")
