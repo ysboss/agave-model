@@ -9,7 +9,7 @@ RUN apt-get update && \
     apt-get install -y --allow-unauthenticated make build-essential \
                        wget gcc g++ git gfortran git patch flex vim \
                        curl openssh-server python3 python3-pip \
-                       ruby uuid-dev pkgconf && \
+                       ruby uuid-dev pkgconf jq && \
     apt-get purge
 
 
