@@ -1,0 +1,10 @@
+{
+    "name": "FUNWAVE",
+    "package": "funwave",
+    "version": "3.2",
+    "inputFile": "",
+    "nx": 4,
+    "ny": 4,
+    "nz": 1
+}
+
