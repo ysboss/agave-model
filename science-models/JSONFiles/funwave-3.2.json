@@ -3,8 +3,8 @@
     "package": "funwave",
     "version": "3.2",
     "inputFile": "",
-    "nx": "",
-    "ny": "",
-    "nz": ""
+    "nx": 4,
+    "ny": 4,
+    "nz": 1
 }
 

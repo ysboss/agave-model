@@ -17,8 +17,8 @@ def relink(dir_a, dir_b):
             os.link(fa, fb)
 
 def run(b):
-    d = input_params.get('middleware')
-    m = input_params.get('machine_'+d)
+    #d = input_params.get('middleware')
+    m = input_params.get('last_jid')
     p = input_params.get('NPROCS')
     procs = []
     for pv in re.findall(r'\d+',p):

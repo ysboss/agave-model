@@ -3,7 +3,7 @@
     "package": "swan",
     "version": "4.1.3.1",
     "inputFile": "",
-    "nx": "",
-    "ny": "",
-    "nz": ""
-}    
+    "nx": 4,
+    "ny": 4,
+    "nz": 1
+}

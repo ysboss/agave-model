@@ -46,11 +46,12 @@ def relink(dir_a, dir_b):
         else:
             os.link(fa, fb)
 
-#############################################          
+#############################################
 
-models, packages = getModelsAndPacks()
+models, packages = getModelsAndPacks(False)
 
 input_params.set('title', models[0])
+input_params.set("last_jid", jetlag_conf.get_uv().jetlag_id)
 input_params.set('modelversion_%s' % models[0].lower(), get_versions(packSplit(packages[0]))[0])
 mpichOptions = get_versions("mpich")
 hypreOptions = get_versions("hypre")
@@ -63,7 +64,7 @@ input_params.set("hdf5-ver", hdf5Options[0])
 
 import global_box
 
-userName = Label(value=jetlag_conf.get_user())
+#userName = Label(value=jetlag_conf.get_user())
 modelTitle = Dropdown(
     options=models,
     #options=['SWAN', 'Funwave_tvd','Delft3D', 'OpenFoam', 'Cactus', 'NHWAVE'],
@@ -77,7 +78,8 @@ middleware = Label(value=middleware_value)
 modelVersion = Dropdown(options=get_versions(input_params.get('title')), value=get_versions(input_params.get('title'))[0])
 input_params.set('modelversion', modelVersion.value)
 globalWidth = '80px'
-modelBox = VBox([Box([Label(value="User", layout = Layout(width = globalWidth)), userName]),
+modelBox = VBox([
+    #Box([Label(value="User", layout = Layout(width = globalWidth)), userName]),
                  Box([Label(value="Model", layout = Layout(width = globalWidth)), modelTitle]), 
                  Box([Label(value="Version", layout = Layout(width = globalWidth)),modelVersion]),
                  ])
@@ -211,7 +213,7 @@ runBtn = Button(description='Run', button_style='primary', layout= Layout(width 
 runWidth = '150px'
 run_items = [
     Box([Label(value="Job Name", layout = Layout(width = runWidth)), jobNameText], layout = run_item_layout),
-    Box([Label(value="Machine", layout = Layout(width = runWidth)), machines], layout = run_item_layout),
+    #Box([Label(value="Machine", layout = Layout(width = runWidth)), machines], layout = run_item_layout),
     #Box([Label(value="Queue", layout = Layout(width = runWidth)), queues], layout = run_item_layout),
     Box([Label(value="NX", layout = Layout(width = runWidth)), numXSlider], layout = run_item_layout),
     Box([Label(value="NY", layout=Layout(width = runWidth)), numYSlider], layout= run_item_layout),
@@ -256,7 +258,7 @@ build_item_layout = Layout(
 )
 
 buildBtn = Button(description = "Build", button_style='primary', layout= Layout(width = '50px'))
-updateBtn = Button(description = "Update Version Options", button_style ='danger', layout=Layout(width = '200px'))
+updateBtn = Button(description = "Update Models/Versions", button_style ='danger', layout=Layout(width = '200px'))
 build_model = Label(value=modelTitle.value + " VERSION", layout = Layout(width = '350px'))
 
 def build_model_observer(change):
@@ -302,7 +304,7 @@ def jobOutput_btn_clicked(a):
             jobid = g.group(3)
             uv = jetlag_conf.get_uv()
             outputSelect.options = ["loading..."]
-            out1 = uv.show_job(jobid,verbose=False)
+            out1 = uv.job_file_list(jobid)
             outputSelect.options = out1
             if len(out1)==0:
                 outputSelect.options = ["empty"]
@@ -430,9 +432,9 @@ msgOut = Output()
 boxWidth = '350px'
 build_items = [
     Box([build_model, modelVersionDd], layout = build_item_layout),
-    Box([Label(value="Build Machine", layout = Layout(width = boxWidth)), machines], layout = build_item_layout),
+    #Box([Label(value="Build Machine", layout = Layout(width = boxWidth)), machines], layout = build_item_layout),
     #Box([Label(value="Queue", layout = Layout(width = boxWidth)), queues], layout = build_item_layout),
-    ipywidgets.HTML(value="<b><font color='OrangeRed'><font size='2.5'>Select Dependent Software</b>"), 
+    #ipywidgets.HTML(value="<b><font color='OrangeRed'><font size='2.5'>Select Dependent Software</b>"), 
     Box([Label(value="MPICH", layout = Layout(width = boxWidth)), mpiDd], layout = build_item_layout),
     Box([Label(value="HDF5", layout = Layout(width = boxWidth)), h5Dd], layout = build_item_layout),
     Box([Label(value="HYPRE", layout = Layout(width = boxWidth)), hypreDd], layout = build_item_layout),
@@ -468,28 +470,26 @@ def do_build(btn):
         #cmd(uv.fill("ssh -i uapp-key {machine_user}@{machine}.{domain} bash ./runbuild.sh"))
 
 def update_vers(btn):
-    global modelDd
-    global modelVersionDd
-    global mpiDd
-    global h5Dd
-    global hypreDd
+#     global modelDd
+#     global modelVersionDd
+#     global mpiDd
+#     global h5Dd
+#     global hypreDd
     
-    print("Retrieving Latest List of Model Versions...")
-    print("This may take a few minutes")
-    gen_spack_pack_list()
-    print("Done!")
+    models, packages = getModelsAndPacks(True)
     
-    if(modelDd.value in models):
-        index = models.index(modelDd.value)
-        modelVersionDd.options = get_versions(packages[index])
-    else:
-        print("change:",change["new"])
+#     if(modelDd.value in models):
+#         index = models.index(modelDd.value)
+#         modelVersionDd.options = get_versions(packages[index])
+#     else:
+#         print("change:",change["new"])
       
-    mpiDd.options = ['3.3.2', '3.1.4']
-    h5Dd.options = ['1.10.5','2.20.0', '1.10.4', '1.8.21']
-    hypreDd.options = ['2.20.0', '2.11.2']
+#     mpiDd.options = ['3.3.2', '3.1.4']
+#     h5Dd.options = ['1.10.5','2.20.0', '1.10.4', '1.8.21']
+#     hypreDd.options = ['2.20.0', '2.11.2']
     
-    print("Update Complete!")
+    print("Models and Versions Updated!")
+    print("Please restart the CMR")
         
 buildBtn.on_click(do_build)
 updateBtn.on_click(update_vers)
