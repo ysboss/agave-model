@@ -52,13 +52,19 @@ models, packages = getModelsAndPacks(False)
 
 input_params.set('title', models[0])
 input_params.set("last_jid", jetlag_conf.get_uv().jetlag_id)
-input_params.set('modelversion_%s' % models[0].lower(), get_versions(packSplit(packages[0]))[0])
+if len(models) > 0 and len(packages) > 0:
+    vers = get_versions(packSplit(packages[0]))
+    if len(vers) > 0:
+        input_params.set('modelversion_%s' % models[0].lower(), vers[0])
 mpichOptions = get_versions("mpich")
 hypreOptions = get_versions("hypre")
 hdf5Options = get_versions("hdf5")
-input_params.set("mpich-ver", mpichOptions[0])
-input_params.set("hypre-ver", hypreOptions[0])
-input_params.set("hdf5-ver", hdf5Options[0])
+if len(mpichOptions)>0:
+    input_params.set("mpich-ver", mpichOptions[0])
+if len(hypreOptions)>0:
+    input_params.set("hypre-ver", hypreOptions[0])
+if len(hdf5Options)>0:
+    input_params.set("hdf5-ver", hdf5Options[0])
 ##############################################
 ### Global Box
 
@@ -75,7 +81,11 @@ modelTitle.observe(global_box.observe_title)
 middleware_value=jetlag_conf.get_uv().utype
 input_params.set('middleware', middleware_value)
 middleware = Label(value=middleware_value)
-modelVersion = Dropdown(options=get_versions(input_params.get('title')), value=get_versions(input_params.get('title'))[0])
+vers = get_versions(input_params.get('title'))
+if len(vers) > 0:
+    modelVersion = Dropdown(options=vers, value=vers[0])
+else:
+    modelVersion = Dropdown()
 input_params.set('modelversion', modelVersion.value)
 globalWidth = '80px'
 modelBox = VBox([
@@ -337,6 +347,9 @@ def download_btn_clicked(a):
     with logOp.logOp:
         try:
             g = re.match(r'^(\S+)\s+(\S+)\s+(\S+)',jobSelect.value)
+            if not g:
+                print("No jobs")
+                return
             jobid = g.group(3)
             uv = jetlag_conf.get_uv()
         
@@ -366,12 +379,21 @@ downloadOpBtn.on_click(download_btn_clicked)
 # TODO: Need a better way of specifying this.... maybe a yaml file?
 modelDd = Dropdown(options=models)
 modelVersionDd = Dropdown(options = get_versions(input_params.get('title')))
-mpiDd = Dropdown(options = mpichOptions,
-    value=input_params.get('mpich-ver',mpichOptions[0]))
-h5Dd = Dropdown(options = hdf5Options,
-    value=input_params.get('hdf5-ver', hdf5Options[0]))
-hypreDd = Dropdown(options = hypreOptions,
-    value=input_params.get('hypre-ver',hypreOptions[0]))
+if len(mpichOptions)>0:
+    mpiDd = Dropdown(options = mpichOptions,
+        value=input_params.get('mpich-ver',mpichOptions[0]))
+else:
+    mpiDd = Dropdown()
+if len(hdf5Options)>0:
+    h5Dd = Dropdown(options = hdf5Options,
+        value=input_params.get('hdf5-ver', hdf5Options[0]))
+else:
+    h5Dd = Dropdown()
+if len(hypreOptions)>0:
+    hypreDd = Dropdown(options = hypreOptions,
+        value=input_params.get('hypre-ver',hypreOptions[0]))
+else:
+    hypreDd = Dropdown()
 
 def save_mpich(change):
     if change['name'] == 'value':
@@ -412,18 +434,30 @@ def model_change(change):
             modelVersion.options = options
             model_key="modelversion_"+change["new"].lower()
             ver = input_params.get(model_key)
-            if ver is None:
-                ver = options[0]
+            if ver is None or ver == "None":
+                for opt in options:
+                    if opt is None or opt == "None":
+                        continue
+                     ver = opt
+                     break
+            if ver is None or ver == "None":
+                return
             input_params.set(model_key,ver)
-            modelVersionDd.value = ver
-            modelVersion.value = ver
+            try:
+                modelVersionDd.value = ver
+            except:
+                print(f"Could not set {ver} for {change['new'].lower()}")
+            try:
+                modelVersion.value = ver
+            except:
+                print(f"Could not set {ver} for {change['new'].lower()}!")
         finally:
             enable_model_change = True
 
 model_change({
     "name":"value",
     "type":"change",
-    "new":input_params.get('title')
+    "new":input_params.get('title','')
 })
 modelTitle.observe(model_change)
 
