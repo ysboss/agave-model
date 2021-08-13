@@ -29,7 +29,7 @@ then
 fi
 spack external find xz tar pkgconf findutils diffutils perl
 
-for p in funwave nhwave swan
+for p in funwave nhwave swan delft3d
 do
   mkdir -p $SPACK_ROOT/var/spack/repos/builtin/packages/$p
   cp /packages/$p/package.py $SPACK_ROOT/var/spack/repos/builtin/packages/$p/package.py

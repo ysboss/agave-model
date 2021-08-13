@@ -11,3 +11,6 @@ COPY --chown=jovyan upstreams.yaml /home/jovyan/.spack/
 COPY --chown=jovyan refresh.sh /home/jovyan/
 RUN chmod +x /home/jovyan/refresh.sh
 RUN bash /home/jovyan/refresh.sh
+WORKDIR /JSONFiles
+COPY JSONFiles .
+WORKDIR /home/jovyan

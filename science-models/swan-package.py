@@ -38,7 +38,7 @@ class Swan(MakefilePackage):
     # maintainers = ['github_user1', 'github_user2']
 
     version('4.1.3.1', sha256='83d1b55d3e264fc4bec47cdd6aba41b919f9986b6b7f14923327b9c7a65750fc')
-    version('4.1.2.1AB', file='file://tarballs/swan-4.1.2.1AB.tgz', sha256='3802d92a91bc8045f51f236c58dd883e15eed2a3f91902927bd5ee409a6d26ce')
+    version('4.1.2.1', sha256='3802d92a91bc8045f51f236c58dd883e15eed2a3f91902927bd5ee409a6d26ce', url='file:///tarballs/swan-4.1.2.1AB.tgz')
 
     # FIXME: Add dependencies if required.
     depends_on('mpi')
