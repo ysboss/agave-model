@@ -52,23 +52,23 @@ def getModelsAndPacks(update_flag):
     
     if (input_params.get("last_jid") != jetlag_conf.get_uv().jetlag_id) or update_flag:
         uv = jetlag_conf.get_uv()
-        os.system("rm -fr input.tgz run_dir")
-        os.system("mkdir -p run_dir")
+        cmd("rm -fr input.tgz run_dir")
+        cmd("mkdir -p run_dir")
         print("Retrieving List of Models...")
         print("This may take a few minutes...")
         if True: #with HiddenPrint():
             write_env()
-            os.system("tar czvf input.tgz run_dir")
-            jobid = uv.run_job("get_models_and_packs", nx=1, ny=1, nz=1, jtype="queue", run_time="1:00:00",script_name="getModelsPacks")
-            jobid.wait()
-            uv.get_file(jobid, "run_dir/machineFiles.tar.gz",as_file="machineFiles.tar.gz")
+            cmd("tar czvf input.tgz run_dir")
+            job = uv.run_job("get_models_and_packs", nx=1, ny=1, nz=1, jtype="queue", run_time="1:00:00",script_name="getModelsPacks")
+            job.wait()
+            uv.get_file(job, "run_dir/machineFiles.tar.gz",as_file="machineFiles.tar.gz")
 
 
         #machinePath = "%s/agave-model/machineFiles" % os.environ["HOME"]
 
-        os.system("rm -rf %s/agave-model/machineFiles" % os.environ["HOME"])
-        os.system("tar -xvf %s/agave-model/machineFiles.tar.gz -C %s/agave-model/" % (os.environ["HOME"], os.environ["HOME"]))
-        os.system("rm %s/agave-model/machineFiles.tar.gz" % os.environ["HOME"])   
+        cmd("rm -rf %s/agave-model/machineFiles" % os.environ["HOME"])
+        cmd("tar -xvf %s/agave-model/machineFiles.tar.gz -C %s/agave-model/" % (os.environ["HOME"], os.environ["HOME"]))
+        cmd("rm %s/agave-model/machineFiles.tar.gz" % os.environ["HOME"])   
     
     path = []
     path.append(os.environ["HOME"]+"/agave-model/machineFiles/")
