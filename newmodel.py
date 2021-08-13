@@ -86,6 +86,12 @@ if len(vers) > 0:
     modelVersion = Dropdown(options=vers, value=vers[0])
 else:
     modelVersion = Dropdown()
+
+def update_version(c):
+    if c["name"] == "value":
+        input_params.set('modelversion', c["new"])
+
+modelVersion.observe(update_version)
 input_params.set('modelversion', modelVersion.value)
 globalWidth = '80px'
 modelBox = VBox([
@@ -438,8 +444,8 @@ def model_change(change):
                 for opt in options:
                     if opt is None or opt == "None":
                         continue
-                     ver = opt
-                     break
+                    ver = opt
+                    break
             if ver is None or ver == "None":
                 return
             input_params.set(model_key,ver)
