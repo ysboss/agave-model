@@ -70,21 +70,18 @@ def getModelsAndPacks(update_flag):
         cmd("tar -xvf %s/agave-model/machineFiles.tar.gz -C %s/agave-model/" % (os.environ["HOME"], os.environ["HOME"]))
         cmd("rm %s/agave-model/machineFiles.tar.gz" % os.environ["HOME"])   
     
-    path = []
-    path.append(os.environ["HOME"]+"/agave-model/machineFiles/")
-    path.append(os.environ["HOME"]+"/agave-model/science-models/JSONFiles/")
+    path = os.environ["HOME"]+"/agave-model/machineFiles/"
     
     name_list = []
     package_list = []
     
-    if os.path.isfile(os.environ["HOME"]+"/agave-model/machineFiles/*.json") and os.path.isfile(os.environ["HOME"]+"/agave-model/machineFiles/spack-info.txt") or os.path.isdir(os.environ["HOME"]+"/agave-model/science-models/JSONFiles"):
-        
-        for x in range(2):
-            for filename in glob.glob(os.path.join(path[x], '*.json')):
-                with open(os.path.join(os.getcwd(), filename), 'r') as f:
-                    data = json.loads(f.read())          
-                    name_list.append(data['name'])
-                    package_list.append(data['package'] + '@' + data['version'])
+    if os.path.isdir(os.environ["HOME"]+"/agave-model/machineFiles/"):      
+
+        for filename in glob.glob(os.path.join(path, '*.json')):
+            with open(os.path.join(os.getcwd(), filename), 'r') as f:
+                data = json.loads(f.read())          
+                name_list.append(data['name'])
+                package_list.append(data['package'] + '@' + data['version'])
 
         if input_params.get("last_jid") != jetlag_conf.get_uv().jetlag_id:
             print("Done!")
