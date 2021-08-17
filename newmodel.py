@@ -50,7 +50,8 @@ def relink(dir_a, dir_b):
 
 models, packages = getModelsAndPacks(False)
 
-input_params.set('title', models[0])
+if len(models)>0:
+    input_params.set('title', models[0])
 input_params.set("last_jid", jetlag_conf.get_uv().jetlag_id)
 if len(models) > 0 and len(packages) > 0:
     vers = get_versions(packSplit(packages[0]))
@@ -71,11 +72,13 @@ if len(hdf5Options)>0:
 import global_box
 
 #userName = Label(value=jetlag_conf.get_user())
-modelTitle = Dropdown(
-    options=models,
-    #options=['SWAN', 'Funwave_tvd','Delft3D', 'OpenFoam', 'Cactus', 'NHWAVE'],
-    value=input_params.get('title'))
-    #value=input_params.get('title','SWAN'))
+model_value = input_params.get('title','SWAN')
+if model_value in models:
+    modelTitle = Dropdown(
+        options=models,
+        value=model_value)
+else:
+    modelTitle = Dropdown()
 modelTitle.observe(global_box.observe_title)
 
 middleware_value=jetlag_conf.get_uv().utype
@@ -275,7 +278,10 @@ build_item_layout = Layout(
 
 buildBtn = Button(description = "Build", button_style='primary', layout= Layout(width = '50px'))
 updateBtn = Button(description = "Update Models/Versions", button_style ='danger', layout=Layout(width = '200px'))
-build_model = Label(value=modelTitle.value + " VERSION", layout = Layout(width = '350px'))
+if modelTitle.value is not None:
+    build_model = Label(value=modelTitle.value + " VERSION", layout = Layout(width = '350px'))
+else:
+    build_model = Label("???", layout = Layout(width = '350px'))
 
 def build_model_observer(change):
     global build_model
@@ -434,6 +440,7 @@ def model_change(change):
             options = get_versions(packSplit(packages[index]))
         else:
             print("change:",change["new"])
+            return
         try:
             enable_model_change = False
             modelVersionDd.options = options
@@ -528,8 +535,11 @@ def update_vers(btn):
 #     h5Dd.options = ['1.10.5','2.20.0', '1.10.4', '1.8.21']
 #     hypreDd.options = ['2.20.0', '2.11.2']
     
-    print("Models and Versions Updated!")
-    print("Please restart the CMR")
+    if os.path.exists("machineFiles/spack-info.txt"):
+        print("Models and Versions Updated!")
+        print("Please restart the CMR")
+    else:
+        print("Something went wrong with your attempt to configure the CMR")
         
 buildBtn.on_click(do_build)
 updateBtn.on_click(update_vers)
