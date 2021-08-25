@@ -1,0 +1,10 @@
+{
+    "name": "NHWAVE",
+    "package": "nhwave",
+    "version": "3.0",
+    "inputFile": "input.txt",
+    "nx": "PX",
+    "ny": "PY",
+    "nz": ""
+}
+

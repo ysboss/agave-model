@@ -1,0 +1,10 @@
+{
+    "name": "FUNWAVE",
+    "package": "funwave",
+    "version": "3.2",
+    "inputFile": "input.txt",
+    "nx": "PX",
+    "ny": "PY",
+    "nz": ""
+}
+

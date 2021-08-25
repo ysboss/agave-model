@@ -5,6 +5,11 @@ import re
 import os
 from jetlag_conf import get_uv
 from write_env import write_env
+import glob
+import json
+
+def listdir_nohidden(path):
+    return glob.glob(os.path.join(path, '*'))
 
 def relink(dir_a, dir_b):
     for f in os.listdir(dir_a):
@@ -39,7 +44,20 @@ def run(b):
         #with open("run_dir/runapp.sh","w") as fd:
         #    print("singularity exec $SING_OPTS --pwd $PWD $IMAGE bash ./model-app.sh",file=fd)
         #cmd("cp model-app.sh run_dir/")
+        
+        path = os.environ["HOME"]+"/agave-model/machineFiles/"
+        model_ver = input_params.get('modelversion_%s' % t)
+        inputFileName = ""
+        for filename in glob.glob(os.path.join(path, '%s-%s.json' %(t, model_ver))):
+            with open(os.path.join(os.getcwd(), filename), 'r') as f:
+                data = json.loads(f.read())
+                inputFileName = data['inputFile']
+        
+        if inputFileName not in listdir_nohidden("%s/agave-model/input_%s" % (os.environ["HOME"], t)) or not os.path.isdir("%s/agave-model/input_%s" % (os.environ["HOME"], t)):
+            print("input_%s is empty. Using default files for model." % t)
+            cmd("tar -xvf %s/agave-model/input_%s.tgz -C %s/agave-model/" % (os.environ["HOME"], t, os.environ["HOME"]))
         relink("input_%s" % t, "run_dir")
+        # ERROR MESSAGE
         cmd("tar czvf input.tgz run_dir")
         print("Procs:",procs,"=>",procs[0]*procs[1]*procs[2])
         jobid = uv.run_job(j, nx=procs[0], ny=procs[1], nz=procs[2], jtype="queue", run_time="1:00:00", script_name="run-app")
