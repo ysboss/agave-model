@@ -61,7 +61,13 @@ def getModelsAndPacks(update_flag):
             cmd("tar czvf input.tgz run_dir")
             job = uv.run_job("get_models_and_packs", nx=1, ny=1, nz=1, jtype="queue", run_time="1:00:00",script_name="getModelsPacks")
             job.wait()
-            uv.get_file(job, "run_dir/machineFiles.tar.gz",as_file="machineFiles.tar.gz")
+            try:
+                uv.get_file(job, "run_dir/machineFiles.tar.gz",as_file="machineFiles.tar.gz")
+            except:
+                ###
+                print("Config failed: Is remote machine configured properly?")
+                print(job.err_output())
+                ###
 
 
         #machinePath = "%s/agave-model/machineFiles" % os.environ["HOME"]
