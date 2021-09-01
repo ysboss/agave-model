@@ -8,7 +8,8 @@ spack-init.sh
 source $SPACK_ROOT/share/spack/setup-env.sh
 for p in funwave nhwave swan openfoam delft3d
 do
-  python3 /usr/local/bin/spackp.py
+  python3 /usr/local/bin/spack-reconfigure.py
   spack install $p $*
 done
+spack install swan@4.1.2.1
 spack gc -y
