@@ -46,6 +46,17 @@ def relink(dir_a, dir_b):
         else:
             os.link(fa, fb)
 
+def getJSONData(jsonData, title, ver):
+    paths = []
+    
+    paths.append("%s/agave-model/science-models/JSONFiles/%s-%s.json" % (os.environ["HOME"], title, ver))
+    paths.append("%s/agave-model/machineFiles/%s-%s.json" % (os.environ["HOME"], title, ver))
+    
+    for p in paths:
+        if os.path.isfile(p):
+            with open(p,'r') as file:
+                jsonData = file.read()
+    return jsonData            
 #############################################
 
 models, packages = getModelsAndPacks(False)
@@ -66,6 +77,19 @@ if len(hypreOptions)>0:
     input_params.set("hypre-ver", hypreOptions[0])
 if len(hdf5Options)>0:
     input_params.set("hdf5-ver", hdf5Options[0])
+
+jsonData = None
+title = input_params.get('title').lower()
+ver = input_params.get('modelversion')
+
+textBox = Textarea(
+    value=getJSONData(jsonData, title, ver),
+    placeholder='',
+    rows = 1,
+    #description= input_params.get('title').lower() +'@'+input_params.get('modelversion'),
+    disabled=False,
+    layout=Layout(width="auto", height="100%"))
+
 ##############################################
 ### Global Box
 
@@ -93,6 +117,13 @@ else:
 def update_version(c):
     if c["name"] == "value":
         input_params.set('modelversion', c["new"])
+        mod = input_params.get('title')
+        model = mod.lower()
+        input_params.set('modelversion_%s' % model, c["new"])
+        title = input_params.get('title').lower()
+        ver = input_params.get('modelversion')
+        textBox.value = getJSONData(jsonData, title, ver)
+              
 
 modelVersion.observe(update_version)
 input_params.set('modelversion', modelVersion.value)
@@ -130,6 +161,7 @@ def update_label(change):
     global UploadLabel
     if change["name"] == "value":
         UploadLabel.value = get_dname()
+        #textBox.decription = input_params.get('title').lower() +'@'+input_params.get('modelversion')
 modelTitle.observe(update_label)
 
 def update_name(change):
@@ -473,75 +505,64 @@ model_change({
     "new":input_params.get('title','')
 })
 modelTitle.observe(model_change)
-
+box1 = VBox([textBox], layout={'height': '200px'})
+box2 = HBox([updateBtn], layout=Layout(align_items='center'))
 #=== Build box
-msgOut = Output()
-boxWidth = '350px'
+#msgOut = Output()
+#boxWidth = '350px
+
+#Select(layout = Layout(height = '150px', width='50%'))
 build_items = [
-    Box([build_model, modelVersionDd], layout = build_item_layout),
+    #Box([build_model, modelVersionDd], layout = build_item_layout),
     #Box([Label(value="Build Machine", layout = Layout(width = boxWidth)), machines], layout = build_item_layout),
     #Box([Label(value="Queue", layout = Layout(width = boxWidth)), queues], layout = build_item_layout),
     #ipywidgets.HTML(value="<b><font color='OrangeRed'><font size='2.5'>Select Dependent Software</b>"), 
-    Box([Label(value="MPICH", layout = Layout(width = boxWidth)), mpiDd], layout = build_item_layout),
-    Box([Label(value="HDF5", layout = Layout(width = boxWidth)), h5Dd], layout = build_item_layout),
-    Box([Label(value="HYPRE", layout = Layout(width = boxWidth)), hypreDd], layout = build_item_layout),
-    HBox([buildBtn, updateBtn], layout = Layout(justify_content="space-between")),
-    Box([msgOut])
+    #Box([Label(value="MPICH", layout = Layout(width = boxWidth)), mpiDd], layout = build_item_layout),
+    #Box([Label(value="HDF5", layout = Layout(width = boxWidth)), h5Dd], layout = build_item_layout),
+    #Box([Label(value="HYPRE", layout = Layout(width = boxWidth)), hypreDd], layout = build_item_layout),
+    HBox([box1, box2], layout = Layout(justify_content="space-between", align_items='center'))
+    #,
+    #Box([msgOut])
 ]
 
-def versions_observe(change):
-    if change["name"] == "value":
-        input_params.set('mpich-ver',mpiDd.value)
-        input_params.set('hdf5-ver',h5Dd.value)
-        input_params.set('hypre-ver',hypreDd.value)
+# def versions_observe(change):
+#     if change["name"] == "value":
+#         input_params.set('mpich-ver',mpiDd.value)
+#         input_params.set('hdf5-ver',h5Dd.value)
+#         input_params.set('hypre-ver',hypreDd.value)
 
-mpiDd.observe(versions_observe)
+# mpiDd.observe(versions_observe)
 
-def do_build(btn):
-    with logOp.logOp:
-        cmd("rm -fr run_dir input.tgz")
-        cmd("mkdir -p run_dir")
-        with open("run_dir/runapp.sh","w") as fd:
-            print("singularity exec $SING_OPTS --pwd $PWD $IMAGE bash ./build.sh",file=fd)
+# def do_build(btn):
+#     with logOp.logOp:
+#         cmd("rm -fr run_dir input.tgz")
+#         cmd("mkdir -p run_dir")
+#         with open("run_dir/runapp.sh","w") as fd:
+#             print("singularity exec $SING_OPTS --pwd $PWD $IMAGE bash ./build.sh",file=fd)
 
-        files = ["build.sh"]
-        for fn in os.listdir("."):
-            if re.match(r'^build-.*\.sh$',fn):
-                files += [fn]
-        write_env()
-        cmd("cp %s run_dir/" % " ".join(files))
-        cmd("tar czf input.tgz run_dir")
-        uv = jetlag_conf.get_uv()
-        uv.run_job('build',jtype='fork',nodes=1)
-        #cmd(uv.fill("scp -i uapp-key env.sh build.sh runbuild.sh {machine_user}@{machine}.{domain}:."))
-        #cmd(uv.fill("ssh -i uapp-key {machine_user}@{machine}.{domain} bash ./runbuild.sh"))
+#         files = ["build.sh"]
+#         for fn in os.listdir("."):
+#             if re.match(r'^build-.*\.sh$',fn):
+#                 files += [fn]
+#         write_env()
+#         cmd("cp %s run_dir/" % " ".join(files))
+#         cmd("tar czf input.tgz run_dir")
+#         uv = jetlag_conf.get_uv()
+#         uv.run_job('build',jtype='fork',nodes=1)
+#         #cmd(uv.fill("scp -i uapp-key env.sh build.sh runbuild.sh {machine_user}@{machine}.{domain}:."))
+#         #cmd(uv.fill("ssh -i uapp-key {machine_user}@{machine}.{domain} bash ./runbuild.sh"))
 
 def update_vers(btn):
-#     global modelDd
-#     global modelVersionDd
-#     global mpiDd
-#     global h5Dd
-#     global hypreDd
     
     models, packages = getModelsAndPacks(True)
-    
-#     if(modelDd.value in models):
-#         index = models.index(modelDd.value)
-#         modelVersionDd.options = get_versions(packages[index])
-#     else:
-#         print("change:",change["new"])
-      
-#     mpiDd.options = ['3.3.2', '3.1.4']
-#     h5Dd.options = ['1.10.5','2.20.0', '1.10.4', '1.8.21']
-#     hypreDd.options = ['2.20.0', '2.11.2']
-    
+        
     if os.path.exists("machineFiles/spack-info.txt"):
         print("Models and Versions Updated!")
         print("Please restart the CMR")
     else:
         print("Something went wrong with your attempt to configure the CMR")
         
-buildBtn.on_click(do_build)
+#buildBtn.on_click(do_build)
 updateBtn.on_click(update_vers)
 
 buildTab = VBox(build_items)
