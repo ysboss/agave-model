@@ -1,0 +1,10 @@
+{
+    "name": "DELFT3D",
+    "package": "delft3d",
+    "version": "6.5.3",
+    "inputFile": "input.txt",
+    "nx": "PX",
+    "ny": "PY",
+    "nz": ""
+}
+
