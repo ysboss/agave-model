@@ -61,14 +61,14 @@ def run(b):
         cmd("tar czvf input.tgz run_dir")
         print("Procs:",procs,"=>",procs[0]*procs[1]*procs[2])
         jobid = uv.run_job(j, nx=procs[0], ny=procs[1], nz=procs[2], jtype="queue", run_time="1:00:00", script_name="run-app")
-        jobid.wait()
-        try:
-            uv.get_file(jobid, "outputFiles.tgz",as_file="outputFiles.tgz")
-            cmd("rm -rf %s/agave-model/run_dir" % os.environ["HOME"])
-            cmd("tar -xvf %s/agave-model/outputFiles.tgz -C %s/agave-model/" % (os.environ["HOME"], os.environ["HOME"]))
-            cmd("rm %s/agave-model/outputFiles.tgz" % os.environ["HOME"])
-        except:
-            ###
-            print("Config failed: Is remote machine configured properly?")
-            print(job.err_output())
-            ###        
+#         jobid.wait()
+#         try:
+#             uv.get_file(jobid, "outputFiles.tgz",as_file="outputFiles.tgz")
+#             cmd("rm -rf %s/agave-model/run_dir" % os.environ["HOME"])
+#             cmd("tar -xvf %s/agave-model/outputFiles.tgz -C %s/agave-model/" % (os.environ["HOME"], os.environ["HOME"]))
+#             cmd("rm %s/agave-model/outputFiles.tgz" % os.environ["HOME"])
+#         except:
+#             ###
+#             print("Config failed: Is remote machine configured properly?")
+#             print(job.err_output())
+#             ###        
