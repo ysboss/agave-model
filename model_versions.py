@@ -35,22 +35,31 @@ def packSplit(pack):
         
 def get_versions(model):
 
+    ver = []
     VERSIONS = []
+    paths = []
+    
+    paths.append(os.environ["HOME"]+"/agave-model/science-models/defaultVersions.txt")
+    paths.append(os.environ["HOME"]+"/agave-model/machineFiles/spack-info.txt")
+    
+    for p in paths:
+        if os.path.isfile(p):
+            p = open(p).read()
+            for g in re.finditer(r'(\w+)@([\d.]+)', p):
+                package = g.group(1)
+                version = g.group(2)
 
-    if os.path.isfile(os.environ["HOME"]+"/agave-model/machineFiles/spack-info.txt"):
-        p = open("%s/agave-model/machineFiles/spack-info.txt" % os.environ["HOME"]).read()
-        for g in re.finditer(r'(\w+)@([\d.]+)', p):
-            package = g.group(1)
-            version = g.group(2)
+                if package == model.lower():
+                    ver.append(version)
 
-            if package == model.lower():
-                VERSIONS.append(version)
-
+    [VERSIONS.append(x) for x in ver if x not in VERSIONS]
     return VERSIONS
 
 def getModelsAndPacks(update_flag):
     
-    if (input_params.get("last_jid") != jetlag_conf.get_uv().jetlag_id) or update_flag:
+    #(input_params.get("last_jid") != jetlag_conf.get_uv().jetlag_id)
+    
+    if update_flag:
         uv = jetlag_conf.get_uv()
         cmd("rm -fr input.tgz run_dir")
         cmd("mkdir -p run_dir")
@@ -61,7 +70,13 @@ def getModelsAndPacks(update_flag):
             cmd("tar czvf input.tgz run_dir")
             job = uv.run_job("get_models_and_packs", nx=1, ny=1, nz=1, jtype="queue", run_time="1:00:00",script_name="getModelsPacks")
             job.wait()
-            uv.get_file(job, "run_dir/machineFiles.tar.gz",as_file="machineFiles.tar.gz")
+            try:
+                uv.get_file(job, "run_dir/machineFiles.tar.gz",as_file="machineFiles.tar.gz")
+            except:
+                ###
+                print("Config failed: Is remote machine configured properly?")
+                print(job.err_output())
+                ###
 
 
         #machinePath = "%s/agave-model/machineFiles" % os.environ["HOME"]
@@ -70,23 +85,28 @@ def getModelsAndPacks(update_flag):
         cmd("tar -xvf %s/agave-model/machineFiles.tar.gz -C %s/agave-model/" % (os.environ["HOME"], os.environ["HOME"]))
         cmd("rm %s/agave-model/machineFiles.tar.gz" % os.environ["HOME"])   
     
-    path = os.environ["HOME"]+"/agave-model/machineFiles/"
+    paths = []
+    paths.append(os.environ["HOME"]+"/agave-model/science-models/JSONFiles/")
+    paths.append(os.environ["HOME"]+"/agave-model/machineFiles/")
     
     name_list = []
     package_list = []
     
-    if os.path.isdir(os.environ["HOME"]+"/agave-model/machineFiles/"):      
+    for p in paths:
+        if os.path.isdir(p):      
+            for filename in glob.glob(os.path.join(p, '*.json')):
+                with open(os.path.join(os.getcwd(), filename), 'r') as f:
+                    data = json.loads(f.read())          
+                    name_list.append(data['name'])
+                    package_list.append(data['package'] + '@' + data['version'])
 
-        for filename in glob.glob(os.path.join(path, '*.json')):
-            with open(os.path.join(os.getcwd(), filename), 'r') as f:
-                data = json.loads(f.read())          
-                name_list.append(data['name'])
-                package_list.append(data['package'] + '@' + data['version'])
-
-        if input_params.get("last_jid") != jetlag_conf.get_uv().jetlag_id:
-            print("Done!")
-        
-    else:
-        print("Error with retrieving certain files from server!")
+            #if input_params.get("last_jid") != jetlag_conf.get_uv().jetlag_id:
+            #    print("Done!")
     
-    return tuple(name_list), tuple(package_list)
+    clean_name = []
+    clean_package = []
+    
+    [clean_name.append(x) for x in name_list if x not in clean_name]
+    [clean_package.append(x) for x in package_list if x not in clean_package]
+    
+    return tuple(clean_name), tuple(clean_package)

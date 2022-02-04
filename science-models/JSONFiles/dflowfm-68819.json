@@ -1,0 +1,10 @@
+{
+    "name": "DFLOWFM",
+    "package": "dflowfm",
+    "version": "68819",
+    "inputFile": "input.txt",
+    "nx": "PX",
+    "ny": "PY",
+    "nz": ""
+}
+

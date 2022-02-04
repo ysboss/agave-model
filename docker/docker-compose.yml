@@ -52,5 +52,5 @@ services:
       - PORT=8002
     ports:
       - '8002:8002'
-    volumes:
-      - homefs-agave-model:/home/jovyan
+    #volumes:
+      #- homefs-agave-model:/home/jovyan

@@ -3,13 +3,13 @@ import input_params
 def write_env():
     print("Writing run_dir/env.sh...")
     with open("run_dir/env.sh","w") as fd:
-        print("export MPICH_VER=%s" % input_params.get('mpich-ver'),file=fd)
-        print("export HYPRE_VER=%s" % input_params.get('hypre-ver'),file=fd)
-        print("export HDF5_VER=%s" % input_params.get('hdf5-ver'),file=fd)
+        #print("export MPICH_VER=%s" % input_params.get('mpich-ver'),file=fd)
+        #print("export HYPRE_VER=%s" % input_params.get('hypre-ver'),file=fd)
+        #print("export HDF5_VER=%s" % input_params.get('hdf5-ver'),file=fd)
         model = value=input_params.get('title','swan').lower()
         MODEL = model.upper()
         print("export model="+model,file=fd)
-        model_ver = input_params.get("modelversion_%s" % model)
+        model_ver = input_params.get("modelversion")
         print("export %s_VER=%s" % (MODEL, model_ver),file=fd)
         #swan_ver = input_params.get("modelversion_swan")
         #if swan_ver is not None:

@@ -1,0 +1,10 @@
+{
+    "name": "OPENFOAM",
+    "package": "openfoam",
+    "version": "2106",
+    "inputFile": "input.txt",
+    "nx": "PX",
+    "ny": "PY",
+    "nz": ""
+}
+
