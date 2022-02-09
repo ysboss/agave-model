@@ -631,27 +631,29 @@ class observe_file_upload:
                 model = value=input_params.get('title').lower()
                 dname = os.environ["HOME"]+"/agave-model/input_"+model
                 if re.match(r'^.*\.(zip|tgz|tar.gz)',self.name[j]):
-                    cmd(['rm','-fr',dname])
+                    with logOp.logOp:
+                        cmd(['rm','-fr',dname])
                 os.makedirs(dname,exist_ok=True)
                 fname = dname + "/" + self.name[j]
                 with open(fname,"wb") as fd:
                     fd.write(d)
                 if os.path.exists(fname):
-                    print("upload of '",fname,"' was successful.",sep='')
+                    logOp.log("upload of '",fname,"' was successful.",sep='')
                 else:
-                    print("upload of '",fname,"' failed.",sep='')
+                    logOp.log("upload of '",fname,"' failed.",sep='')
                 try:
-                    here = os.getcwd()
-                    os.chdir(dname)
-                    if re.match(r'^.*\.(tgz|tar\.gz)$', self.name[j]):
-                        cmd(['tar','xzf',self.name[j]])
-                        cmd(['rm','-f',self.name[j]])
-                    elif re.match(r'^.*\.(tar)$', self.name[j]):
-                        cmd(['tar','xf',self.name[j]])
-                        cmd(['rm','-f',self.name[j]])
-                    elif re.match(r'^.*\.(zip)$', self.name[j]):
-                        cmd(['unzip',self.name[j]])
-                        cmd(['rm','-f',self.name[j]])
+                    with logOp.logOp:
+                        here = os.getcwd()
+                        os.chdir(dname)
+                        if re.match(r'^.*\.(tgz|tar\.gz)$', self.name[j]):
+                            cmd(['tar','xzf',self.name[j]])
+                            cmd(['rm','-f',self.name[j]])
+                        elif re.match(r'^.*\.(tar)$', self.name[j]):
+                            cmd(['tar','xf',self.name[j]])
+                            cmd(['rm','-f',self.name[j]])
+                        elif re.match(r'^.*\.(zip)$', self.name[j]):
+                            cmd(['unzip',self.name[j]])
+                            cmd(['rm','-f',self.name[j]])
                 finally:
                     os.chdir(here)
             self.metadata = None
