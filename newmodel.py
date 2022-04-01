@@ -47,18 +47,20 @@ def relink(dir_a, dir_b):
             os.link(fa, fb)
 
 def getJSONData(jsonData, title, ver):
-    paths = []
+    paths = get_paths()
     
-    paths.append("%s/agave-model/science-models/JSONFiles/%s-%s.json" % (os.environ["HOME"], title, ver))
-    paths.append("%s/agave-model/machineFiles/%s-%s.json" % (os.environ["HOME"], title, ver))
-    
-    for p in paths:
-        if os.path.isfile(p):
-            with open(p,'r') as file:
-                jsonData = file.read()
+    for d in paths:
+        for f in os.listdir(d):
+            if not re.match(r'^.*-.*\.json$', f):
+                continue
+            p = os.path.join(d, f)
+            if os.path.isfile(p):
+                with open(p,'r') as file:
+                    jsonData = file.read()
     return jsonData            
 #############################################
 
+from here import here
 models, packages = getModelsAndPacks(False)
 
 if len(models)>0:
@@ -79,7 +81,7 @@ if len(hdf5Options)>0:
     input_params.set("hdf5-ver", hdf5Options[0])
 
 jsonData = None
-title = input_params.get('title').lower()
+title = input_params.get('title','').lower()
 ver = input_params.get('modelversion')
 
 textBox = Textarea(
@@ -122,7 +124,9 @@ def update_version(c):
         input_params.set('modelversion_%s' % model, c["new"])
         title = input_params.get('title').lower()
         ver = input_params.get('modelversion')
-        textBox.value = getJSONData(jsonData, title, ver)
+        jdata = getJSONData(jsonData, title, ver)
+        if jdata is not None:
+            textBox.value = jdata
               
 
 modelVersion.observe(update_version)

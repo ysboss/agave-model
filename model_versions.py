@@ -17,6 +17,17 @@ class HiddenPrint:
         sys.stdout.close()
         sys.stdout = self._original_stdout
         
+def get_paths():
+    paths = []
+    for p in [os.environ["HOME"]+"/","/"]:
+        apath = p + "agave-model/"
+        if os.path.exists(apath):
+            for k in ["science-models/JSONFiles/", "science-models/", "machineFiles/", ""]:
+                f = apath + k
+                if os.path.exists(f):
+                    paths += [f]
+    return paths
+
 def emptyListValue(x):
     if not x:
         return "None"
@@ -34,15 +45,13 @@ def packSplit(pack):
     return temp[0]
         
 def get_versions(model):
-
+    paths = get_paths()
     ver = []
     VERSIONS = []
-    paths = []
     
-    paths.append(os.environ["HOME"]+"/agave-model/science-models/defaultVersions.txt")
-    paths.append(os.environ["HOME"]+"/agave-model/machineFiles/spack-info.txt")
-    
-    for p in paths:
+    for d in paths:
+      for f in ["defaultVersions.txt","spack-info.txt"]:
+        p = d+f
         if os.path.isfile(p):
             p = open(p).read()
             for g in re.finditer(r'(\w+)@([\d.]+)', p):
@@ -85,10 +94,8 @@ def getModelsAndPacks(update_flag):
         cmd("tar -xvf %s/agave-model/machineFiles.tar.gz -C %s/agave-model/" % (os.environ["HOME"], os.environ["HOME"]))
         cmd("rm %s/agave-model/machineFiles.tar.gz" % os.environ["HOME"])   
     
-    paths = []
-    paths.append(os.environ["HOME"]+"/agave-model/science-models/JSONFiles/")
-    paths.append(os.environ["HOME"]+"/agave-model/machineFiles/")
-    
+    paths = get_paths()
+
     name_list = []
     package_list = []
     
