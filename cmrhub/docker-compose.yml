@@ -1,0 +1,18 @@
+version: '2'
+
+services:
+
+  cmrhub-workspace:
+    build:
+        context: .
+        dockerfile: Dockerfile
+    image: stevenrbrandt/cmrhub
+    container_name: cmrhub
+    #entrypoint: sleep infinity
+    environment:
+      - "PYTHONPATH=/usr/local/python/JetLag:/agave-model"
+    ports:
+      # If you don't have a cert...
+      - "6088:80"
+      # If you have a cert...
+      - "6443:443"
