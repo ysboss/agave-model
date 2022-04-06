@@ -49,14 +49,13 @@ def run(b):
         
         for path in json_dirs:
             model_ver = input_params.get('modelversion_%s' % t)
-            here(model_ver)
             inputFileName = ""
             for filename in glob.glob(os.path.join(path, '%s-%s.json' %(t, model_ver))):
                 with open(os.path.join(os.getcwd(), filename), 'r') as f:
                     data = json.loads(f.read())
                     inputFileName = data['inputFile']
         
-        if not os.path.isdir("{model_dir}/input_{t}") or inputFileName not in listdir_nohidden(f"{model_dir}/input_{t}"):
+        if not os.path.isdir(f"{model_dir}/input_{t}") or inputFileName not in listdir_nohidden(f"{model_dir}/input_{t}"):
             print("input_%s is empty. Using default files for model." % t)
             cmd("tar -xvf {model_dir}/input_{t}.tgz -C {work_dir}/")
         relink(f"{work_dir}/input_{t}", f"{work_dir}/run_dir")

@@ -338,6 +338,8 @@ def abort_btn_clicked(a):
             uv = jetlag_conf.get_uv()
             uv.job_stop(jobid)
             print("Job stopped:",jobid)
+        else:
+            print("Job NOT stopped:",jobSelect.value)
 
 abortBtn.on_click(abort_btn_clicked)
 
@@ -405,21 +407,30 @@ def download_btn_clicked(a):
             jobid = g.group(3)
             uv = jetlag_conf.get_uv()
         
-            if outputSelect.value == '/output.tgz':
-                print("Downloading output tarball to jobdata-"+jobid)
-                job = RemoteJob(uv, jobid)
-                job.get_result()
-                cmd("cp jobdata-%s/output.tgz ." % jobid)
-                cmd("rm -fr run_dir")
-                cmd("tar xzf output.tgz")
-            elif re.match(r'.*\.(txt|out|err|ipcexe|log)',outputSelect.value):
-                rcmd = uv.get_file(jobid,outputSelect.value)
+            #if outputSelect.value == '/output.tgz':
+            #    tarball = outputSelect.value[1:]
+            #    print("Downloading output tarball to jobdata-"+jobid)
+            #    job = RemoteJob(uv, jobid)
+            #    with in_dir(work_dir):
+            #        job.get_result()
+            #    cmd(f"cp jobdata-{jobid}/{tarball} .",cwd=work_dir)
+            #    cmd(f"rm -fr run_dir",cwd=work_dir)
+            #    cmd(f"tar xzf {tarball}",cwd=work_dir)
+            if re.match(r'.*\.(txt|out|err|ipcexe|log)',outputSelect.value):
+                with in_dir(work_dir):
+                    rcmd = uv.get_file(jobid,outputSelect.value)
                 print(decode_bytes(rcmd))
             else:
                 f1 = outputSelect.value
                 f2 = re.sub(r'.*/','',f1)
+                cmd(f"rm -f {f2}",cwd=work_dir)
+                if f2 in ["output.tgz","outputFiles.tgz"]:
+                    cmd(f"rm -fr run_dir",cwd=work_dir)
                 print("Download:",f1,"->",f2)
-                rcmd = uv.get_file(jobid,f1,as_file=f2)
+                with in_dir(work_dir):
+                    rcmd = uv.get_file(jobid,f1,as_file=f2)
+                if f2.endswith(".tgz"):
+                    cmd(f"tar xzvf {f2}",cwd=work_dir)
         except Exception as ex:
             with logOp:
                 print("DIED!",ex)

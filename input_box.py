@@ -23,8 +23,6 @@ def get_tabs():
         cur_model = input_params.get('title').lower()
         menus[cur_model] = {}
         dirname = os.path.join(work_dir, "input_"+cur_model)
-        with logOp:
-            here(dirname)
         ###########################
         if not os.path.exists(dirname):
             if cur_model == "none":
