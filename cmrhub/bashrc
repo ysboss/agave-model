@@ -1,0 +1,2 @@
+# BASH PROFILE
+export PYTHONPATH=/usr/local/python/JetLag:/agave-model
