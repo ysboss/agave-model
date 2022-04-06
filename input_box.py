@@ -4,6 +4,8 @@ from command import cmd
 from safe_reader import safe_reader
 from ipywidgets import interactive, Layout, Button, Box, HBox, VBox, Text, Dropdown, Label, IntSlider, Textarea, Accordion, ToggleButton, ToggleButtons, Select, HTMLMath, FloatRangeSlider, Output, Tab, Checkbox, HTML
 from logOp import *
+from here import here
+from paths import *
 
 if 'input_params' in globals():
     imp.reload(input_params)
@@ -20,7 +22,9 @@ def get_tabs():
         tabs = ["Choose Input Template"]
         cur_model = input_params.get('title').lower()
         menus[cur_model] = {}
-        dirname = "input_"+cur_model
+        dirname = os.path.join(work_dir, "input_"+cur_model)
+        with logOp:
+            here(dirname)
         ###########################
         if not os.path.exists(dirname):
             if cur_model == "none":

@@ -16,7 +16,7 @@ from modInput import modInput
 import input_params
 import jetlag_conf
 from safe_reader import safe_reader
-import logOp
+from logOp import logOp, clearLog, log
 
 import pprint
 pp = pprint.PrettyPrinter()
@@ -47,13 +47,11 @@ def relink(dir_a, dir_b):
             os.link(fa, fb)
 
 def getJSONData(jsonData, title, ver):
-    paths = get_paths()
-    
-    for d in paths:
-        for f in os.listdir(d):
+    for json_dir in json_dirs:
+        for f in os.listdir(json_dir):
             if not re.match(r'^.*-.*\.json$', f):
                 continue
-            p = os.path.join(d, f)
+            p = os.path.join(json_dir, f)
             if os.path.isfile(p):
                 with open(p,'r') as file:
                     jsonData = file.read()
@@ -62,6 +60,9 @@ def getJSONData(jsonData, title, ver):
 
 from here import here
 models, packages = getModelsAndPacks(False)
+with logOp:
+    here("models:",models)
+    here("packs:",packages)
 
 if len(models)>0:
     input_params.set('title', models[0])
@@ -134,7 +135,7 @@ input_params.set('modelversion', modelVersion.value)
 globalWidth = '80px'
 clearLogBtn = Button(description='Clear log', button_style='primary', layout = Layout(width = '115px'))
 def clearLog_btn_clicked(a):
-    logOp.clearLog()
+    clearLog()
 
 clearLogBtn.on_click(clearLog_btn_clicked)
 modelBox = VBox([
@@ -334,7 +335,7 @@ modelTitle.observe(build_model_observer)
 def abort_btn_clicked(a):
     g = re.match(r'^(\S+)\s+(\S+)\s+(\S+)',jobSelect.value)
     jobid = g.group(3)
-    with logOp.logOp:
+    with logOp:
         if g:
             jobid = g.group(3)
             uv = jetlag_conf.get_uv()
@@ -344,7 +345,7 @@ def abort_btn_clicked(a):
 abortBtn.on_click(abort_btn_clicked)
 
 def jobList_btn_clicked(a):
-    with logOp.logOp:
+    with logOp:
         try:
             jobSelect.options = ["loading..."]
             out1 = []
@@ -363,7 +364,7 @@ jobListBtn.on_click(jobList_btn_clicked)
 
 def jobOutput_btn_clicked(a):
     g = re.match(r'^(\S+)\s+(\S+)\s+(\S+)',jobSelect.value)
-    with logOp.logOp:
+    with logOp:
         if g:
             jobid = g.group(3)
             uv = jetlag_conf.get_uv()
@@ -380,7 +381,7 @@ jobOutputBtn.on_click(jobOutput_btn_clicked)
 
 def jobHis_btn_clicked(a):
     g = re.match(r'^(\S+)\s+(\S+)\s+(\S+)',jobSelect.value)
-    with logOp.logOp:
+    with logOp:
         if g:
             jobid = g.group(3)
             print("History for job %s" % jobid)
@@ -398,7 +399,7 @@ def jobHis_btn_clicked(a):
 jobHisBtn.on_click(jobHis_btn_clicked)
 
 def download_btn_clicked(a):
-    with logOp.logOp:
+    with logOp:
         try:
             g = re.match(r'^(\S+)\s+(\S+)\s+(\S+)',jobSelect.value)
             if not g:
@@ -501,11 +502,13 @@ def model_change(change):
             try:
                 modelVersionDd.value = ver
             except:
-                print(f"Could not set {ver} for {change['new'].lower()}")
+                with logOp:
+                    print(f"Could not set {ver} for {change['new'].lower()}")
             try:
                 modelVersion.value = ver
             except:
-                print(f"Could not set {ver} for {change['new'].lower()}!")
+                with logOp:
+                    print(f"Could not set {ver} for {change['new'].lower()}!")
         finally:
             enable_model_change = True
 
@@ -544,7 +547,7 @@ build_items = [
 # mpiDd.observe(versions_observe)
 
 # def do_build(btn):
-#     with logOp.logOp:
+#     with logOp:
 #         cmd("rm -fr run_dir input.tgz")
 #         cmd("mkdir -p run_dir")
 #         with open("run_dir/runapp.sh","w") as fd:
@@ -605,8 +608,8 @@ modelTitle.observe(input_box.observe_title(templateDD,clr=clear_input_form))
 UpInputBtn.on_click(input_box.save_input_file(obj=ddo))
 
 display(tab_nest)
-display(logOp.logOp)
-logOp.clearLog()
+display(logOp)
+clearLog()
 
 from ipywidgets import FileUpload
 import os
@@ -635,18 +638,18 @@ class observe_file_upload:
                 model = value=input_params.get('title').lower()
                 dname = os.environ["HOME"]+"/agave-model/input_"+model
                 if re.match(r'^.*\.(zip|tgz|tar.gz)',self.name[j]):
-                    with logOp.logOp:
+                    with logOp:
                         cmd(['rm','-fr',dname])
                 os.makedirs(dname,exist_ok=True)
                 fname = dname + "/" + self.name[j]
                 with open(fname,"wb") as fd:
                     fd.write(d)
                 if os.path.exists(fname):
-                    logOp.log("upload of '",fname,"' was successful.",sep='')
+                    log("upload of '",fname,"' was successful.",sep='')
                 else:
-                    logOp.log("upload of '",fname,"' failed.",sep='')
+                    log("upload of '",fname,"' failed.",sep='')
                 try:
-                    with logOp.logOp:
+                    with logOp:
                         here = os.getcwd()
                         os.chdir(dname)
                         if re.match(r'^.*\.(tgz|tar\.gz)$', self.name[j]):

@@ -3,8 +3,9 @@ import re
 from subprocess import Popen, STDOUT, PIPE
 from shlex import split
 from setvar import repvar
+from colored import colored
 
-def cmd(arg,show=True,keep_endings=False,inputs="",trace=True):
+def cmd(arg,show=True,keep_endings=False,inputs="",trace=True,cwd="."):
     if type(arg) == str:
         pyargs = split(repvar(arg))
     else:
@@ -12,10 +13,10 @@ def cmd(arg,show=True,keep_endings=False,inputs="",trace=True):
     lines = []
     errs  = []
     if show:
-        print("cmd:"," ".join(pyargs))
+        print(colored("cmd:","cyan"),colored(" ".join(pyargs),"green"))
     elif trace:
-        print("cmd:",pyargs[0],"...")
-    with Popen(pyargs,stderr=PIPE,stdout=PIPE,stdin=PIPE,close_fds=True) as pipe:
+        print(colored("cmd:","cyan"),colored(pyargs[0],"...","green"))
+    with Popen(pyargs,stderr=PIPE,stdout=PIPE,stdin=PIPE,close_fds=True,cwd=cwd) as pipe:
         pipe.stdin.write(inputs.encode())
         pipe.stdin.close()
         for line in pipe.stdout.readlines():

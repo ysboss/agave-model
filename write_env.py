@@ -1,8 +1,9 @@
 import input_params
+from paths import *
 
 def write_env():
     print("Writing run_dir/env.sh...")
-    with open("run_dir/env.sh","w") as fd:
+    with open(f"{work_dir}/run_dir/env.sh","w") as fd:
         #print("export MPICH_VER=%s" % input_params.get('mpich-ver'),file=fd)
         #print("export HYPRE_VER=%s" % input_params.get('hypre-ver'),file=fd)
         #print("export HDF5_VER=%s" % input_params.get('hdf5-ver'),file=fd)

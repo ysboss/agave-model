@@ -7,6 +7,9 @@ from write_env import write_env
 import jetlag_conf
 import os, sys
 import input_params
+from paths import *
+from logOp import logOp
+from here import here
 
 class HiddenPrint:
     def __enter__(self):
@@ -16,17 +19,6 @@ class HiddenPrint:
     def __exit__(self, exc_type, exc_val, exc_tb):
         sys.stdout.close()
         sys.stdout = self._original_stdout
-        
-def get_paths():
-    paths = []
-    for p in [os.environ["HOME"]+"/","/"]:
-        apath = p + "agave-model/"
-        if os.path.exists(apath):
-            for k in ["science-models/JSONFiles/", "science-models/", "machineFiles/", ""]:
-                f = apath + k
-                if os.path.exists(f):
-                    paths += [f]
-    return paths
 
 def emptyListValue(x):
     if not x:
@@ -45,13 +37,15 @@ def packSplit(pack):
     return temp[0]
         
 def get_versions(model):
-    paths = get_paths()
     ver = []
     VERSIONS = []
+
+    p1 = os.path.join(work_dir, "machineFiles", "spack-info.txt")
+    p2 = os.path.join(model_dir, "science-models", "defaultVersions.txt")
     
-    for d in paths:
-      for f in ["defaultVersions.txt","spack-info.txt"]:
-        p = d+f
+    for p in [p1, p2]:
+        if not os.path.exists(p):
+            continue
         if os.path.isfile(p):
             p = open(p).read()
             for g in re.finditer(r'(\w+)@([\d.]+)', p):
@@ -70,13 +64,13 @@ def getModelsAndPacks(update_flag):
     
     if update_flag:
         uv = jetlag_conf.get_uv()
-        cmd("rm -fr input.tgz run_dir")
-        cmd("mkdir -p run_dir")
+        cmd("rm -fr input.tgz run_dir",cwd=work_dir)
+        cmd("mkdir -p run_dir",cwd=work_dir)
         print("Retrieving List of Models...")
         print("This may take a few minutes...")
         if True: #with HiddenPrint():
             write_env()
-            cmd("tar czvf input.tgz run_dir")
+            cmd(f"tar czvf input.tgz run_dir",cwd=work_dir)
             job = uv.run_job("get_models_and_packs", nx=1, ny=1, nz=1, jtype="queue", run_time="1:00:00",script_name="getModelsPacks")
             job.wait()
             try:
@@ -90,25 +84,21 @@ def getModelsAndPacks(update_flag):
 
         #machinePath = "%s/agave-model/machineFiles" % os.environ["HOME"]
 
-        cmd("rm -rf %s/agave-model/machineFiles" % os.environ["HOME"])
-        cmd("tar -xvf %s/agave-model/machineFiles.tar.gz -C %s/agave-model/" % (os.environ["HOME"], os.environ["HOME"]))
-        cmd("rm %s/agave-model/machineFiles.tar.gz" % os.environ["HOME"])   
+        cmd(f"rm -rf {work_dir}/machineFiles")
+        cmd(f"tar -xvf {work_dir}/machineFiles.tar.gz -C {work_dir}/")
+        cmd(f"rm {work_dir}/machineFiles.tar.gz")
     
-    paths = get_paths()
-
     name_list = []
     package_list = []
     
-    for p in paths:
-        if os.path.isdir(p):      
-            for filename in glob.glob(os.path.join(p, '*.json')):
-                with open(os.path.join(os.getcwd(), filename), 'r') as f:
-                    data = json.loads(f.read())          
-                    name_list.append(data['name'])
-                    package_list.append(data['package'] + '@' + data['version'])
-
-            #if input_params.get("last_jid") != jetlag_conf.get_uv().jetlag_id:
-            #    print("Done!")
+    for json_dir in json_dirs:
+        for filename in glob.glob(os.path.join(json_dir, '*.json')):
+            with open(os.path.join(os.getcwd(), filename), 'r') as f:
+                data = json.loads(f.read())          
+                name_list.append(data['name'])
+                package_list.append(data['package'] + '@' + data['version'])
+    #if input_params.get("last_jid") != jetlag_conf.get_uv().jetlag_id:
+    #    print("Done!")
     
     clean_name = []
     clean_package = []
