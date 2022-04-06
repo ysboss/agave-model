@@ -1,5 +1,6 @@
 import os, re
 import imp
+from command import cmd
 from safe_reader import safe_reader
 from ipywidgets import interactive, Layout, Button, Box, HBox, VBox, Text, Dropdown, Label, IntSlider, Textarea, Accordion, ToggleButton, ToggleButtons, Select, HTMLMath, FloatRangeSlider, Output, Tab, Checkbox, HTML
 from logOp import *
@@ -19,20 +20,22 @@ def get_tabs():
         tabs = ["Choose Input Template"]
         cur_model = input_params.get('title').lower()
         menus[cur_model] = {}
-        dir = "input_"+cur_model
+        dirname = "input_"+cur_model
         ###########################
-        if not os.path.exists(dir):
+        if not os.path.exists(dirname):
             if cur_model == "none":
-                os.system("mkdir -p %s" % dir)
+                with logOp:
+                    cmd(["mkdir","-p",dirname])
                 return tuple(tabs)
             else:
-                print("Path does not exist: %s" % dir)
-                print("Creating Directory for: %s" % cur_model.upper())
-                os.system("mkdir -p %s" % dir)
-                print(dir + " has been created for "+cur_model.upper())
+                with logOp:
+                    print("Path does not exist: %s" % dirname)
+                    print("Creating Directory for: %s" % cur_model.upper())
+                    cmd(["mkdir","-p",dirname])
+                    print(dirname + " has been created for "+cur_model.upper())
                 return tuple(tabs)
         ###########################
-        for f in os.listdir(dir):
+        for f in os.listdir(dirname):
             if re.match(r'\.',f):
                 continue
             if not re.search(r'_template',f):
