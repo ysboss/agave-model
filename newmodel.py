@@ -17,6 +17,7 @@ import input_params
 import jetlag_conf
 from safe_reader import safe_reader
 from logOp import logOp, clearLog, log
+from here import here
 
 import pprint
 pp = pprint.PrettyPrinter()
@@ -58,11 +59,7 @@ def getJSONData(jsonData, title, ver):
     return jsonData            
 #############################################
 
-from here import here
 models, packages = getModelsAndPacks(False)
-with logOp:
-    here("models:",models)
-    here("packs:",packages)
 
 if len(models)>0:
     input_params.set('title', models[0])
@@ -164,7 +161,7 @@ UploadBtn = FileUpload(multiple=True)
 def get_dname():
     model = value=input_params.get('title').lower()
     if model != "None":
-        dname = os.environ["HOME"]+"/agave-model/input_"+model
+        dname = f"{work_dir}/input_"+model
     return 'To upload via command line: docker cp [file] cmr:%s/' % dname
 UploadLabel = Label(value=get_dname())
 
@@ -618,7 +615,16 @@ class observe_file_upload:
     def __init__(self):
         self.metadata = None
         self.name = []
+
     def __call__(self,change):
+        try:
+            self.callme(change)
+        except:
+           with logOp:
+              traceback.print_exc(file=sys.stdout)
+
+    def callme(self, change):
+            
         n = change["name"]
         v = change["new"]
         if n == "metadata":
@@ -636,22 +642,20 @@ class observe_file_upload:
                 #    dname = os.path.join(os.environ["HOME"], "Download")
                 #else:
                 model = value=input_params.get('title').lower()
-                dname = os.environ["HOME"]+"/agave-model/input_"+model
+                dname = f"{work_dir}/input_"+model
                 if re.match(r'^.*\.(zip|tgz|tar.gz)',self.name[j]):
                     with logOp:
-                        cmd(['rm','-fr',dname])
+                        cmd(['rm','-fr',dname],cwd=work_dir)
                 os.makedirs(dname,exist_ok=True)
-                fname = dname + "/" + self.name[j]
+                fname = os.path.join(dname, self.name[j])
                 with open(fname,"wb") as fd:
                     fd.write(d)
                 if os.path.exists(fname):
                     log("upload of '",fname,"' was successful.",sep='')
                 else:
                     log("upload of '",fname,"' failed.",sep='')
-                try:
+                with in_dir(dname):
                     with logOp:
-                        here = os.getcwd()
-                        os.chdir(dname)
                         if re.match(r'^.*\.(tgz|tar\.gz)$', self.name[j]):
                             cmd(['tar','xzf',self.name[j]])
                             cmd(['rm','-f',self.name[j]])
@@ -661,8 +665,6 @@ class observe_file_upload:
                         elif re.match(r'^.*\.(zip)$', self.name[j]):
                             cmd(['unzip',self.name[j]])
                             cmd(['rm','-f',self.name[j]])
-                finally:
-                    os.chdir(here)
             self.metadata = None
             self.name = []
 
