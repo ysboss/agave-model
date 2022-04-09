@@ -1,5 +1,5 @@
 #FROM ubuntu:18.04
-FROM stevenrbrandt/spack-cmr-built
+FROM stevenrbrandt/spack-cmr
 USER root
 
 # Needed to install tzdata
@@ -7,7 +7,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update 
 RUN apt-get install -y g++ make xauth python3-pip python3 wget git make nodejs npm curl \
-    jq sshpass sudo ffmpeg bsdmainutils vim tzdata pkg-config paraview-python \
+    jq sshpass sudo ffmpeg bsdmainutils vim tzdata pkg-config \
     locales locales-all libcairo2-dev libjpeg9-dev iproute2 x11-apps net-tools
 RUN update-alternatives --install /usr/bin/python python /usr/bin/python3 2
 RUN update-alternatives --install /usr/bin/pip pip /usr/bin/pip3 2
@@ -36,11 +36,16 @@ RUN chmod 755 /usr/local/bin/runuser.sh
 RUN echo "ALL            ALL = (ALL) NOPASSWD: ALL" >> /etc/sudoers
 RUN chown jovyan /usr/local/python
 RUN find /home/jovyan | xargs chown jovyan
+RUN usermod jovyan --shell /bin/bash
+WORKDIR /
+RUN git clone -b newmodel https://github.com/ysboss/agave-model.git
+RUN find agave-model | xargs -d '\n' chown jovyan
 USER jovyan
 WORKDIR /usr/local/python
-RUN git clone -b jetlag2 https://github.com/STEllAR-GROUP/JetLag.git
-ENV HOME /home/jovyan
+RUN git clone -b jetlag2 https://github.com/STEllAR-GROUP/JetLag.git JetLag
 ENV PYTHONPATH /usr/local/python/JetLag
-WORKDIR /home/jovyan
+RUN mkdir -p /home/jovyan/notebooks
+WORKDIR /home/jovyan/notebooks
+RUN cp /agave-model/model.ipynb /agave-model/vis*.ipynb .
 
 CMD /usr/local/bin/runuser.sh

@@ -50,7 +50,8 @@ services:
     # it in all 3 places below.
     environment:
       - PORT=8002
+      - PYTHONPATH=/usr/local/python/JetLag:/agave-model
     ports:
       - '8002:8002'
     #volumes:
-      #- homefs-agave-model:/home/jovyan
+    #  - homefs-agave-model:/home/jovyan
