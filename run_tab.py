@@ -57,7 +57,7 @@ def run(b):
         
         if not os.path.isdir(f"{model_dir}/input_{t}") or inputFileName not in listdir_nohidden(f"{model_dir}/input_{t}"):
             print("input_%s is empty. Using default files for model." % t)
-            cmd("tar -xvf {model_dir}/input_{t}.tgz -C {work_dir}/")
+            cmd(f"tar -xvf {model_dir}/input_{t}.tgz -C {work_dir}/")
         relink(f"{work_dir}/input_{t}", f"{work_dir}/run_dir")
         cmd("tar czvf input.tgz run_dir",cwd=work_dir)
         print("Procs:",procs,"=>",procs[0]*procs[1]*procs[2])
