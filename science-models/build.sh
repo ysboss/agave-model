@@ -6,8 +6,12 @@ then
 fi
 spack-init.sh
 source $SPACK_ROOT/share/spack/setup-env.sh
-for p in funwave nhwave swan openfoam
+for p in funwave nhwave openfoam delft3d
 do
-  spack install $p target=x86_64
+  #python3 /usr/local/bin/spack-reconfigure.py
+  echo spack install $p $*
+  spack install $p $*
 done
-spack gc -y
+echo spack install -j1 swan $*
+spack install -j1 swan $*
+#spack gc -y

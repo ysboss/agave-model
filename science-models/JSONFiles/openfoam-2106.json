@@ -1,0 +1,12 @@
+{
+    "name": "OPENFOAM",
+    "package": "openfoam",
+    "version": "2106",
+    "callmpi" : false,
+    "execFile": "openfoam.sh",
+    "inputFile": "",
+    "nx": "",
+    "ny": "",
+    "nz": ""
+}
+
