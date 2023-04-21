@@ -385,14 +385,17 @@ def jobHis_btn_clicked(a):
             jobid = g.group(3)
             print("History for job %s" % jobid)
             uv = jetlag_conf.get_uv()
-            hist = uv.job_history(jobid)
             out1 = []
+            hist = uv.job_history(jobid)
             for item in hist:
                 out1 += [
                     item["status"]+" "+
                     item["created"]+"\n"+
                     item["description"]
                 ]
+            status = uv.job_status(jobid)
+            if "lastStatusMessage" in status:
+                out1 += ["Last Status: "+status["lastStatusMessage"]]
             jobHisSelect.options = out1
     
 jobHisBtn.on_click(jobHis_btn_clicked)
