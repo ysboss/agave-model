@@ -49,15 +49,29 @@ def run(b):
         
         for path in json_dirs:
             model_ver = input_params.get('modelversion_%s' % t)
-            inputFileName = ""
             for filename in glob.glob(os.path.join(path, '%s-%s.json' %(t, model_ver))):
-                with open(os.path.join(os.getcwd(), filename), 'r') as f:
+                inputFileName = ""
+                full_filename = os.path.join(os.getcwd(), filename)
+                print("Opening",full_filename)
+                with open(full_filename, 'r') as f:
                     data = json.loads(f.read())
                     inputFileName = data['inputFile']
+                    print("inputFileName:",inputFileName)
         
-        if not os.path.isdir(f"{model_dir}/input_{t}") or inputFileName not in listdir_nohidden(f"{model_dir}/input_{t}"):
-            print("input_%s is empty. Using default files for model." % t)
+        if os.path.isdir(f"{work_dir}/input_{t}"):
+            contents = os.listdir(f"{work_dir}/input_{t}")
+        else:
+            contents = []
+        if len(contents) == 0:
             cmd(f"tar -xvf {model_dir}/input_{t}.tgz -C {work_dir}/")
+            print(f"Newly created input files for '{t}.' Please check before attempting to run again.")
+            return
+        if inputFileName not in contents:
+            print(f"File '{inputFileName}' not in '{work_dir}/input_{t}'")
+            for fname in contents:
+                print("  found:",fname)
+                #cmd(f"tar -xvf {model_dir}/input_{t}.tgz -C {work_dir}/")
+            return
         relink(f"{work_dir}/input_{t}", f"{work_dir}/run_dir")
         cmd("tar czvf input.tgz run_dir",cwd=work_dir)
         print("Procs:",procs,"=>",procs[0]*procs[1]*procs[2])
